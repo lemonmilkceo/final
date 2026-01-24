@@ -27,24 +27,47 @@ const GUEST_SAMPLE_CONTRACTS = [
   {
     id: 'sample-1',
     worker_name: '게스트',
-    hourly_wage: 9860,
+    hourly_wage: 10360,
     status: 'pending' as const,
     expires_at: new Date(Date.now() + 86400000 * 3).toISOString(), // 3일 후
     created_at: new Date().toISOString(),
-    employer: { name: '김사장' },
+    employer: { name: '스타벅스 강남점' },
     signatures: [{ signer_role: 'employer' as const, signed_at: new Date().toISOString() }],
   },
   {
     id: 'sample-2',
     worker_name: '게스트',
+    hourly_wage: 11000,
+    status: 'pending' as const,
+    expires_at: new Date(Date.now() + 86400000 * 7).toISOString(), // 7일 후
+    created_at: new Date(Date.now() - 86400000).toISOString(),
+    employer: { name: 'CU 역삼역점' },
+    signatures: [{ signer_role: 'employer' as const, signed_at: new Date().toISOString() }],
+  },
+  {
+    id: 'sample-3',
+    worker_name: '게스트',
+    hourly_wage: 12000,
+    status: 'completed' as const,
+    expires_at: null,
+    created_at: new Date(Date.now() - 86400000 * 30).toISOString(),
+    employer: { name: '맥도날드 선릉점' },
+    signatures: [
+      { signer_role: 'employer' as const, signed_at: new Date(Date.now() - 86400000 * 30).toISOString() },
+      { signer_role: 'worker' as const, signed_at: new Date(Date.now() - 86400000 * 29).toISOString() },
+    ],
+  },
+  {
+    id: 'sample-4',
+    worker_name: '게스트',
     hourly_wage: 10500,
     status: 'completed' as const,
     expires_at: null,
-    created_at: new Date(Date.now() - 86400000 * 7).toISOString(),
-    employer: { name: '이사장' },
+    created_at: new Date(Date.now() - 86400000 * 60).toISOString(),
+    employer: { name: '올리브영 강남역점' },
     signatures: [
-      { signer_role: 'employer' as const, signed_at: new Date().toISOString() },
-      { signer_role: 'worker' as const, signed_at: new Date().toISOString() },
+      { signer_role: 'employer' as const, signed_at: new Date(Date.now() - 86400000 * 60).toISOString() },
+      { signer_role: 'worker' as const, signed_at: new Date(Date.now() - 86400000 * 59).toISOString() },
     ],
   },
 ];

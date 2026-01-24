@@ -125,22 +125,66 @@ export default function WorkerDashboard({
       <div className="px-5 pt-4 pb-24">
         {/* Welcome Message */}
         <div className="mb-6">
-          <h1 className="text-[22px] font-bold text-gray-900">
-            안녕하세요, {profile.name}님 👋
+          <p className="text-[15px] text-gray-500">안녕하세요,</p>
+          <h1 className="text-[26px] font-bold text-gray-900">
+            {profile.name}님 👋
           </h1>
-          <p className="text-[15px] text-gray-500 mt-1">
-            {pendingContracts.length > 0
-              ? `서명할 계약서가 ${pendingContracts.length}건 있어요`
-              : '새로운 계약서가 없어요'}
-          </p>
         </div>
+
+        {/* 내 경력 카드 */}
+        <Card
+          variant="elevated"
+          interactive
+          onClick={() => router.push('/worker/career')}
+          className="mb-6 bg-gradient-to-r from-blue-50 to-blue-100/50"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center">
+              <svg
+                className="w-7 h-7 text-blue-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <p className="text-[16px] font-semibold text-gray-900">내 경력</p>
+              <p className="text-[14px] text-gray-500">근무 이력 및 평가 확인</p>
+            </div>
+            <svg
+              className="w-5 h-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </div>
+        </Card>
 
         {/* Pending Contracts */}
         {pendingContracts.length > 0 && (
-          <section className="mb-8">
-            <h2 className="text-[16px] font-semibold text-gray-900 mb-3">
-              서명 대기중
-            </h2>
+          <section className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-[16px] font-semibold text-gray-900">
+                서명 대기중
+              </h2>
+              <span className="text-[13px] text-blue-500 font-medium">
+                {pendingContracts.length}건
+              </span>
+            </div>
             <div className="space-y-3">
               {pendingContracts.map((contract) => (
                 <Card
@@ -186,10 +230,15 @@ export default function WorkerDashboard({
 
         {/* Completed Contracts */}
         {completedContracts.length > 0 && (
-          <section className="mb-8">
-            <h2 className="text-[16px] font-semibold text-gray-900 mb-3">
-              체결된 계약서
-            </h2>
+          <section className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-[16px] font-semibold text-gray-900">
+                체결된 계약서
+              </h2>
+              <span className="text-[13px] text-gray-400">
+                {completedContracts.length}건
+              </span>
+            </div>
             <div className="space-y-3">
               {completedContracts.map((contract) => (
                 <Card
@@ -218,11 +267,24 @@ export default function WorkerDashboard({
 
         {/* Empty State */}
         {contracts.length === 0 && (
-          <EmptyState
-            icon={<span className="text-6xl">📋</span>}
-            title="아직 계약서가 없어요"
-            description="사장님이 계약서를 보내면 여기에 나타나요"
-          />
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mb-4">
+              <svg
+                className="w-10 h-10 text-gray-300"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
+            <p className="text-[16px] text-gray-400">아직 받은 계약서가 없어요</p>
+          </div>
         )}
       </div>
 

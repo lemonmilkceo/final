@@ -23,12 +23,14 @@ interface CareerListProps {
   contracts: CareerContract[];
   totalDays: number;
   totalContracts: number;
+  isGuestMode?: boolean;
 }
 
 export default function CareerList({
   contracts,
   totalDays,
   totalContracts,
+  isGuestMode = false,
 }: CareerListProps) {
   const formatPeriod = (startDate: string, endDate: string | null) => {
     const start = formatDate(startDate);
@@ -61,7 +63,17 @@ export default function CareerList({
 
       <div className="px-5 pt-4 pb-24">
         {/* Title */}
-        <h1 className="text-[22px] font-bold text-gray-900 mb-6">내 경력</h1>
+        <h1 className="text-[22px] font-bold text-gray-900 mb-4">내 경력</h1>
+
+        {/* Guest Mode Banner */}
+        {isGuestMode && (
+          <div className="bg-blue-50 rounded-2xl p-4 mb-6 flex items-center gap-3">
+            <span className="text-xl">💡</span>
+            <p className="text-[14px] text-blue-700">
+              샘플 데이터입니다. 로그인하면 실제 경력을 확인할 수 있어요.
+            </p>
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3 mb-6">
