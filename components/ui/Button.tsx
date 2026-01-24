@@ -91,3 +91,5 @@ export function KakaoIcon({ className = 'w-5 h-5' }: { className?: string }) {
     </svg>
   );
 }
+
+export default Button;

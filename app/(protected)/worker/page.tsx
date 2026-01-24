@@ -1,62 +1,69 @@
-import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
+import { createClient } from '@/lib/supabase/server';
+import { ROUTES } from '@/lib/constants/routes';
+import WorkerDashboard from './worker-dashboard';
 
 export default async function WorkerDashboardPage() {
   const supabase = await createClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/login');
+    redirect(ROUTES.LOGIN);
   }
 
   // 프로필 조회
   const { data: profile } = await supabase
     .from('profiles')
-    .select('name, role')
+    .select('name, avatar_url')
     .eq('id', user.id)
     .single();
 
-  // 역할 체크
-  if (profile?.role !== 'worker') {
-    redirect('/employer');
+  // 온보딩 완료 여부 확인
+  const { data: workerDetails } = await supabase
+    .from('worker_details')
+    .select('id')
+    .eq('user_id', user.id)
+    .single();
+
+  // 온보딩 미완료 시 온보딩 페이지로 이동
+  if (!workerDetails) {
+    redirect('/worker/onboarding');
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 px-6 py-8 safe-top">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <p className="text-gray-500 text-sm">안녕하세요</p>
-          <h1 className="text-xl font-bold text-gray-900">
-            {profile?.name || '알바생'}님
-          </h1>
-        </div>
-        <Link
-          href="/auth/signout"
-          className="text-sm text-gray-500 underline"
-        >
-          로그아웃
-        </Link>
-      </div>
+  // 계약서 목록 조회 (worker_id로 또는 초대된 계약서)
+  const { data: contracts } = await supabase
+    .from('contracts')
+    .select(
+      `
+      id,
+      worker_name,
+      hourly_wage,
+      status,
+      expires_at,
+      created_at,
+      employer:profiles!contracts_employer_id_fkey (
+        name
+      ),
+      signatures (
+        signer_role,
+        signed_at
+      )
+    `
+    )
+    .eq('worker_id', user.id)
+    .neq('status', 'deleted')
+    .order('created_at', { ascending: false });
 
-      {/* Placeholder Content */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">
-          🎉 근로자 대시보드
-        </h2>
-        <p className="text-gray-500 mb-4">
-          Phase 5에서 계약서 확인, 서명 기능이 구현됩니다.
-        </p>
-        <div className="space-y-2 text-sm text-gray-400">
-          <p>✅ 카카오 로그인 완료</p>
-          <p>✅ 역할 선택 완료</p>
-          <p>⏳ 민감정보 입력 (Phase 5)</p>
-          <p>⏳ 계약서 서명 기능 (Phase 5)</p>
-        </div>
-      </div>
-    </div>
+  return (
+    <WorkerDashboard
+      profile={{
+        name: profile?.name || '알바생',
+        avatarUrl: profile?.avatar_url,
+      }}
+      contracts={contracts || []}
+    />
   );
 }
