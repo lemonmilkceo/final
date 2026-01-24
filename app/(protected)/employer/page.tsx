@@ -24,23 +24,68 @@ async function isGuestMode(): Promise<boolean> {
 const GUEST_SAMPLE_CONTRACTS = [
   {
     id: 'sample-1',
-    worker_name: '홍길동',
-    hourly_wage: 9860,
-    status: 'pending' as const,
+    worker_name: '박지훈',
+    work_location: 'GS25 잠실역점',
+    hourly_wage: 12000,
+    status: 'draft' as const,
     created_at: new Date().toISOString(),
+    folder_id: null,
+    signatures: [],
+  },
+  {
+    id: 'sample-2',
+    worker_name: '장민서',
+    work_location: '홍대 프차',
+    hourly_wage: 11000,
+    status: 'pending' as const,
+    created_at: new Date(Date.now() - 86400000).toISOString(),
     folder_id: null,
     signatures: [{ signer_role: 'employer' as const, signed_at: new Date().toISOString() }],
   },
   {
-    id: 'sample-2',
-    worker_name: '김철수',
-    hourly_wage: 10000,
+    id: 'sample-3',
+    worker_name: '김서연',
+    work_location: '연남동 감성카페',
+    hourly_wage: 10500,
+    status: 'pending' as const,
+    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+    folder_id: null,
+    signatures: [{ signer_role: 'employer' as const, signed_at: new Date().toISOString() }],
+  },
+  {
+    id: 'sample-4',
+    worker_name: '이수빈',
+    work_location: '서초 네일샵',
+    hourly_wage: 11500,
+    status: 'pending' as const,
+    created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
+    folder_id: null,
+    signatures: [{ signer_role: 'employer' as const, signed_at: new Date().toISOString() }],
+  },
+  {
+    id: 'sample-5',
+    worker_name: '최유진',
+    work_location: '역삼 직화삼겹',
+    hourly_wage: 10030,
     status: 'completed' as const,
-    created_at: new Date(Date.now() - 86400000).toISOString(),
+    created_at: new Date(Date.now() - 7 * 86400000).toISOString(),
     folder_id: null,
     signatures: [
-      { signer_role: 'employer' as const, signed_at: new Date().toISOString() },
-      { signer_role: 'worker' as const, signed_at: new Date().toISOString() },
+      { signer_role: 'employer' as const, signed_at: new Date(Date.now() - 7 * 86400000).toISOString() },
+      { signer_role: 'worker' as const, signed_at: new Date(Date.now() - 6 * 86400000).toISOString() },
+    ],
+  },
+  {
+    id: 'sample-6',
+    worker_name: '한예린',
+    work_location: '이태원 브런치클럽',
+    hourly_wage: 12500,
+    status: 'completed' as const,
+    created_at: new Date(Date.now() - 14 * 86400000).toISOString(),
+    folder_id: null,
+    signatures: [
+      { signer_role: 'employer' as const, signed_at: new Date(Date.now() - 14 * 86400000).toISOString() },
+      { signer_role: 'worker' as const, signed_at: new Date(Date.now() - 13 * 86400000).toISOString() },
     ],
   },
 ];
@@ -91,13 +136,14 @@ export default async function EmployerDashboardPage() {
     .eq('credit_type', 'contract')
     .single();
 
-  // 계약서 목록 조회
+  // 계약서 목록 조회 (work_location 추가)
   const { data: contracts } = await supabase
     .from('contracts')
     .select(
       `
       id,
       worker_name,
+      work_location,
       hourly_wage,
       status,
       created_at,
