@@ -201,18 +201,18 @@
 #### Story 2.1.1: OAuth 기본 설정
 > 예상 시간: 2시간
 
-- [ ] **Task 2.1.1.1**: 카카오 개발자 콘솔 앱 생성 및 설정 ⏳ (사용자 설정 필요)
+- [x] **Task 2.1.1.1**: 카카오 개발자 콘솔 앱 생성 및 설정 ✅
   - 작업 내용: 
     - 카카오 개발자 콘솔에서 앱 생성
     - 플랫폼 등록 (웹)
     - Redirect URI 설정
   - 출력: 카카오 REST API Key, JavaScript Key
 
-- [ ] **Task 2.1.1.2**: Supabase 대시보드에서 카카오 Provider 활성화 ⏳ (사용자 설정 필요)
+- [x] **Task 2.1.1.2**: Supabase 대시보드에서 카카오 Provider 활성화 ✅
   - Authentication > Providers > Kakao 설정
   - Client ID, Client Secret 입력
 
-- [ ] **Task 2.1.1.3**: `.env.local`에 카카오 환경변수 추가 ⏳ (사용자 설정 필요)
+- [x] **Task 2.1.1.3**: `.env.local`에 카카오 환경변수 추가 ✅
   - `NEXT_PUBLIC_KAKAO_JS_KEY`
   - `KAKAO_REST_API_KEY`
 
