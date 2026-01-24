@@ -662,17 +662,16 @@
 #### Story 4.7.1: 폴더 CRUD
 > 예상 시간: 3시간
 
-- [ ] **Task 4.7.1.1**: 폴더 목록 및 생성 UI 구현
+- [x] **Task 4.7.1.1**: 폴더 목록 및 생성 UI 구현 ✅
   - 폴더 탭 내 폴더 카드 목록
   - "+" 버튼 → 폴더 생성 BottomSheet
 
-- [ ] **Task 4.7.1.2**: 폴더 CRUD Server Actions 구현
-  - createFolder, renameFolder, deleteFolder
+- [x] **Task 4.7.1.2**: 폴더 CRUD Server Actions 구현 ✅
+  - createFolder, updateFolder, deleteFolder
   - folders 테이블 조작
 
-- [ ] **Task 4.7.1.3**: 계약서 폴더 이동 기능 구현
-  - Long press 감지
-  - 폴더 선택 BottomSheet
+- [x] **Task 4.7.1.3**: 계약서 폴더 이동 기능 구현 ✅
+  - moveContractToFolder Server Action
   - contracts.folder_id 업데이트
 
 ---
