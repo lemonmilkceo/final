@@ -28,7 +28,9 @@ interface ReviewItem {
 // 미리보기에서 사용하는 계약서 타입
 interface PreviewContract {
   worker_name: string;
-  hourly_wage: number;
+  wage_type?: string;
+  hourly_wage: number | null;
+  monthly_wage?: number | null;
   includes_weekly_allowance: boolean;
   start_date: string;
   end_date: string | null;
@@ -40,6 +42,8 @@ interface PreviewContract {
   work_location: string;
   job_description: string;
   pay_day: number;
+  payment_timing?: string;
+  is_last_day_payment?: boolean;
   business_size: 'under_5' | 'over_5';
   status: ContractStatus;
   signatures?: {

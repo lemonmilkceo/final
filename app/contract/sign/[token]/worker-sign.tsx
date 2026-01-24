@@ -13,7 +13,9 @@ import clsx from 'clsx';
 // 근로자 서명 페이지에서 사용하는 타입
 interface WorkerSignContract {
   worker_name: string;
-  hourly_wage: number;
+  wage_type?: string;
+  hourly_wage: number | null;
+  monthly_wage?: number | null;
   includes_weekly_allowance: boolean;
   start_date: string;
   end_date: string | null;
@@ -25,6 +27,8 @@ interface WorkerSignContract {
   work_location: string;
   job_description: string;
   pay_day: number;
+  payment_timing?: string;
+  is_last_day_payment?: boolean;
   signatures?: {
     id: string;
     signer_role: 'employer' | 'worker';
@@ -99,12 +103,27 @@ export default function WorkerSignPage({
     }
   };
 
+  // 급여 정보 포맷팅
+  const formatWage = () => {
+    if (contract.wage_type === 'monthly' && contract.monthly_wage) {
+      return `월 ${formatCurrency(contract.monthly_wage)}`;
+    }
+    if (contract.hourly_wage) {
+      return `시급 ${formatCurrency(contract.hourly_wage)}${contract.includes_weekly_allowance ? ' (주휴수당 포함)' : ''}`;
+    }
+    return '-';
+  };
+
+  // 급여일 포맷팅
+  const formatPayDay = () => {
+    const timing = contract.payment_timing === 'next_month' ? '익월' : '당월';
+    const day = contract.is_last_day_payment ? '말일' : `${contract.pay_day}일`;
+    return `${timing} ${day}`;
+  };
+
   const contractItems = [
     { label: '근로자', value: contract.worker_name },
-    {
-      label: '시급',
-      value: `${formatCurrency(contract.hourly_wage)}${contract.includes_weekly_allowance ? ' (주휴수당 포함)' : ''}`,
-    },
+    { label: '급여', value: formatWage() },
     {
       label: '근무기간',
       value: contract.end_date
@@ -119,7 +138,7 @@ export default function WorkerSignPage({
     { label: '휴게시간', value: `${contract.break_minutes}분` },
     { label: '근무장소', value: contract.work_location },
     { label: '업무내용', value: contract.job_description },
-    { label: '급여일', value: `매월 ${contract.pay_day}일` },
+    { label: '급여일', value: formatPayDay() },
   ];
 
   // 서명 완료 화면

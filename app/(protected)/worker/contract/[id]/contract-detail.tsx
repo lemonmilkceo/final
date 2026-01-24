@@ -17,7 +17,9 @@ import type { ContractStatus } from '@/types';
 interface ContractDetailData {
   id: string;
   worker_name: string;
-  hourly_wage: number;
+  wage_type?: string;
+  hourly_wage: number | null;
+  monthly_wage?: number | null;
   includes_weekly_allowance: boolean;
   start_date: string;
   end_date: string | null;
@@ -29,6 +31,8 @@ interface ContractDetailData {
   work_location: string;
   job_description: string;
   pay_day: number;
+  payment_timing?: string;
+  is_last_day_payment?: boolean;
   status: ContractStatus;
   expires_at: string | null;
   signatures: {
@@ -105,16 +109,34 @@ export default function WorkerContractDetail({
     }
   };
 
+  // 급여 정보 포맷팅
+  const formatWage = () => {
+    if (contract.wage_type === 'monthly' && contract.monthly_wage) {
+      return `월 ${formatCurrency(contract.monthly_wage)}`;
+    }
+    if (contract.hourly_wage) {
+      return `시급 ${formatCurrency(contract.hourly_wage)}`;
+    }
+    return '-';
+  };
+
+  // 급여일 포맷팅
+  const formatPayDay = () => {
+    const timing = contract.payment_timing === 'next_month' ? '익월' : '당월';
+    const day = contract.is_last_day_payment ? '말일' : `${contract.pay_day}일`;
+    return `${timing} ${day}`;
+  };
+
   // 요약 카드 항목
   const summaryItems = [
-    { label: '시급', value: formatCurrency(contract.hourly_wage), icon: '💰' },
+    { label: '급여', value: formatWage(), icon: '💰' },
     { label: '근무요일', value: formatWorkDays(), icon: '📅' },
     {
       label: '근무시간',
       value: `${contract.work_start_time}~${contract.work_end_time}`,
       icon: '⏰',
     },
-    { label: '급여일', value: `매월 ${contract.pay_day}일`, icon: '💵' },
+    { label: '급여일', value: formatPayDay(), icon: '💵' },
   ];
 
   return (
@@ -202,10 +224,10 @@ export default function WorkerContractDetail({
                 <span className="text-gray-900">{contract.worker_name}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-gray-100">
-                <span className="text-gray-500">시급</span>
+                <span className="text-gray-500">급여</span>
                 <span className="text-gray-900">
-                  {formatCurrency(contract.hourly_wage)}
-                  {contract.includes_weekly_allowance && ' (주휴 포함)'}
+                  {formatWage()}
+                  {contract.wage_type !== 'monthly' && contract.includes_weekly_allowance && ' (주휴 포함)'}
                 </span>
               </div>
               <div className="flex justify-between py-2 border-b border-gray-100">

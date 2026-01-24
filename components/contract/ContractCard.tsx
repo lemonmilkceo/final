@@ -10,7 +10,9 @@ interface ContractCardData {
   id: string;
   worker_name: string;
   work_location: string;
-  hourly_wage: number;
+  hourly_wage: number | null;
+  wage_type?: string;
+  monthly_wage?: number | null;
   status: ContractStatus;
   created_at: string;
   folder_id: string | null;

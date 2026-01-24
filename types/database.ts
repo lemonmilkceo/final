@@ -112,16 +112,20 @@ export type Database = {
           end_date: string | null
           expires_at: string | null
           folder_id: string | null
-          hourly_wage: number
+          hourly_wage: number | null
           id: string
           includes_weekly_allowance: boolean
+          is_last_day_payment: boolean
           job_description: string
+          monthly_wage: number | null
           pay_day: number
+          payment_timing: string
           pdf_url: string | null
           share_token: string
           start_date: string
           status: Database["public"]["Enums"]["contract_status"]
           updated_at: string
+          wage_type: string
           work_days: string[] | null
           work_days_per_week: number | null
           work_end_time: string
@@ -140,16 +144,20 @@ export type Database = {
           end_date?: string | null
           expires_at?: string | null
           folder_id?: string | null
-          hourly_wage: number
+          hourly_wage?: number | null
           id?: string
           includes_weekly_allowance?: boolean
+          is_last_day_payment?: boolean
           job_description: string
+          monthly_wage?: number | null
           pay_day: number
+          payment_timing?: string
           pdf_url?: string | null
           share_token?: string
           start_date: string
           status?: Database["public"]["Enums"]["contract_status"]
           updated_at?: string
+          wage_type?: string
           work_days?: string[] | null
           work_days_per_week?: number | null
           work_end_time: string
@@ -168,16 +176,20 @@ export type Database = {
           end_date?: string | null
           expires_at?: string | null
           folder_id?: string | null
-          hourly_wage?: number
+          hourly_wage?: number | null
           id?: string
           includes_weekly_allowance?: boolean
+          is_last_day_payment?: boolean
           job_description?: string
+          monthly_wage?: number | null
           pay_day?: number
+          payment_timing?: string
           pdf_url?: string | null
           share_token?: string
           start_date?: string
           status?: Database["public"]["Enums"]["contract_status"]
           updated_at?: string
+          wage_type?: string
           work_days?: string[] | null
           work_days_per_week?: number | null
           work_end_time?: string
@@ -285,6 +297,7 @@ export type Database = {
       }
       folders: {
         Row: {
+          color: string | null
           created_at: string
           id: string
           name: string
@@ -292,6 +305,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          color?: string | null
           created_at?: string
           id?: string
           name: string
@@ -299,6 +313,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          color?: string | null
           created_at?: string
           id?: string
           name?: string

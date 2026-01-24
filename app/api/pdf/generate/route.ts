@@ -71,7 +71,9 @@ export async function POST(request: NextRequest) {
       ContractPDFDocument({
         contract: {
           workerName: contract.worker_name,
+          wageType: contract.wage_type,
           hourlyWage: contract.hourly_wage,
+          monthlyWage: contract.monthly_wage,
           includesWeeklyAllowance: contract.includes_weekly_allowance,
           startDate: contract.start_date,
           endDate: contract.end_date,
@@ -83,6 +85,8 @@ export async function POST(request: NextRequest) {
           workLocation: contract.work_location,
           jobDescription: contract.job_description,
           payDay: contract.pay_day,
+          paymentTiming: contract.payment_timing,
+          isLastDayPayment: contract.is_last_day_payment,
           businessSize: contract.business_size,
           createdAt: contract.created_at,
         },

@@ -1,8 +1,17 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
-// 토스페이먼츠 테스트 시크릿 키
-const SECRET_KEY = process.env.TOSS_SECRET_KEY || 'test_sk_zXLkKEypNArWmo50nX3lmeaxYG5R';
+/**
+ * 토스페이먼츠 시크릿 키
+ * 환경변수에서 가져오며, 미설정 시 에러 발생
+ */
+function getTossSecretKey(): string {
+  const key = process.env.TOSS_SECRET_KEY;
+  if (!key) {
+    throw new Error('TOSS_SECRET_KEY 환경 변수가 설정되지 않았습니다.');
+  }
+  return key;
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -52,13 +61,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // 토스페이먼츠 시크릿 키 가져오기
+    const secretKey = getTossSecretKey();
+
     // 토스페이먼츠 결제 승인 API 호출
     const confirmResponse = await fetch(
       'https://api.tosspayments.com/v1/payments/confirm',
       {
         method: 'POST',
         headers: {
-          Authorization: `Basic ${Buffer.from(SECRET_KEY + ':').toString('base64')}`,
+          Authorization: `Basic ${Buffer.from(secretKey + ':').toString('base64')}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

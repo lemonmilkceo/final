@@ -8,7 +8,9 @@ import { formatCurrency, formatDate } from '@/lib/utils/format';
 interface CareerContract {
   id: string;
   worker_name: string;
-  hourly_wage: number;
+  wage_type?: string;
+  hourly_wage: number | null;
+  monthly_wage?: number | null;
   start_date: string;
   end_date: string | null;
   work_location: string;
@@ -131,7 +133,13 @@ export default function CareerList({
                         {formatPeriod(contract.start_date, contract.end_date)}
                       </span>
                       <span>•</span>
-                      <span>{formatCurrency(contract.hourly_wage)}</span>
+                      <span>
+                        {contract.wage_type === 'monthly' && contract.monthly_wage
+                          ? `월 ${formatCurrency(contract.monthly_wage)}`
+                          : contract.hourly_wage
+                            ? `시급 ${formatCurrency(contract.hourly_wage)}`
+                            : '-'}
+                      </span>
                     </div>
                   </div>
                 </div>

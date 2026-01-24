@@ -16,7 +16,9 @@ import type { ContractStatus } from '@/types';
 interface DashboardContract {
   id: string;
   worker_name: string;
-  hourly_wage: number;
+  wage_type?: string;
+  hourly_wage: number | null;
+  monthly_wage?: number | null;
   status: ContractStatus;
   expires_at: string | null;
   created_at: string;
@@ -202,7 +204,11 @@ export default function WorkerDashboard({
                         {getDdayBadge(contract.expires_at)}
                       </div>
                       <p className="text-[14px] text-gray-500">
-                        시급 {formatCurrency(contract.hourly_wage)}
+                        {contract.wage_type === 'monthly' && contract.monthly_wage
+                          ? `월 ${formatCurrency(contract.monthly_wage)}`
+                          : contract.hourly_wage
+                            ? `시급 ${formatCurrency(contract.hourly_wage)}`
+                            : '-'}
                       </p>
                     </div>
                     <div className="flex items-center gap-1 text-blue-500">
@@ -254,7 +260,11 @@ export default function WorkerDashboard({
                         {contract.employer?.name || '사장님'}
                       </p>
                       <p className="text-[13px] text-gray-500">
-                        {formatCurrency(contract.hourly_wage)}
+                        {contract.wage_type === 'monthly' && contract.monthly_wage
+                          ? `월 ${formatCurrency(contract.monthly_wage)}`
+                          : contract.hourly_wage
+                            ? formatCurrency(contract.hourly_wage)
+                            : '-'}
                       </p>
                     </div>
                     <Badge variant="completed">완료</Badge>

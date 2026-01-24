@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useContractFormStore, type BusinessType } from '@/stores/contractFormStore';
 import BottomSheet from '@/components/ui/BottomSheet';
 import clsx from 'clsx';
+import { formatCurrency } from '@/lib/utils/format';
 
 // 업종별 데이터
 const BUSINESS_TYPES: {
@@ -97,12 +98,49 @@ const BUSINESS_TYPES: {
   },
 ];
 
+// 추가수당 계산 함수 (5인 이상 사업장)
+function calculateExtraPayments(hourlyWage: number | null, monthlyWage: number | null, wageType: 'hourly' | 'monthly') {
+  // 시급 기준으로 계산
+  let baseHourlyWage = 0;
+  
+  if (wageType === 'hourly' && hourlyWage) {
+    baseHourlyWage = hourlyWage;
+  } else if (wageType === 'monthly' && monthlyWage) {
+    // 월급 → 시급 환산 (월 209시간 기준)
+    baseHourlyWage = Math.round(monthlyWage / 209);
+  }
+  
+  if (baseHourlyWage === 0) return null;
+  
+  // 연장근로수당: 시급 × 1.5 (1시간당)
+  const overtimePay = Math.round(baseHourlyWage * 1.5);
+  
+  // 휴일근로수당: 시급 × 1.5 × 8시간 (하루당)
+  const holidayPay = Math.round(baseHourlyWage * 1.5 * 8);
+  
+  // 연차수당: 시급 × 8시간 (1일당)
+  const annualLeavePay = Math.round(baseHourlyWage * 8);
+  
+  return {
+    baseHourlyWage,
+    overtimePay,
+    holidayPay,
+    annualLeavePay,
+  };
+}
+
 export default function Step9JobDescription() {
   const router = useRouter();
   const { data, updateData } = useContractFormStore();
   const [isBusinessTypeSheetOpen, setIsBusinessTypeSheetOpen] = useState(false);
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
   const [additionalDescription, setAdditionalDescription] = useState('');
+  
+  // 5인 이상 사업장일 때만 추가수당 계산
+  const extraPayments = useMemo(() => {
+    if (data.businessSize !== 'over_5') return null;
+    return calculateExtraPayments(data.hourlyWage, data.monthlyWage, data.wageType);
+  }, [data.businessSize, data.hourlyWage, data.monthlyWage, data.wageType]);
 
   // 현재 선택된 업종 찾기
   const currentBusinessType = BUSINESS_TYPES.find((b) => b.value === data.businessType);
@@ -206,8 +244,72 @@ export default function Step9JobDescription() {
               onChange={handleAdditionalChange}
               placeholder="추가로 입력하고 싶은 업무 내용을 적어주세요"
               rows={3}
-              className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-[15px] text-gray-900 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-[15px] text-gray-900 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 mb-6"
             />
+
+            {/* 5인 이상 사업장: 추가수당 안내 */}
+            {extraPayments && (
+              <div className="space-y-4">
+                {/* 알아두세요 배너 */}
+                <div className="bg-amber-50 rounded-2xl px-5 py-4">
+                  <div className="flex items-start gap-3">
+                    <span className="text-xl">💡</span>
+                    <div>
+                      <p className="text-[15px] font-semibold text-amber-700 mb-1">알아두세요</p>
+                      <p className="text-[14px] text-amber-600 leading-relaxed">
+                        직원이 야근이나 휴일에 더 일하면 위 금액만큼 더 줘야 해요.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 추가수당 자동계산 카드 */}
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white text-[12px]">ⓘ</span>
+                    <span className="text-xl">💰</span>
+                    <span className="text-[15px] font-semibold text-blue-600">
+                      추가로 일하면 이만큼 더 줘야 해요
+                    </span>
+                  </div>
+
+                  <div className="space-y-3">
+                    {/* 야근수당 */}
+                    <div className="bg-white rounded-xl px-4 py-3 border-l-4 border-blue-500 flex items-center justify-between">
+                      <div>
+                        <p className="text-[15px] font-semibold text-gray-900">야근 1시간마다</p>
+                        <p className="text-[13px] text-gray-500">퇴근시간 이후 근무</p>
+                      </div>
+                      <p className="text-[17px] font-bold text-blue-600">
+                        +{formatCurrency(extraPayments.overtimePay)}
+                      </p>
+                    </div>
+
+                    {/* 휴일근무수당 */}
+                    <div className="bg-white rounded-xl px-4 py-3 border-l-4 border-blue-500 flex items-center justify-between">
+                      <div>
+                        <p className="text-[15px] font-semibold text-gray-900">휴일 하루 근무</p>
+                        <p className="text-[13px] text-gray-500">쉬는 날 출근</p>
+                      </div>
+                      <p className="text-[17px] font-bold text-blue-600">
+                        +{formatCurrency(extraPayments.holidayPay)}
+                      </p>
+                    </div>
+
+                    {/* 연차수당 */}
+                    <div className="bg-white rounded-xl px-4 py-3 border-l-4 border-blue-500 flex items-center justify-between">
+                      <div>
+                        <p className="text-[15px] font-semibold text-gray-900">연차 1일 미사용</p>
+                        <p className="text-[13px] text-gray-500">휴가 안 쓰면 돈으로</p>
+                      </div>
+                      <p className="text-[17px] font-bold text-blue-600">
+                        +{formatCurrency(extraPayments.annualLeavePay)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>

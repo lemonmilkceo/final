@@ -98,7 +98,9 @@ const styles = StyleSheet.create({
 interface ContractPDFProps {
   contract: {
     workerName: string;
-    hourlyWage: number;
+    wageType?: string;
+    hourlyWage: number | null;
+    monthlyWage?: number | null;
     includesWeeklyAllowance: boolean;
     startDate: string;
     endDate: string | null;
@@ -110,6 +112,8 @@ interface ContractPDFProps {
     workLocation: string;
     jobDescription: string;
     payDay: number;
+    paymentTiming?: string;
+    isLastDayPayment?: boolean;
     businessSize: string;
     createdAt: string;
   };
@@ -148,6 +152,24 @@ export function ContractPDFDocument({
     return '-';
   };
 
+  // 급여 정보 포맷팅
+  const formatWage = () => {
+    if (contract.wageType === 'monthly' && contract.monthlyWage) {
+      return `월 ${formatCurrency(contract.monthlyWage)}`;
+    }
+    if (contract.hourlyWage) {
+      return `시급 ${formatCurrency(contract.hourlyWage)}${contract.includesWeeklyAllowance ? ' (주휴수당 포함)' : ''}`;
+    }
+    return '-';
+  };
+
+  // 급여일 포맷팅
+  const formatPayDay = () => {
+    const timing = contract.paymentTiming === 'next_month' ? '익월' : '당월';
+    const day = contract.isLastDayPayment ? '말일' : `${contract.payDay}일`;
+    return `${timing} ${day}`;
+  };
+
   const employerSignature = signatures.find((s) => s.signer_role === 'employer');
   const workerSignature = signatures.find((s) => s.signer_role === 'worker');
 
@@ -170,11 +192,8 @@ export function ContractPDFDocument({
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>2. 근로 조건</Text>
           <View style={styles.row}>
-            <Text style={styles.label}>시급</Text>
-            <Text style={styles.value}>
-              {formatCurrency(contract.hourlyWage)}
-              {contract.includesWeeklyAllowance ? ' (주휴수당 포함)' : ''}
-            </Text>
+            <Text style={styles.label}>급여</Text>
+            <Text style={styles.value}>{formatWage()}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>근무 기간</Text>
@@ -212,7 +231,7 @@ export function ContractPDFDocument({
           <Text style={styles.sectionTitle}>3. 급여 정보</Text>
           <View style={styles.row}>
             <Text style={styles.label}>급여일</Text>
-            <Text style={styles.value}>매월 {contract.payDay}일</Text>
+            <Text style={styles.value}>{formatPayDay()}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>사업장 규모</Text>

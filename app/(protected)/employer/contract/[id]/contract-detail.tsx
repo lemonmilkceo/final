@@ -23,7 +23,9 @@ interface Signature {
 interface ContractData {
   id: string;
   workerName: string;
-  hourlyWage: number;
+  wageType: 'hourly' | 'monthly';
+  hourlyWage: number | null;
+  monthlyWage: number | null;
   includesWeeklyAllowance: boolean;
   startDate: string;
   endDate: string | null;
@@ -35,6 +37,8 @@ interface ContractData {
   workLocation: string;
   jobDescription: string;
   payDay: number;
+  paymentTiming: 'current_month' | 'next_month';
+  isLastDayPayment: boolean;
   businessSize: 'under_5' | 'over_5';
   status: 'draft' | 'pending' | 'completed' | 'expired' | 'deleted';
   createdAt: string;
@@ -241,12 +245,27 @@ export default function ContractDetail({
     }
   };
 
+  // 급여 정보 포맷팅
+  const formatWage = () => {
+    if (contract.wageType === 'monthly' && contract.monthlyWage) {
+      return `월 ${formatCurrency(contract.monthlyWage)}`;
+    }
+    if (contract.hourlyWage) {
+      return `시급 ${formatCurrency(contract.hourlyWage)}${contract.includesWeeklyAllowance ? ' (주휴수당 포함)' : ''}`;
+    }
+    return '-';
+  };
+
+  // 급여일 포맷팅
+  const formatPayDay = () => {
+    const timing = contract.paymentTiming === 'next_month' ? '익월' : '당월';
+    const day = contract.isLastDayPayment ? '말일' : `${contract.payDay}일`;
+    return `${timing} ${day}`;
+  };
+
   const contractItems = [
     { label: '근로자', value: contract.workerName },
-    {
-      label: '시급',
-      value: `${formatCurrency(contract.hourlyWage)}${contract.includesWeeklyAllowance ? ' (주휴수당 포함)' : ''}`,
-    },
+    { label: '급여', value: formatWage() },
     {
       label: '근무기간',
       value: contract.endDate
@@ -261,7 +280,7 @@ export default function ContractDetail({
     { label: '휴게시간', value: `${contract.breakMinutes}분` },
     { label: '근무장소', value: contract.workLocation },
     { label: '업무내용', value: contract.jobDescription },
-    { label: '급여일', value: `매월 ${contract.payDay}일` },
+    { label: '급여일', value: formatPayDay() },
   ];
 
   return (
