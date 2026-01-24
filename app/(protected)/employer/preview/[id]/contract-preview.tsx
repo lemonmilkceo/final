@@ -5,8 +5,11 @@ import { useRouter } from 'next/navigation';
 import PageHeader from '@/components/layout/PageHeader';
 import BottomSheet from '@/components/ui/BottomSheet';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import SignatureCanvas from '@/components/contract/SignatureCanvas';
+import Toast from '@/components/ui/Toast';
 import { useContractFormStore } from '@/stores/contractFormStore';
 import { createContract } from '../../../create/actions';
+import { signContract, sendContract } from './actions';
 import { formatCurrency } from '@/lib/utils/format';
 import clsx from 'clsx';
 import type { Contract, Signature } from '@/types';
@@ -27,6 +30,15 @@ export default function ContractPreview({
   const [isSignatureSheetOpen, setIsSignatureSheetOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [signatureData, setSignatureData] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState('');
+  const [showToast, setShowToast] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+
+  // 사업자가 이미 서명했는지 확인
+  const employerSigned = contract?.signatures?.some(
+    (s) => s.signer_role === 'employer' && s.signed_at
+  );
 
   // 표시할 데이터 결정 (새 계약서면 store, 아니면 DB)
   const displayData = isNew
@@ -76,33 +88,101 @@ export default function ContractPreview({
   };
 
   const handleSignAndSend = async () => {
-    if (!isNew) {
-      // 기존 계약서 - 서명 시트 열기
-      setIsSignatureSheetOpen(true);
+    if (isNew) {
+      // 새 계약서 저장
+      setIsLoading(true);
+      setError('');
+
+      try {
+        const result = await createContract({
+          ...formData,
+          hourlyWage: formData.hourlyWage || 0,
+          businessSize: formData.businessSize || 'under_5',
+        });
+
+        if (result.success && result.data) {
+          reset(); // 스토어 초기화
+          router.push(`/employer/preview/${result.data.contractId}`);
+        } else {
+          setError(result.error || '계약서 저장에 실패했어요');
+        }
+      } catch {
+        setError('알 수 없는 오류가 발생했어요');
+      } finally {
+        setIsLoading(false);
+      }
       return;
     }
 
-    // 새 계약서 저장
+    // 기존 계약서 - 서명 여부에 따라 분기
+    if (employerSigned) {
+      // 이미 서명했으면 전송
+      await handleSend();
+    } else {
+      // 서명 시트 열기
+      setIsSignatureSheetOpen(true);
+    }
+  };
+
+  const handleSignatureComplete = async () => {
+    if (!signatureData || !contractId) {
+      setError('서명을 해주세요');
+      return;
+    }
+
     setIsLoading(true);
     setError('');
 
     try {
-      const result = await createContract({
-        ...formData,
-        hourlyWage: formData.hourlyWage || 0,
-        businessSize: formData.businessSize || 'under_5',
-      });
+      const result = await signContract(contractId, signatureData);
 
-      if (result.success && result.data) {
-        reset(); // 스토어 초기화
-        router.push(`/employer/preview/${result.data.contractId}`);
+      if (result.success) {
+        setIsSignatureSheetOpen(false);
+        setToastMessage('서명이 완료됐어요! ✍️');
+        setShowToast(true);
+        router.refresh();
       } else {
-        setError(result.error || '계약서 저장에 실패했어요');
+        setError(result.error || '서명 저장에 실패했어요');
       }
     } catch {
       setError('알 수 없는 오류가 발생했어요');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSend = async () => {
+    if (!contractId) return;
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const result = await sendContract(contractId);
+
+      if (result.success && result.data) {
+        setShareUrl(result.data.shareUrl);
+        setToastMessage('공유 링크가 생성됐어요! 🔗');
+        setShowToast(true);
+      } else {
+        setError(result.error || '공유 링크 생성에 실패했어요');
+      }
+    } catch {
+      setError('알 수 없는 오류가 발생했어요');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (!shareUrl) return;
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setToastMessage('링크가 복사됐어요! 📋');
+      setShowToast(true);
+    } catch {
+      setError('링크 복사에 실패했어요');
     }
   };
 
@@ -272,6 +352,21 @@ export default function ContractPreview({
           </button>
         </div>
 
+        {/* Share URL Display */}
+        {shareUrl && (
+          <div className="mb-4 bg-blue-50 rounded-xl p-3 flex items-center gap-2">
+            <span className="flex-1 text-[13px] text-blue-700 truncate">
+              {shareUrl}
+            </span>
+            <button
+              onClick={handleCopyLink}
+              className="text-[13px] text-blue-500 font-medium whitespace-nowrap"
+            >
+              복사
+            </button>
+          </div>
+        )}
+
         {/* Main CTA */}
         <button
           onClick={handleSignAndSend}
@@ -286,10 +381,12 @@ export default function ContractPreview({
           {isLoading ? (
             <>
               <LoadingSpinner variant="button" />
-              저장 중...
+              처리 중...
             </>
           ) : isNew ? (
             '계약서 저장하기'
+          ) : employerSigned ? (
+            '근로자에게 보내기 📤'
           ) : (
             <>서명하고 보내기 ✍️</>
           )}
@@ -302,30 +399,41 @@ export default function ContractPreview({
         onClose={() => setIsSignatureSheetOpen(false)}
         title="서명해주세요"
       >
-        <div className="flex items-center justify-between mb-4">
-          <span />
-          <button
-            onClick={() => {}}
-            className="text-[15px] text-gray-500"
-          >
-            다시 쓰기
-          </button>
-        </div>
-
-        {/* Signature Canvas Placeholder */}
-        <div className="w-full h-48 bg-gray-50 rounded-2xl border-2 border-gray-200 relative mb-6">
-          <div className="absolute inset-0 flex items-center justify-center text-gray-300 text-[15px]">
-            여기에 서명하세요
-          </div>
-        </div>
+        {/* Signature Canvas */}
+        <SignatureCanvas
+          onSignatureChange={setSignatureData}
+          width={320}
+          height={192}
+          className="mb-6"
+        />
 
         <button
-          onClick={() => setIsSignatureSheetOpen(false)}
-          className="w-full py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg"
+          onClick={handleSignatureComplete}
+          disabled={!signatureData || isLoading}
+          className={clsx(
+            'w-full py-4 rounded-2xl font-semibold text-lg flex items-center justify-center gap-2',
+            signatureData && !isLoading
+              ? 'bg-blue-500 text-white active:bg-blue-600'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+          )}
         >
-          서명 완료
+          {isLoading ? (
+            <>
+              <LoadingSpinner variant="button" />
+              서명 저장 중...
+            </>
+          ) : (
+            '서명 완료'
+          )}
         </button>
       </BottomSheet>
+
+      {/* Toast */}
+      <Toast
+        message={toastMessage}
+        isVisible={showToast}
+        onClose={() => setShowToast(false)}
+      />
     </div>
   );
 }

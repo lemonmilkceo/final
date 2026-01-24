@@ -542,22 +542,22 @@
 #### Story 4.3.2: 서명 기능
 > 예상 시간: 3시간
 
-- [ ] **Task 4.3.2.1**: `components/contract/SignatureCanvas.tsx` 서명 캔버스 컴포넌트 구현
+- [x] **Task 4.3.2.1**: `components/contract/SignatureCanvas.tsx` 서명 캔버스 컴포넌트 구현 ✅
   - 참조: `UI` 섹션 2.4 (서명 입력 Bottom Sheet)
   - Canvas API 기반 자필 서명
   - 다시 쓰기 기능
   - Base64 이미지 출력
 
-- [ ] **Task 4.3.2.2**: 서명 BottomSheet UI 및 연동
+- [x] **Task 4.3.2.2**: 서명 BottomSheet UI 및 연동 ✅
   - BottomSheet + SignatureCanvas 결합
   - "서명 완료" 버튼
 
-- [ ] **Task 4.3.2.3**: `app/(protected)/employer/preview/[id]/actions.ts` 서명 저장 Server Action 구현
+- [x] **Task 4.3.2.3**: `app/(protected)/employer/preview/[id]/actions.ts` 서명 저장 Server Action 구현 ✅
   - signatures 테이블 INSERT
   - contracts 상태 업데이트 (draft → pending)
   - expires_at 설정 (7일 후)
 
-- [ ] **Task 4.3.2.4**: "서명하고 보내기" 버튼 연결
+- [x] **Task 4.3.2.4**: "서명하고 보내기" 버튼 연결 ✅
   - 서명 완료 후 공유 옵션 표시
   - 알림톡 발송 트리거 (별도 Task)
 
