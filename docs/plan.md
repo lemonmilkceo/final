@@ -919,16 +919,18 @@
 #### Story 8.1.1: 인앱 알림
 > 예상 시간: 3시간
 
-- [ ] **Task 8.1.1.1**: 알림 목록 BottomSheet UI 구현
+- [x] **Task 8.1.1.1**: 알림 목록 BottomSheet UI 구현 ✅
   - 참조: `IA` 섹션 9 (모달/팝업 구조)
   - 알림 아이템 목록
   - 읽음/안읽음 구분
 
-- [ ] **Task 8.1.1.2**: 알림 읽음 처리 Server Action 구현
+- [x] **Task 8.1.1.2**: 알림 읽음 처리 Server Action 구현 ✅
   - notifications.is_read 업데이트
+  - markNotificationAsRead, markAllNotificationsAsRead
 
-- [ ] **Task 8.1.1.3**: Header 알림 아이콘에 뱃지 표시
+- [x] **Task 8.1.1.3**: Header 알림 아이콘에 뱃지 표시 ✅
   - 읽지 않은 알림 수 표시
+  - 대시보드에 알림 연결
 
 ---
 
