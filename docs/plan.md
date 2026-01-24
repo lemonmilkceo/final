@@ -1619,4 +1619,62 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ---
 
+## 📝 Amendment 6: 급여 형태 선택 UI 개선 (2026년 1월 24일)
+
+> **추가일**: 2026년 1월 24일  
+> **변경 사유**: 시급/월급 선택 기능 및 주휴수당 카드 UI 개선  
+> **우선순위**: P1  
+> **상태**: ✅ 완료
+
+---
+
+### Epic A6.1: Step3Wage UI 전면 리디자인
+> 예상 시간: 1시간 | **상태: ✅ 완료**
+
+- [x] **Task A6.1.1**: contractFormStore에 wageType, monthlyWage 필드 추가
+- [x] **Task A6.1.2**: 시급/월급 선택 카드 UI 구현
+- [x] **Task A6.1.3**: 시급 입력 UI (둥근 박스 스타일)
+- [x] **Task A6.1.4**: 월급 입력 UI 구현
+- [x] **Task A6.1.5**: 주휴수당 체크박스 카드형 UI 구현
+- [x] **Task A6.1.6**: 주휴수당 체크 시 최저시급 안내 추가
+
+---
+
+### Epic A6.2: 최저시급 업데이트
+> 예상 시간: 15분 | **상태: ✅ 완료**
+
+- [x] **Task A6.2.1**: lib/utils/validation.ts - MINIMUM_WAGE_2026 = 10360
+- [x] **Task A6.2.2**: app/api/ai-review/route.ts - MINIMUM_WAGE = 10360
+- [x] **Task A6.2.3**: lib/constants/sampleData.ts - hourly_wage 업데이트
+- [x] **Task A6.2.4**: 테스트 파일 최저시급 업데이트
+
+---
+
+### Epic A6.3: 스키마 문서화 (DB 마이그레이션 대기)
+> 예상 시간: 10분 | **상태: ✅ 완료**
+
+- [x] **Task A6.3.1**: schema.md에 wage_type, monthly_wage 컬럼 문서화
+- [ ] **Task A6.3.2**: Supabase 마이그레이션 (사용자 수동 실행 필요)
+
+---
+
+## 📊 Amendment 6 완료 요약
+
+| Task | 상태 | 설명 |
+|------|------|------|
+| A6.1.1 | ✅ | wageType: 'hourly' \| 'monthly' 추가 |
+| A6.1.2 | ✅ | 시급/월급 2열 카드 선택 |
+| A6.1.3 | ✅ | 시급 입력 (둥근 박스 + 최저시급 안내) |
+| A6.1.4 | ✅ | 월급 입력 필드 |
+| A6.1.5 | ✅ | 주휴수당 카드형 체크박스 |
+| A6.1.6 | ✅ | 체크 시 "12,432원 이상이어야 해요" 안내 |
+| A6.2.1~4 | ✅ | 최저시급 10,030 → 10,360원 |
+| A6.3.1 | ✅ | 스키마 문서화 완료 |
+
+---
+
+> **Amendment 6 끝**
+
+---
+
 > **문서 끝**

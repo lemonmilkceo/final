@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // 최저시급 (2026년 기준)
-export const MINIMUM_WAGE_2026 = 10030;
+export const MINIMUM_WAGE_2026 = 10360;
 
 // 사업장 규모 enum
 export const businessSizeSchema = z.enum(['under_5', 'over_5']);

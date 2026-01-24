@@ -13,7 +13,7 @@ const getOpenAIClient = () => {
 };
 
 // 최저시급 (2026년 기준 예상치)
-const MINIMUM_WAGE = 10030;
+const MINIMUM_WAGE = 10360;
 
 interface ContractData {
   hourly_wage: number;

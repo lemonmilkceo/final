@@ -66,7 +66,7 @@ const GUEST_SAMPLE_CONTRACTS = [
     id: 'sample-5',
     worker_name: '최유진',
     work_location: '역삼 직화삼겹',
-    hourly_wage: 10030,
+    hourly_wage: 10360,
     status: 'completed' as const,
     created_at: new Date(Date.now() - 7 * 86400000).toISOString(),
     folder_id: null,

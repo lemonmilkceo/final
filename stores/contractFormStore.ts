@@ -2,10 +2,14 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { BusinessSize } from '@/types';
 
+export type WageType = 'hourly' | 'monthly';
+
 export interface ContractFormData {
   businessSize: BusinessSize | null;
   workerName: string;
+  wageType: WageType;
   hourlyWage: number | null;
+  monthlyWage: number | null;
   includesWeeklyAllowance: boolean;
   startDate: string;
   endDate: string | null;
@@ -36,7 +40,9 @@ const TOTAL_STEPS = 10;
 const initialData: ContractFormData = {
   businessSize: null,
   workerName: '',
+  wageType: 'hourly',
   hourlyWage: null,
+  monthlyWage: null,
   includesWeeklyAllowance: false,
   startDate: '',
   endDate: null,

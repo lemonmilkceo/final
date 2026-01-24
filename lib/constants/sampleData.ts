@@ -7,7 +7,7 @@ export const SAMPLE_EMPLOYER_CONTRACTS = [
   {
     id: 'sample-1',
     worker_name: '김민수',
-    hourly_wage: 10030,
+    hourly_wage: 10360,
     status: 'completed' as const,
     created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
     folder_id: null,
@@ -74,7 +74,7 @@ export const SAMPLE_CONTRACT_DETAILS: Record<string, {
   'sample-1': {
     id: 'sample-1',
     worker_name: '김민수',
-    hourly_wage: 10030,
+    hourly_wage: 10360,
     includes_weekly_allowance: true,
     status: 'completed',
     business_size: 'over_5',

@@ -1231,3 +1231,62 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 > **Amendment 3 끝**
+
+---
+
+## 📝 Amendment 6: 급여 형태 확장 (2026년 1월 24일)
+
+> **버전**: 1.6  
+> **변경 사유**: 시급/월급 선택 기능 및 2026년 최저시급 업데이트
+
+### A6.1 스키마 변경 사항
+
+#### contracts 테이블에 컬럼 추가 필요
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `wage_type` | `text` | NO | `'hourly'` | 급여 형태 ('hourly' \| 'monthly') |
+| `monthly_wage` | `integer` | YES | `NULL` | 월급 금액 (월급제일 때만 사용) |
+
+**마이그레이션 SQL:**
+```sql
+-- 급여 형태 컬럼 추가
+ALTER TABLE contracts ADD COLUMN wage_type text NOT NULL DEFAULT 'hourly';
+
+-- 월급 컬럼 추가
+ALTER TABLE contracts ADD COLUMN monthly_wage integer;
+
+-- 급여 형태 제약 조건
+ALTER TABLE contracts ADD CONSTRAINT check_wage_type 
+  CHECK (wage_type IN ('hourly', 'monthly'));
+
+-- 월급제일 때 monthly_wage 필수
+ALTER TABLE contracts ADD CONSTRAINT check_monthly_wage_required 
+  CHECK (
+    (wage_type = 'monthly' AND monthly_wage IS NOT NULL AND monthly_wage > 0) OR
+    (wage_type = 'hourly' AND monthly_wage IS NULL)
+  );
+```
+
+### A6.2 최저시급 업데이트
+
+| 항목 | 이전 | 변경 |
+|------|------|------|
+| 2026년 최저시급 | 10,030원 | **10,360원** |
+| 주휴수당 포함 시 최저시급 | 없음 | **12,432원** (10,360 × 1.2) |
+
+**영향받는 파일:**
+- `lib/utils/validation.ts` - MINIMUM_WAGE_2026 상수
+- `app/api/ai-review/route.ts` - AI 검토 최저시급
+- `lib/constants/sampleData.ts` - 샘플 데이터
+- `components/contract/ContractForm/Step3Wage.tsx` - UI 상수
+
+### A6.3 현재 상태
+
+- **코드**: wage_type, monthly_wage 필드 추가 완료 (contractFormStore)
+- **DB**: 마이그레이션 대기 중
+- **최저시급**: 10,360원으로 업데이트 완료
+
+---
+
+> **Amendment 6 끝**

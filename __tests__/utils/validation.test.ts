@@ -8,7 +8,7 @@ import {
 
 describe('MINIMUM_WAGE_2026', () => {
   it('2026년 최저시급이 올바르게 설정되어야 한다', () => {
-    expect(MINIMUM_WAGE_2026).toBe(10030);
+    expect(MINIMUM_WAGE_2026).toBe(10360);
   });
 });
 
@@ -16,7 +16,7 @@ describe('contractFormSchema', () => {
   const validFormData: ContractFormInput = {
     businessSize: 'under_5',
     workerName: '홍길동',
-    hourlyWage: 10030,
+    hourlyWage: 10360,
     includesWeeklyAllowance: true,
     startDate: '2026-01-01',
     endDate: '2026-12-31',
