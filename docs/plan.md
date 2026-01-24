@@ -599,29 +599,29 @@
 #### Story 4.5.1: 공유 기능 구현
 > 예상 시간: 4시간
 
-- [ ] **Task 4.5.1.1**: `lib/kakao.ts` 카카오 SDK 초기화 및 공유 유틸 작성
+- [x] **Task 4.5.1.1**: `lib/kakao.ts` 카카오 SDK 초기화 및 공유 유틸 작성 ✅
   - 참조: `Rules` 섹션 6.1 (카카오톡 공유)
-  - initKakao, shareContract 함수
+  - initKakao, shareContractViaKakao 함수
 
-- [ ] **Task 4.5.1.2**: `app/layout.tsx`에 카카오 SDK 스크립트 추가
+- [x] **Task 4.5.1.2**: `app/layout.tsx`에 카카오 SDK 스크립트 추가 ✅
   - Script 컴포넌트로 SDK 로드
 
-- [ ] **Task 4.5.1.3**: `lib/utils/share.ts` 링크 복사 유틸 작성
+- [x] **Task 4.5.1.3**: `lib/utils/share.ts` 링크 복사 유틸 작성 ✅
   - `copyContractLink(shareToken)` 함수
   - Clipboard API 사용
 
-- [ ] **Task 4.5.1.4**: PDF 생성 패키지 설치 및 설정
+- [x] **Task 4.5.1.4**: PDF 생성 패키지 설치 및 설정 ✅
   ```bash
   npm install @react-pdf/renderer
   ```
 
-- [ ] **Task 4.5.1.5**: `app/api/pdf/generate/route.ts` PDF 생성 API Route 구현
+- [x] **Task 4.5.1.5**: `app/api/pdf/generate/route.ts` PDF 생성 API Route 구현 ✅
   - 계약서 데이터로 PDF 생성
-  - Storage에 업로드
-  - contracts.pdf_url 업데이트
+  - Base64 인코딩 반환
+  - 다운로드 기능 연동
 
-- [ ] **Task 4.5.1.6**: 공유 버튼들 기능 연결
-  - 카카오톡 공유 → shareContract 호출
+- [x] **Task 4.5.1.6**: 공유 버튼들 기능 연결 ✅
+  - 카카오톡 공유 → shareContractViaKakao 호출
   - 링크 복사 → copyContractLink 호출
   - PDF 다운로드 → API 호출 후 다운로드
 
