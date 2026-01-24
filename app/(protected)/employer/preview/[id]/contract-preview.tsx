@@ -7,12 +7,21 @@ import BottomSheet from '@/components/ui/BottomSheet';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import SignatureCanvas from '@/components/contract/SignatureCanvas';
 import Toast from '@/components/ui/Toast';
+import AIReviewSheet from '@/components/contract/AIReviewSheet';
 import { useContractFormStore } from '@/stores/contractFormStore';
 import { createContract } from '@/app/(protected)/employer/create/actions';
 import { signContract, sendContract } from './actions';
 import { formatCurrency } from '@/lib/utils/format';
 import clsx from 'clsx';
 import type { ContractStatus } from '@/types';
+
+interface ReviewItem {
+  category: string;
+  status: 'pass' | 'warning' | 'fail';
+  title: string;
+  description: string;
+  suggestion: string | null;
+}
 
 // 미리보기에서 사용하는 계약서 타입
 interface PreviewContract {
@@ -59,6 +68,14 @@ export default function ContractPreview({
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  
+  // AI Review 상태
+  const [isAIReviewLoading, setIsAIReviewLoading] = useState(false);
+  const [isAIReviewSheetOpen, setIsAIReviewSheetOpen] = useState(false);
+  const [aiReviewResult, setAiReviewResult] = useState<{
+    overall_status: 'pass' | 'warning' | 'fail';
+    items: ReviewItem[];
+  } | null>(null);
 
   // 사업자가 이미 서명했는지 확인
   const employerSigned = contract?.signatures?.some(
@@ -238,6 +255,51 @@ export default function ContractPreview({
     },
   ];
 
+  // AI 검토 요청
+  const handleAIReview = async () => {
+    if (isNew) {
+      setError('계약서를 먼저 저장해주세요');
+      return;
+    }
+
+    if (!contractId) {
+      setError('계약서 ID가 없어요');
+      return;
+    }
+
+    setIsAIReviewLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/ai-review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contractId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 402) {
+          setError('AI 검토 크레딧이 부족해요. 크레딧을 충전해주세요.');
+        } else {
+          setError(data.error || 'AI 검토에 실패했어요');
+        }
+        return;
+      }
+
+      setAiReviewResult({
+        overall_status: data.review.overall_status,
+        items: data.review.review_items || [],
+      });
+      setIsAIReviewSheetOpen(true);
+    } catch {
+      setError('AI 검토 중 오류가 발생했어요');
+    } finally {
+      setIsAIReviewLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
@@ -286,31 +348,48 @@ export default function ContractPreview({
         </div>
 
         {/* AI Review Button */}
-        <button className="w-full mt-4 bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm active:bg-gray-50">
+        <button
+          onClick={handleAIReview}
+          disabled={isAIReviewLoading || isNew}
+          className={clsx(
+            'w-full mt-4 bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm',
+            isAIReviewLoading || isNew
+              ? 'opacity-50 cursor-not-allowed'
+              : 'active:bg-gray-50'
+          )}
+        >
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🤖</span>
+            <span className="text-2xl">
+              {isAIReviewLoading ? '⏳' : '🤖'}
+            </span>
             <div>
               <p className="text-[15px] font-semibold text-gray-900">
-                AI 노무사 검토 받기
+                {isAIReviewLoading ? 'AI가 검토 중이에요...' : 'AI 노무사 검토 받기'}
               </p>
               <p className="text-[13px] text-gray-500">
-                법적 문제가 없는지 확인해요
+                {isNew
+                  ? '계약서를 먼저 저장해주세요'
+                  : '법적 문제가 없는지 확인해요'}
               </p>
             </div>
           </div>
-          <svg
-            className="w-5 h-5 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
+          {isAIReviewLoading ? (
+            <LoadingSpinner variant="inline" className="w-5 h-5" />
+          ) : (
+            <svg
+              className="w-5 h-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          )}
         </button>
 
         {/* Error Message */}
@@ -459,6 +538,16 @@ export default function ContractPreview({
         isVisible={showToast}
         onClose={() => setShowToast(false)}
       />
+
+      {/* AI Review Sheet */}
+      {aiReviewResult && (
+        <AIReviewSheet
+          isOpen={isAIReviewSheetOpen}
+          onClose={() => setIsAIReviewSheetOpen(false)}
+          overallStatus={aiReviewResult.overall_status}
+          items={aiReviewResult.items}
+        />
+      )}
     </div>
   );
 }
