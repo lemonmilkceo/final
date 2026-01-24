@@ -393,21 +393,21 @@
 #### Story 4.1.1: 대시보드 레이아웃 및 데이터 로드
 > 예상 시간: 4시간
 
-- [ ] **Task 4.1.1.1**: `app/(protected)/employer/layout.tsx` 사업자 레이아웃 생성
+- [x] **Task 4.1.1.1**: `app/(protected)/employer/layout.tsx` 사업자 레이아웃 생성 ✅
   - Header, FAB 포함
   - 역할 체크 (employer가 아니면 리다이렉트)
 
-- [ ] **Task 4.1.1.2**: `app/(protected)/employer/page.tsx` 대시보드 Server Component 구현
+- [x] **Task 4.1.1.2**: `app/(protected)/employer/page.tsx` 대시보드 Server Component 구현 ✅
   - 참조: `Rules` 섹션 4.1 (Server Component에서 데이터 로드)
   - contracts 테이블에서 employer_id로 조회
   - 상태별 필터링 데이터 전달
 
-- [ ] **Task 4.1.1.3**: `components/contract/ContractCard.tsx` 계약서 카드 컴포넌트 생성
+- [x] **Task 4.1.1.3**: `components/contract/ContractCard.tsx` 계약서 카드 컴포넌트 생성 ✅
   - 참조: `UI` 섹션 2.1 (Contract Card)
   - 근로자 이름, 시급, 생성일, 상태 배지
   - onClick → 상세 페이지 이동
 
-- [ ] **Task 4.1.1.4**: 대시보드 탭 필터링 및 빈 상태 UI 구현
+- [x] **Task 4.1.1.4**: 대시보드 탭 필터링 및 빈 상태 UI 구현 ✅
   - 참조: `UI` 섹션 2.1 (탭 메뉴, Empty State)
   - TabBar 연동
   - 상태별 필터 (대기중, 완료, 폴더, 휴지통)
@@ -419,17 +419,17 @@
 #### Story 4.2.1: Funnel 기본 구조 및 상태 관리
 > 예상 시간: 2시간
 
-- [ ] **Task 4.2.1.1**: `stores/contractFormStore.ts` Zustand 스토어 생성
+- [x] **Task 4.2.1.1**: `stores/contractFormStore.ts` Zustand 스토어 생성 ✅
   - 참조: `Rules` 섹션 5.1 (Zustand 스토어 규칙)
   - step, data, setStep, nextStep, prevStep, updateData, reset
   - sessionStorage persist
 
-- [ ] **Task 4.2.1.2**: `app/(protected)/employer/create/page.tsx` Funnel 레이아웃 구현
+- [x] **Task 4.2.1.2**: `app/(protected)/employer/create/page.tsx` Funnel 레이아웃 구현 ✅
   - 참조: `UI` 섹션 2.2 (계약서 작성 Funnel)
   - PageHeader (뒤로가기, 진행률)
   - 동적 Step 렌더링
 
-- [ ] **Task 4.2.1.3**: Funnel 네비게이션 로직 구현
+- [x] **Task 4.2.1.3**: Funnel 네비게이션 로직 구현 ✅
   - 이전/다음 버튼 동작
   - Step 완료 조건 검증
   - 마지막 Step에서 미리보기 이동
@@ -439,28 +439,28 @@
 #### Story 4.2.2: Step 1-5 UI 구현
 > 예상 시간: 3시간
 
-- [ ] **Task 4.2.2.1**: `components/contract/ContractForm/Step1BusinessSize.tsx` 구현
+- [x] **Task 4.2.2.1**: `components/contract/ContractForm/Step1BusinessSize.tsx` 구현 ✅
   - 참조: `UI` 섹션 2.2 Step 1
   - 5인 미만/이상 라디오 카드
   - 4대보험 안내 문구
 
-- [ ] **Task 4.2.2.2**: `components/contract/ContractForm/Step2WorkerName.tsx` 구현
+- [x] **Task 4.2.2.2**: `components/contract/ContractForm/Step2WorkerName.tsx` 구현 ✅
   - 참조: `UI` 섹션 2.2 Step 2
   - 언더라인 입력 필드
   - 한글 2-10자 검증
 
-- [ ] **Task 4.2.2.3**: `components/contract/ContractForm/Step3Wage.tsx` 구현
+- [x] **Task 4.2.2.3**: `components/contract/ContractForm/Step3Wage.tsx` 구현 ✅
   - 참조: `UI` 섹션 2.2 Step 3
   - 숫자 입력 (자동 3자리 콤마)
   - 주휴수당 포함 체크박스
   - 최저시급 정보 카드
 
-- [ ] **Task 4.2.2.4**: `components/contract/ContractForm/Step4WorkPeriod.tsx` 구현
+- [x] **Task 4.2.2.4**: `components/contract/ContractForm/Step4WorkPeriod.tsx` 구현 ✅
   - 참조: `UI` 섹션 2.2 Step 4
   - 날짜 피커 (시작일, 종료일)
   - "종료일 없음" 체크박스
 
-- [ ] **Task 4.2.2.5**: `components/contract/ContractForm/Step5WorkDays.tsx` 구현
+- [x] **Task 4.2.2.5**: `components/contract/ContractForm/Step5WorkDays.tsx` 구현 ✅
   - 참조: `UI` 섹션 2.2 Step 5
   - 요일 선택 칩 (월-일)
   - "주 N일" 대체 입력
@@ -470,27 +470,27 @@
 #### Story 4.2.3: Step 6-10 UI 구현
 > 예상 시간: 2시간
 
-- [ ] **Task 4.2.3.1**: `components/contract/ContractForm/Step6WorkTime.tsx` 구현
+- [x] **Task 4.2.3.1**: `components/contract/ContractForm/Step6WorkTime.tsx` 구현 ✅
   - 참조: `UI` 섹션 2.2 Step 6
   - 시간 피커 (시작, 종료)
   - 일 근무시간 자동 계산 표시
 
-- [ ] **Task 4.2.3.2**: `components/contract/ContractForm/Step7BreakTime.tsx` 구현
+- [x] **Task 4.2.3.2**: `components/contract/ContractForm/Step7BreakTime.tsx` 구현 ✅
   - 참조: `UI` 섹션 2.2 Step 7
   - 30분, 60분, 직접입력 버튼
   - 법적 안내 문구
 
-- [ ] **Task 4.2.3.3**: `components/contract/ContractForm/Step8Location.tsx` 구현
+- [x] **Task 4.2.3.3**: `components/contract/ContractForm/Step8Location.tsx` 구현 ✅
   - 참조: `UI` 섹션 2.2 Step 8
   - 주소 검색 버튼 (또는 직접 입력)
   - 주소 API 연동은 별도 Task
 
-- [ ] **Task 4.2.3.4**: `components/contract/ContractForm/Step9JobDescription.tsx` 구현
+- [x] **Task 4.2.3.4**: `components/contract/ContractForm/Step9JobDescription.tsx` 구현 ✅
   - 참조: `UI` 섹션 2.2 Step 9
   - 텍스트 영역
   - 예시 태그 클릭 시 자동 입력
 
-- [ ] **Task 4.2.3.5**: `components/contract/ContractForm/Step10PayDay.tsx` 구현
+- [x] **Task 4.2.3.5**: `components/contract/ContractForm/Step10PayDay.tsx` 구현 ✅
   - 참조: `UI` 섹션 2.2 Step 10
   - 숫자 선택 (1-31)
   - 다음 급여일 자동 계산

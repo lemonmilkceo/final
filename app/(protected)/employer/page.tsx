@@ -1,61 +1,59 @@
 import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
-import Link from 'next/link';
+import EmployerDashboard from './employer-dashboard';
 
 export default async function EmployerDashboardPage() {
   const supabase = await createClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/login');
+    return null;
   }
 
-  // 프로필 조회
+  // 사용자 프로필 조회 (크레딧 포함)
   const { data: profile } = await supabase
     .from('profiles')
-    .select('name, role')
+    .select('name, avatar_url')
     .eq('id', user.id)
     .single();
 
-  // 역할 체크
-  if (profile?.role !== 'employer') {
-    redirect('/worker');
-  }
+  // 크레딧 조회
+  const { data: credit } = await supabase
+    .from('credits')
+    .select('balance')
+    .eq('user_id', user.id)
+    .single();
+
+  // 계약서 목록 조회
+  const { data: contracts } = await supabase
+    .from('contracts')
+    .select(
+      `
+      id,
+      worker_name,
+      hourly_wage,
+      status,
+      created_at,
+      folder_id,
+      signatures (
+        signer_role,
+        signed_at
+      )
+    `
+    )
+    .eq('employer_id', user.id)
+    .order('created_at', { ascending: false });
 
   return (
-    <div className="min-h-screen bg-gray-50 px-6 py-8 safe-top">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <p className="text-gray-500 text-sm">안녕하세요</p>
-          <h1 className="text-xl font-bold text-gray-900">
-            {profile?.name || '사장'}님
-          </h1>
-        </div>
-        <Link
-          href="/auth/signout"
-          className="text-sm text-gray-500 underline"
-        >
-          로그아웃
-        </Link>
-      </div>
-
-      {/* Placeholder Content */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">
-          🎉 사업자 대시보드
-        </h2>
-        <p className="text-gray-500 mb-4">
-          Phase 4에서 계약서 목록, 작성 기능이 구현됩니다.
-        </p>
-        <div className="space-y-2 text-sm text-gray-400">
-          <p>✅ 카카오 로그인 완료</p>
-          <p>✅ 역할 선택 완료</p>
-          <p>⏳ 계약서 작성 기능 (Phase 4)</p>
-        </div>
-      </div>
-    </div>
+    <EmployerDashboard
+      profile={{
+        name: profile?.name || '사장님',
+        avatarUrl: profile?.avatar_url,
+      }}
+      credits={credit?.balance || 0}
+      contracts={contracts || []}
+    />
   );
 }
