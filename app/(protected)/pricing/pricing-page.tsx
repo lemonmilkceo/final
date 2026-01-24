@@ -1,0 +1,245 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import PageHeader from '@/components/layout/PageHeader';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import Toast from '@/components/ui/Toast';
+import PaymentWidget from '@/components/payment/PaymentWidget';
+import { formatCurrency } from '@/lib/utils/format';
+import clsx from 'clsx';
+
+interface PricingPageProps {
+  currentCredits: {
+    contract: number;
+    aiReview: number;
+  };
+  userId: string;
+}
+
+// 상품 정의
+const PRODUCTS = [
+  {
+    id: 'credit_5',
+    name: '계약서 5건',
+    credits: 5,
+    price: 4900,
+    originalPrice: null,
+    popular: false,
+    description: '소규모 사업장 추천',
+  },
+  {
+    id: 'credit_15',
+    name: '계약서 15건',
+    credits: 15,
+    price: 12900,
+    originalPrice: 14700,
+    popular: true,
+    description: '가장 많이 선택해요',
+  },
+  {
+    id: 'credit_50',
+    name: '계약서 50건',
+    credits: 50,
+    price: 39000,
+    originalPrice: 49000,
+    popular: false,
+    description: '대형 사업장 추천',
+  },
+];
+
+export default function PricingPage({
+  currentCredits,
+  userId,
+}: PricingPageProps) {
+  const router = useRouter();
+  const [selectedProduct, setSelectedProduct] = useState(PRODUCTS[1]); // 기본 인기상품
+  const [showPayment, setShowPayment] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+
+  const handlePaymentSuccess = () => {
+    setShowPayment(false);
+    setToastMessage('결제가 완료됐어요! 🎉');
+    setShowToast(true);
+    // 2초 후 새로고침
+    setTimeout(() => {
+      router.refresh();
+    }, 2000);
+  };
+
+  const handlePaymentError = (message: string) => {
+    setShowPayment(false);
+    setToastMessage(message || '결제에 실패했어요');
+    setShowToast(true);
+  };
+
+  const getDiscount = (product: (typeof PRODUCTS)[0]) => {
+    if (!product.originalPrice) return null;
+    const discount = Math.round(
+      ((product.originalPrice - product.price) / product.originalPrice) * 100
+    );
+    return discount;
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <PageHeader title="크레딧 충전" />
+
+      <div className="flex-1 p-5">
+        {/* 현재 보유 크레딧 */}
+        <div className="bg-white rounded-2xl p-5 mb-6">
+          <p className="text-[14px] text-gray-500 mb-2">현재 보유 크레딧</p>
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <p className="text-[24px] font-bold text-gray-900">
+                {currentCredits.contract}
+                <span className="text-[14px] font-normal text-gray-500 ml-1">
+                  건
+                </span>
+              </p>
+              <p className="text-[12px] text-gray-400">계약서 작성</p>
+            </div>
+            <div className="w-px h-10 bg-gray-200" />
+            <div className="flex-1">
+              <p className="text-[24px] font-bold text-gray-900">
+                {currentCredits.aiReview}
+                <span className="text-[14px] font-normal text-gray-500 ml-1">
+                  건
+                </span>
+              </p>
+              <p className="text-[12px] text-gray-400">AI 검토</p>
+            </div>
+          </div>
+        </div>
+
+        {/* 상품 목록 */}
+        <div className="space-y-3 mb-6">
+          <p className="text-[16px] font-semibold text-gray-900">
+            충전할 크레딧 선택
+          </p>
+
+          {PRODUCTS.map((product) => {
+            const isSelected = selectedProduct.id === product.id;
+            const discount = getDiscount(product);
+
+            return (
+              <button
+                key={product.id}
+                onClick={() => setSelectedProduct(product)}
+                className={clsx(
+                  'w-full bg-white rounded-2xl p-5 text-left transition-all',
+                  'border-2',
+                  isSelected
+                    ? 'border-blue-500 shadow-md'
+                    : 'border-transparent'
+                )}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[17px] font-bold text-gray-900">
+                        {product.name}
+                      </span>
+                      {product.popular && (
+                        <span className="bg-blue-500 text-white text-[11px] font-medium px-2 py-0.5 rounded-full">
+                          인기
+                        </span>
+                      )}
+                      {discount && (
+                        <span className="bg-red-500 text-white text-[11px] font-medium px-2 py-0.5 rounded-full">
+                          {discount}% 할인
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[13px] text-gray-500">
+                      {product.description}
+                    </p>
+                  </div>
+
+                  <div className="text-right">
+                    {product.originalPrice && (
+                      <p className="text-[13px] text-gray-400 line-through">
+                        {formatCurrency(product.originalPrice)}
+                      </p>
+                    )}
+                    <p className="text-[18px] font-bold text-gray-900">
+                      {formatCurrency(product.price)}
+                    </p>
+                    <p className="text-[11px] text-gray-400">
+                      건당{' '}
+                      {formatCurrency(Math.round(product.price / product.credits))}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 선택 인디케이터 */}
+                <div className="mt-3 flex items-center justify-end">
+                  <div
+                    className={clsx(
+                      'w-6 h-6 rounded-full border-2 flex items-center justify-center',
+                      isSelected
+                        ? 'border-blue-500 bg-blue-500'
+                        : 'border-gray-300'
+                    )}
+                  >
+                    {isSelected && (
+                      <svg
+                        className="w-4 h-4 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={3}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* 안내 문구 */}
+        <div className="bg-blue-50 rounded-xl p-4 mb-6">
+          <p className="text-[13px] text-blue-700">
+            💡 <strong>테스트 모드</strong>로 운영 중이에요.
+            <br />
+            카드번호 <code className="bg-blue-100 px-1 rounded">4242 4242 4242 4242</code>로 테스트할 수 있어요.
+          </p>
+        </div>
+      </div>
+
+      {/* 하단 결제 버튼 */}
+      <div className="bg-white border-t border-gray-100 px-5 pt-3 pb-4 safe-bottom">
+        <Button onClick={() => setShowPayment(true)}>
+          {formatCurrency(selectedProduct.price)} 결제하기
+        </Button>
+      </div>
+
+      {/* 결제 위젯 */}
+      {showPayment && (
+        <PaymentWidget
+          product={selectedProduct}
+          userId={userId}
+          onSuccess={handlePaymentSuccess}
+          onError={handlePaymentError}
+          onClose={() => setShowPayment(false)}
+        />
+      )}
+
+      {/* 토스트 */}
+      <Toast
+        message={toastMessage}
+        isVisible={showToast}
+        onClose={() => setShowToast(false)}
+      />
+    </div>
+  );
+}
