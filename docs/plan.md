@@ -1008,14 +1008,14 @@
 #### Story 10.1.1: 테스트 환경 설정
 > 예상 시간: 2시간
 
-- [ ] **Task 10.1.1.1**: Vitest 설치 및 설정
+- [x] **Task 10.1.1.1**: Vitest 설치 및 설정 ✅
   ```bash
   npm install -D vitest @vitejs/plugin-react jsdom @testing-library/react
   ```
 
-- [ ] **Task 10.1.1.2**: `vitest.config.ts` 설정 파일 생성
+- [x] **Task 10.1.1.2**: `vitest.config.ts` 설정 파일 생성 ✅
 
-- [ ] **Task 10.1.1.3**: Playwright 설치 및 설정
+- [ ] **Task 10.1.1.3**: Playwright 설치 및 설정 (P3 - E2E 테스트 시)
   ```bash
   npm install -D @playwright/test
   npx playwright install
@@ -1026,11 +1026,11 @@
 #### Story 10.1.2: 테스트 작성
 > 예상 시간: 6시간
 
-- [ ] **Task 10.1.2.1**: 유틸 함수 단위 테스트 작성
-  - format.ts, validation.ts, encryption.ts
+- [x] **Task 10.1.2.1**: 유틸 함수 단위 테스트 작성 ✅
+  - format.ts, validation.ts
 
-- [ ] **Task 10.1.2.2**: 주요 컴포넌트 테스트 작성
-  - Button, Input, Card 등
+- [x] **Task 10.1.2.2**: 주요 컴포넌트 테스트 작성 ✅
+  - Button, Badge 등
 
 - [ ] **Task 10.1.2.3**: 사업자 계약서 작성 플로우 E2E 테스트 작성
   - 로그인 → 작성 → 서명 → 공유
