@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
+out/
+build/
+
+# Package files
+package-lock.json
+
+# Generated types
+types/database.ts
+
+# Env files
+.env*

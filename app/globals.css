@@ -1,26 +1,456 @@
 @import "tailwindcss";
 
+/* ================================================
+   싸인해주세요 (SignPlease) Design System
+   Based on UI_Spec.md - Toss-style Radical Simplicity
+   ================================================ */
+
+/* ================================================
+   1. CSS Variables & Theme Configuration
+   ================================================ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Primary */
+  --primary: #3182F6;
+  --primary-light: #EBF4FF;
+  
+  /* Neutral */
+  --white: #FFFFFF;
+  --gray-50: #F9FAFB;
+  --gray-100: #F3F4F6;
+  --gray-200: #E5E7EB;
+  --gray-300: #D1D5DB;
+  --gray-400: #9CA3AF;
+  --gray-500: #6B7280;
+  --gray-700: #374151;
+  --gray-900: #191F28;
+  
+  /* Semantic */
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --error: #EF4444;
+  
+  /* Kakao */
+  --kakao: #FEE500;
+  --kakao-text: #191919;
+  
+  /* Background */
+  --background: var(--white);
+  --foreground: var(--gray-900);
 }
 
+/* Tailwind v4 Theme Configuration */
 @theme inline {
+  /* Colors */
+  --color-primary: var(--primary);
+  --color-primary-light: var(--primary-light);
+  
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  
+  --color-kakao: var(--kakao);
+  --color-kakao-text: var(--kakao-text);
+  
+  /* Custom Animations */
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-fade-in-up: fade-in-up 0.3s ease-out;
+  --animate-slide-up: slide-up 0.3s ease-out;
+  --animate-bounce-slow: bounce 2s infinite;
+  
+  /* Font Family */
+  --font-sans: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ================================================
+   2. Keyframe Animations
+   ================================================ */
+@keyframes fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes fade-in-up {
+  0% { 
+    opacity: 0; 
+    transform: translateY(10px); 
   }
+  100% { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes slide-up {
+  0% { transform: translateY(100%); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ================================================
+   3. Base Styles
+   ================================================ */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ================================================
+   4. Typography Classes
+   ================================================ */
+.text-hero {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.text-title {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.text-subtitle {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.text-body {
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.text-caption {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.text-small {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* ================================================
+   5. Button Components
+   ================================================ */
+.btn-primary {
+  width: 100%;
+  padding: 16px;
+  border-radius: 16px;
+  background-color: #3182F6;
+  color: white;
+  font-weight: 600;
+  font-size: 18px;
+  transition: background-color 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary:active {
+  background-color: #1D6FE3;
+}
+
+.btn-primary:disabled {
+  background-color: #E5E7EB;
+  color: #9CA3AF;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  width: 100%;
+  padding: 16px;
+  border-radius: 16px;
+  background-color: #F3F4F6;
+  color: #191F28;
+  font-weight: 600;
+  font-size: 18px;
+  transition: background-color 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-secondary:active {
+  background-color: #E5E7EB;
+}
+
+.btn-kakao {
+  width: 100%;
+  padding: 16px;
+  border-radius: 16px;
+  background-color: #FEE500;
+  color: #191919;
+  font-weight: 600;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-kakao:active {
+  background-color: #E6CF00;
+}
+
+.btn-ghost {
+  color: #6B7280;
+  font-size: 15px;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+/* ================================================
+   6. Card Components
+   ================================================ */
+.card {
+  background-color: white;
+  border-radius: 16px;
+  padding: 20px;
+  transition: background-color 0.2s;
+}
+
+.card:active {
+  background-color: #F9FAFB;
+}
+
+.card-elevated {
+  background-color: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* ================================================
+   7. Input Components
+   ================================================ */
+.input-underline {
+  width: 100%;
+  border: none;
+  border-bottom: 2px solid #E5E7EB;
+  background: transparent;
+  font-size: 28px;
+  font-weight: 700;
+  color: #191F28;
+  padding: 8px 0;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input-underline::placeholder {
+  color: #D1D5DB;
+}
+
+.input-underline:focus {
+  border-color: #3182F6;
+}
+
+.input-box {
+  width: 100%;
+  background-color: #F3F4F6;
+  border-radius: 16px;
+  padding: 16px 20px;
+  font-size: 17px;
+  color: #191F28;
+  border: 2px solid transparent;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input-box::placeholder {
+  color: #9CA3AF;
+}
+
+.input-box:focus {
+  border-color: #3182F6;
+}
+
+/* ================================================
+   8. Badge Components
+   ================================================ */
+.badge-waiting {
+  background-color: #FEF3C7;
+  color: #D97706;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badge-complete {
+  background-color: #D1FAE5;
+  color: #059669;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badge-expired {
+  background-color: #F3F4F6;
+  color: #6B7280;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* ================================================
+   9. Progress Bar
+   ================================================ */
+.progress-bar {
+  height: 4px;
+  background-color: #F3F4F6;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #3182F6;
+  transition: width 0.3s ease;
+}
+
+/* ================================================
+   10. Bottom Sheet
+   ================================================ */
+.bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: white;
+  border-radius: 24px 24px 0 0;
+  padding: 12px 24px 32px;
+  padding-bottom: max(32px, env(safe-area-inset-bottom));
+}
+
+.bottom-sheet-handle {
+  width: 40px;
+  height: 4px;
+  background-color: #D1D5DB;
+  border-radius: 9999px;
+  margin: 0 auto 24px;
+}
+
+/* ================================================
+   11. Safe Area Utilities
+   ================================================ */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-x {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* ================================================
+   12. Layout Utilities
+   ================================================ */
+.container-mobile {
+  max-width: 448px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background-color: white;
+}
+
+.section-gap {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.item-gap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ================================================
+   13. Animation Utilities
+   ================================================ */
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.animate-bounce-slow {
+  animation: bounce 2s infinite;
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+/* ================================================
+   14. Responsive Adjustments
+   ================================================ */
+@media (min-width: 768px) {
+  .container-mobile {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    border-radius: 24px;
+    margin-top: 32px;
+    margin-bottom: 32px;
+    min-height: calc(100vh - 64px);
+  }
+}
+
+/* ================================================
+   15. Scrollbar Styling
+   ================================================ */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
 }
