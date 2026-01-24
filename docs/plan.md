@@ -289,22 +289,22 @@
 #### Story 3.1.1: 기본 UI 컴포넌트 (Part 1)
 > 예상 시간: 3시간
 
-- [ ] **Task 3.1.1.1**: `components/ui/Input.tsx` 입력 필드 컴포넌트 생성
+- [x] **Task 3.1.1.1**: `components/ui/Input.tsx` 입력 필드 컴포넌트 생성 ✅
   - 참조: `UI` 섹션 0.4 (Input Fields)
   - variant: underline, box
   - Props: label, error, helper
 
-- [ ] **Task 3.1.1.2**: `components/ui/Card.tsx` 카드 컴포넌트 생성
+- [x] **Task 3.1.1.2**: `components/ui/Card.tsx` 카드 컴포넌트 생성 ✅
   - 참조: `UI` 섹션 0.4 (Cards)
   - variant: default, elevated
   - Props: onClick, children
 
-- [ ] **Task 3.1.1.3**: `components/ui/Badge.tsx` 배지 컴포넌트 생성
+- [x] **Task 3.1.1.3**: `components/ui/Badge.tsx` 배지 컴포넌트 생성 ✅
   - 참조: `UI` 섹션 0.4 (Chip / Badge)
   - variant: waiting, complete, expired
   - Props: children
 
-- [ ] **Task 3.1.1.4**: `components/ui/ProgressBar.tsx` 진행률 바 컴포넌트 생성
+- [x] **Task 3.1.1.4**: `components/ui/ProgressBar.tsx` 진행률 바 컴포넌트 생성 ✅
   - 참조: `UI` 섹션 0.4 (Progress Bar)
   - Props: current, total, showLabel
 
@@ -313,25 +313,25 @@
 #### Story 3.1.2: 기본 UI 컴포넌트 (Part 2)
 > 예상 시간: 3시간
 
-- [ ] **Task 3.1.2.1**: `components/ui/BottomSheet.tsx` 바텀시트 컴포넌트 생성
+- [x] **Task 3.1.2.1**: `components/ui/BottomSheet.tsx` 바텀시트 컴포넌트 생성 ✅
   - 참조: `UI` 섹션 0.4 (Bottom Sheet)
   - Props: isOpen, onClose, title, children
   - 핸들 바, 백드롭 포함
 
-- [ ] **Task 3.1.2.2**: `components/ui/Toast.tsx` 토스트 컴포넌트 생성
+- [x] **Task 3.1.2.2**: `components/ui/Toast.tsx` 토스트 컴포넌트 생성 ✅
   - 참조: `UI` 섹션 5.1 (Toast Message)
   - variant: success, error
   - 자동 dismiss 로직
 
-- [ ] **Task 3.1.2.3**: `components/ui/LoadingSpinner.tsx` 로딩 컴포넌트 생성
+- [x] **Task 3.1.2.3**: `components/ui/LoadingSpinner.tsx` 로딩 컴포넌트 생성 ✅
   - 참조: `UI` 섹션 5.2 (Loading State)
   - variant: fullPage, inline, button
 
-- [ ] **Task 3.1.2.4**: `components/shared/EmptyState.tsx` 빈 상태 컴포넌트 생성
+- [x] **Task 3.1.2.4**: `components/shared/EmptyState.tsx` 빈 상태 컴포넌트 생성 ✅
   - 참조: `UI` 섹션 5.3 (Empty State)
   - Props: icon, title, description, actionLabel, onAction
 
-- [ ] **Task 3.1.2.5**: `components/ui/ConfirmSheet.tsx` 확인 바텀시트 컴포넌트 생성
+- [x] **Task 3.1.2.5**: `components/ui/ConfirmSheet.tsx` 확인 바텀시트 컴포넌트 생성 ✅
   - 참조: `UI` 섹션 5.4 (Confirmation Modal)
   - Props: isOpen, title, description, confirmLabel, onConfirm, onCancel
 
@@ -340,23 +340,23 @@
 #### Story 3.1.3: 레이아웃 컴포넌트
 > 예상 시간: 3시간
 
-- [ ] **Task 3.1.3.1**: `components/layout/Header.tsx` 헤더 컴포넌트 생성
+- [x] **Task 3.1.3.1**: `components/layout/Header.tsx` 헤더 컴포넌트 생성 ✅
   - 참조: `UI` 섹션 2.1 (사업자 대시보드 헤더)
   - Props: showProfile, showNotification, credits
 
-- [ ] **Task 3.1.3.2**: `components/layout/PageHeader.tsx` 페이지 헤더 컴포넌트 생성
+- [x] **Task 3.1.3.2**: `components/layout/PageHeader.tsx` 페이지 헤더 컴포넌트 생성 ✅
   - 참조: `UI` 섹션 2.2 (계약서 작성 헤더)
   - Props: title, onBack, rightElement, progress
 
-- [ ] **Task 3.1.3.3**: `components/layout/TabBar.tsx` 탭 바 컴포넌트 생성
+- [x] **Task 3.1.3.3**: `components/layout/TabBar.tsx` 탭 바 컴포넌트 생성 ✅
   - 참조: `UI` 섹션 2.1 (Tab Bar)
   - Props: tabs, activeTab, onTabChange
 
-- [ ] **Task 3.1.3.4**: `components/layout/BottomNav.tsx` 하단 네비게이션 컴포넌트 생성
+- [x] **Task 3.1.3.4**: `components/layout/BottomNav.tsx` 하단 네비게이션 컴포넌트 생성 ✅
   - 참조: `UI` 섹션 3.2 (근로자 대시보드)
   - 홈, 채팅, 경력, 설정 4개 탭
 
-- [ ] **Task 3.1.3.5**: `components/layout/FAB.tsx` FAB 컴포넌트 생성
+- [x] **Task 3.1.3.5**: `components/layout/FAB.tsx` FAB 컴포넌트 생성 ✅
   - 참조: `UI` 섹션 2.1 (FAB 버튼)
   - Props: onClick, icon
 
@@ -365,20 +365,20 @@
 #### Story 3.1.4: 스플래시 & 온보딩 화면
 > 예상 시간: 3시간
 
-- [ ] **Task 3.1.4.1**: `app/page.tsx` 스플래시 화면 UI 구현
+- [x] **Task 3.1.4.1**: `app/page.tsx` 스플래시 화면 UI 구현 ✅
   - 참조: `UI` 섹션 1.1 (스플래시)
   - 로고, 서비스명, 로딩 도트 애니메이션
 
-- [ ] **Task 3.1.4.2**: `app/page.tsx` 스플래시 자동 리다이렉트 로직 구현
+- [x] **Task 3.1.4.2**: `app/page.tsx` 스플래시 자동 리다이렉트 로직 구현 ✅
   - 2초 후 자동 이동
   - 로그인 상태 체크 후 분기 (로그인 → 대시보드, 비로그인 → 온보딩)
 
-- [ ] **Task 3.1.4.3**: `app/(public)/onboarding/page.tsx` 온보딩 슬라이드 UI 구현
+- [x] **Task 3.1.4.3**: `app/(public)/onboarding/page.tsx` 온보딩 슬라이드 UI 구현 ✅
   - 참조: `UI` 섹션 1.2 (온보딩)
   - 3장 슬라이드 (일러스트, 타이틀, 설명)
   - 인디케이터
 
-- [ ] **Task 3.1.4.4**: `app/(public)/onboarding/page.tsx` 스와이프 및 버튼 로직 구현
+- [x] **Task 3.1.4.4**: `app/(public)/onboarding/page.tsx` 스와이프 및 버튼 로직 구현 ✅
   - 스와이프로 슬라이드 전환 (swipe library or touch events)
   - "시작하기" → 회원가입
   - "둘러보기" → 게스트 모드
