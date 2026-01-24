@@ -877,14 +877,14 @@
 #### Story 7.1.1: 채팅 목록
 > 예상 시간: 3시간
 
-- [ ] **Task 7.1.1.1**: `app/(protected)/employer/chat/page.tsx` 사업자 채팅 목록 구현
+- [x] **Task 7.1.1.1**: `app/(protected)/employer/chat/page.tsx` 사업자 채팅 목록 구현 ✅
   - contracts 기반 채팅방 목록
   - 마지막 메시지, 시간 표시
 
-- [ ] **Task 7.1.1.2**: `app/(protected)/worker/chat/page.tsx` 근로자 채팅 목록 구현
+- [x] **Task 7.1.1.2**: `app/(protected)/worker/chat/page.tsx` 근로자 채팅 목록 구현 ✅
   - 동일 구조
 
-- [ ] **Task 7.1.1.3**: 읽지 않은 메시지 배지 구현
+- [x] **Task 7.1.1.3**: 읽지 않은 메시지 배지 구현 ✅
   - chat_messages.is_read 카운트
 
 ---
@@ -892,20 +892,20 @@
 #### Story 7.1.2: 채팅방 상세
 > 예상 시간: 4시간
 
-- [ ] **Task 7.1.2.1**: 채팅방 UI 구현
+- [x] **Task 7.1.2.1**: 채팅방 UI 구현 ✅
   - 참조: `PRD` 섹션 4.4.2 (채팅방 상세)
   - 메시지 목록 (발신/수신 구분)
   - 입력창
 
-- [ ] **Task 7.1.2.2**: 메시지 전송 Server Action 구현
+- [x] **Task 7.1.2.2**: 메시지 전송 Server Action 구현 ✅
   - chat_messages INSERT
   - 상대방 읽음 상태 초기화
 
-- [ ] **Task 7.1.2.3**: Supabase Realtime 구독 설정
+- [x] **Task 7.1.2.3**: Supabase Realtime 구독 설정 ✅
   - chat_messages 테이블 실시간 구독
   - 새 메시지 수신 시 UI 업데이트
 
-- [ ] **Task 7.1.2.4**: 파일 첨부 기능 구현
+- [ ] **Task 7.1.2.4**: 파일 첨부 기능 구현 (P3 - 추후 구현)
   - 이미지/PDF 업로드
   - chat-files 버킷 저장
 
