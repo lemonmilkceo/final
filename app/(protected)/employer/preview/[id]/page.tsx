@@ -1,13 +1,13 @@
+import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { redirect, notFound } from 'next/navigation';
-import { ROUTES } from '@/lib/constants/routes';
 import ContractPreview from './contract-preview';
+import { ROUTES } from '@/lib/constants/routes';
 
-interface PageProps {
+interface PreviewPageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function ContractPreviewPage({ params }: PageProps) {
+export default async function PreviewPage({ params }: PreviewPageProps) {
   const { id } = await params;
   const supabase = await createClient();
 
@@ -19,9 +19,9 @@ export default async function ContractPreviewPage({ params }: PageProps) {
     redirect(ROUTES.LOGIN);
   }
 
-  // 새 계약서인 경우 (아직 저장되지 않음)
+  // 새 계약서 (store에서 데이터 가져오기)
   if (id === 'new') {
-    return <ContractPreview contract={null} isNew={true} />;
+    return <ContractPreview contractId={null} isNew={true} />;
   }
 
   // 기존 계약서 조회
@@ -46,5 +46,5 @@ export default async function ContractPreviewPage({ params }: PageProps) {
     notFound();
   }
 
-  return <ContractPreview contract={contract} isNew={false} />;
+  return <ContractPreview contractId={id} contract={contract} isNew={false} />;
 }
