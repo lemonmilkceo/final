@@ -179,3 +179,13 @@ export function formatPhoneNumber(phone: string): string {
 export function formatWorkDays(days: string[]): string {
   return days.join(', ');
 }
+
+/**
+ * 상대적 시간 표시 (채팅용 - 방금 전, n분 전, n시간 전 등)
+ * @param date 날짜
+ * @returns "방금 전", "5분 전", "2시간 전", "어제" 등
+ */
+export function formatRelativeTime(date: string | Date): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return formatDistanceToNow(d, { addSuffix: true, locale: ko });
+}
