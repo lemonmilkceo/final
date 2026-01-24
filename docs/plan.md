@@ -632,12 +632,12 @@
 #### Story 4.6.1: 계약서 상세 화면
 > 예상 시간: 2시간
 
-- [ ] **Task 4.6.1.1**: `app/(protected)/employer/contract/[id]/page.tsx` Server Component 구현
+- [x] **Task 4.6.1.1**: `app/(protected)/employer/contract/[id]/page.tsx` Server Component 구현 ✅
   - 계약서 데이터 조회
   - 서명 현황 조회
   - AI 검토 결과 조회
 
-- [ ] **Task 4.6.1.2**: 계약서 상세 UI 구현
+- [x] **Task 4.6.1.2**: 계약서 상세 UI 구현 ✅
   - 참조: `PRD` 섹션 4.2.4 (계약서 상세)
   - 상태 배지, 계약서 본문, 서명 현황
   - 액션 버튼 (PDF, 재전송, 삭제)
@@ -647,13 +647,13 @@
 #### Story 4.6.2: 계약서 삭제 및 재전송
 > 예상 시간: 1시간
 
-- [ ] **Task 4.6.2.1**: 계약서 삭제 Server Action 구현
+- [x] **Task 4.6.2.1**: 계약서 삭제 Server Action 구현 ✅
   - status → 'deleted', deleted_at 설정
   - revalidatePath 호출
 
-- [ ] **Task 4.6.2.2**: 계약서 재전송 기능 구현
+- [x] **Task 4.6.2.2**: 계약서 재전송 기능 구현 ✅
   - 카카오톡 공유 재호출
-  - 알림톡 재발송
+  - 만료일 연장 (7일)
 
 ---
 
