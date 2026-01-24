@@ -100,6 +100,8 @@ export default function EmployerDashboard({
         return {
           title: '폴더가 비어있어요',
           description: '계약서를 폴더로 정리해보세요',
+          actionLabel: '폴더 관리하기',
+          onAction: () => router.push('/employer/folders'),
         };
       case 'trash':
         return {
