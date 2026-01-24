@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import TabBar from '@/components/layout/TabBar';
 import FAB from '@/components/layout/FAB';
 import ContractCard from '@/components/contract/ContractCard';
 import EmptyState from '@/components/shared/EmptyState';
+import NotificationSheet from '@/components/notification/NotificationSheet';
 import { ROUTES } from '@/lib/constants/routes';
+import { getNotifications, getUnreadNotificationCount } from '@/app/actions/notifications';
 import type { ContractStatus } from '@/types';
 
 // 대시보드에서 사용하는 계약서 타입 (필요한 필드만)
@@ -22,6 +24,15 @@ interface DashboardContract {
     signer_role: 'employer' | 'worker';
     signed_at: string | null;
   }[];
+}
+
+interface Notification {
+  id: string;
+  type: 'contract_sent' | 'contract_signed' | 'contract_expired_soon' | 'contract_expired';
+  title: string;
+  body: string;
+  is_read: boolean;
+  created_at: string;
 }
 
 interface EmployerDashboardProps {
@@ -69,8 +80,31 @@ export default function EmployerDashboard({
 }: EmployerDashboardProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>('pending');
+  const [isNotificationSheetOpen, setIsNotificationSheetOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const filteredContracts = filterContractsByTab(contracts, activeTab);
+
+  // 알림 데이터 로드
+  useEffect(() => {
+    const loadNotifications = async () => {
+      const [notifResult, count] = await Promise.all([
+        getNotifications(),
+        getUnreadNotificationCount(),
+      ]);
+      if (notifResult.success) {
+        setNotifications(notifResult.data as Notification[]);
+      }
+      setUnreadCount(count);
+    };
+    loadNotifications();
+  }, []);
+
+  const handleNotificationsUpdate = async () => {
+    const count = await getUnreadNotificationCount();
+    setUnreadCount(count);
+  };
 
   // 탭별 카운트 계산
   const tabsWithCount = tabs.map((tab) => ({
@@ -121,6 +155,8 @@ export default function EmployerDashboard({
         avatarEmoji="😊"
         showProfile={true}
         showNotification={true}
+        unreadCount={unreadCount}
+        onNotificationClick={() => setIsNotificationSheetOpen(true)}
       />
 
       {/* Tab Bar */}
@@ -163,6 +199,14 @@ export default function EmployerDashboard({
 
       {/* FAB */}
       <FAB onClick={handleCreateContract} />
+
+      {/* Notification Sheet */}
+      <NotificationSheet
+        isOpen={isNotificationSheetOpen}
+        onClose={() => setIsNotificationSheetOpen(false)}
+        notifications={notifications}
+        onNotificationsUpdate={handleNotificationsUpdate}
+      />
     </div>
   );
 }

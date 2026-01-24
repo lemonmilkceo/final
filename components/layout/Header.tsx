@@ -11,6 +11,7 @@ interface HeaderProps {
   credits?: number;
   avatarEmoji?: string;
   unreadCount?: number;
+  onNotificationClick?: () => void;
   className?: string;
 }
 
@@ -20,6 +21,7 @@ const Header: React.FC<HeaderProps> = ({
   credits,
   avatarEmoji = '😊',
   unreadCount = 0,
+  onNotificationClick,
   className,
 }) => {
   return (
@@ -48,7 +50,11 @@ const Header: React.FC<HeaderProps> = ({
         {/* Right Actions */}
         <div className="flex items-center gap-3">
           {showNotification && (
-            <button className="relative">
+            <button 
+              onClick={onNotificationClick}
+              className="relative"
+              aria-label="알림"
+            >
               <svg
                 className="w-6 h-6 text-gray-700"
                 fill="none"
