@@ -49,9 +49,9 @@ export default function CreateContractPage() {
       case 8:
         return <Step8Location />;
       case 9:
-        return <Step9JobDescription />;
+        return <Step10PayDay />; // 임금 지급일 (9번으로 이동)
       case 10:
-        return <Step10PayDay />;
+        return <Step9JobDescription />; // 업무 내용 (10번으로 이동)
       default:
         return <Step1BusinessSize />;
     }

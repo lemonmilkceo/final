@@ -1,12 +1,14 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useContractFormStore } from '@/stores/contractFormStore';
 import clsx from 'clsx';
 
 const EXAMPLE_TAGS = ['홀서빙', '주방보조', '음료 제조', '포장', '배달', '계산'];
 
 export default function Step9JobDescription() {
-  const { data, updateData, nextStep, prevStep } = useContractFormStore();
+  const router = useRouter();
+  const { data, updateData } = useContractFormStore();
 
   const handleTagClick = (tag: string) => {
     const current = data.jobDescription.trim();
@@ -16,9 +18,9 @@ export default function Step9JobDescription() {
     updateData({ jobDescription: newValue });
   };
 
-  const handleNext = () => {
+  const handlePreview = () => {
     if (data.jobDescription.trim()) {
-      nextStep();
+      router.push('/employer/preview/new');
     }
   };
 
@@ -26,7 +28,7 @@ export default function Step9JobDescription() {
 
   return (
     <>
-      <div className="flex-1 px-6 pt-8">
+      <div className="flex-1 px-6 pt-8 overflow-y-auto">
         <h1 className="text-[26px] font-bold text-gray-900 leading-tight mb-8">
           어떤 일을 하나요?
         </h1>
@@ -56,24 +58,31 @@ export default function Step9JobDescription() {
         </div>
       </div>
 
-      <div className="px-6 pb-4 safe-bottom flex gap-3">
+      <div className="px-6 pb-4 safe-bottom">
         <button
-          onClick={prevStep}
-          className="flex-1 py-4 rounded-2xl bg-gray-100 text-gray-700 font-semibold text-lg"
-        >
-          이전
-        </button>
-        <button
-          onClick={handleNext}
+          onClick={handlePreview}
           disabled={!isValid}
           className={clsx(
-            'flex-1 py-4 rounded-2xl font-semibold text-lg transition-colors',
+            'w-full py-4 rounded-2xl font-semibold text-lg transition-colors flex items-center justify-center gap-2',
             isValid
               ? 'bg-blue-500 text-white active:bg-blue-600'
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              : 'bg-blue-300 text-white cursor-not-allowed'
           )}
         >
-          다음
+          계약서 미리보기
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
         </button>
       </div>
     </>
