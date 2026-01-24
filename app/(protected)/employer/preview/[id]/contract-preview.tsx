@@ -8,6 +8,7 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import SignatureCanvas from '@/components/contract/SignatureCanvas';
 import Toast from '@/components/ui/Toast';
 import AIReviewSheet from '@/components/contract/AIReviewSheet';
+import SignupPromptSheet from '@/components/shared/SignupPromptSheet';
 import { useContractFormStore } from '@/stores/contractFormStore';
 import { createContract } from '@/app/(protected)/employer/create/actions';
 import { signContract, sendContract } from './actions';
@@ -89,6 +90,9 @@ export default function ContractPreview({
   const [isPDFLoading, setIsPDFLoading] = useState(false);
   // Share token (from shareUrl)
   const shareToken = shareUrl?.split('/').pop() || '';
+  
+  // 회원가입 안내 팝업
+  const [isSignupPromptOpen, setIsSignupPromptOpen] = useState(false);
 
   // 사업자가 이미 서명했는지 확인
   const employerSigned = contract?.signatures?.some(
@@ -143,10 +147,9 @@ export default function ContractPreview({
   };
 
   const handleSignAndSend = async () => {
-    // 게스트 모드에서는 체험 메시지만 표시
+    // 게스트 모드에서는 회원가입 안내 팝업 표시
     if (isGuestMode) {
-      setToastMessage('🎉 체험 완료! 로그인하면 실제로 계약서를 작성할 수 있어요');
-      setShowToast(true);
+      setIsSignupPromptOpen(true);
       return;
     }
 
@@ -680,6 +683,12 @@ export default function ContractPreview({
           items={aiReviewResult.items}
         />
       )}
+
+      {/* 회원가입 안내 팝업 (게스트 모드) */}
+      <SignupPromptSheet
+        isOpen={isSignupPromptOpen}
+        onClose={() => setIsSignupPromptOpen(false)}
+      />
     </div>
   );
 }
