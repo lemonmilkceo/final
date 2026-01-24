@@ -201,18 +201,18 @@
 #### Story 2.1.1: OAuth 기본 설정
 > 예상 시간: 2시간
 
-- [ ] **Task 2.1.1.1**: 카카오 개발자 콘솔 앱 생성 및 설정
+- [ ] **Task 2.1.1.1**: 카카오 개발자 콘솔 앱 생성 및 설정 ⏳ (사용자 설정 필요)
   - 작업 내용: 
     - 카카오 개발자 콘솔에서 앱 생성
     - 플랫폼 등록 (웹)
     - Redirect URI 설정
   - 출력: 카카오 REST API Key, JavaScript Key
 
-- [ ] **Task 2.1.1.2**: Supabase 대시보드에서 카카오 Provider 활성화
+- [ ] **Task 2.1.1.2**: Supabase 대시보드에서 카카오 Provider 활성화 ⏳ (사용자 설정 필요)
   - Authentication > Providers > Kakao 설정
   - Client ID, Client Secret 입력
 
-- [ ] **Task 2.1.1.3**: `.env.local`에 카카오 환경변수 추가
+- [ ] **Task 2.1.1.3**: `.env.local`에 카카오 환경변수 추가 ⏳ (사용자 설정 필요)
   - `NEXT_PUBLIC_KAKAO_JS_KEY`
   - `KAKAO_REST_API_KEY`
 
@@ -221,21 +221,21 @@
 #### Story 2.1.2: 로그인/회원가입 UI 구현
 > 예상 시간: 3시간
 
-- [ ] **Task 2.1.2.1**: `app/(public)/layout.tsx` 공개 라우트 레이아웃 생성
+- [x] **Task 2.1.2.1**: `app/(public)/layout.tsx` 공개 라우트 레이아웃 생성 ✅
   - 참조: `Rules` 섹션 1 (프로젝트 구조)
   - 기본 HTML 구조, 메타 태그
 
-- [ ] **Task 2.1.2.2**: `components/ui/Button.tsx` 버튼 컴포넌트 생성
+- [x] **Task 2.1.2.2**: `components/ui/Button.tsx` 버튼 컴포넌트 생성 ✅
   - 참조: `UI` 섹션 0.4 (Component Tokens)
   - variant: primary, secondary, kakao, ghost
   - Props: loading, disabled, fullWidth
 
-- [ ] **Task 2.1.2.3**: `app/(public)/signup/page.tsx` 회원가입 페이지 UI 구현
+- [x] **Task 2.1.2.3**: `app/(public)/signup/page.tsx` 회원가입 페이지 UI 구현 ✅
   - 참조: `UI` 섹션 1.3 (회원가입 & 로그인)
   - 로고, 서비스명, 카카오 버튼, 약관 동의 문구
   - 로직 제외, 순수 마크업만
 
-- [ ] **Task 2.1.2.4**: `app/(public)/login/page.tsx` 로그인 페이지 UI 구현
+- [x] **Task 2.1.2.4**: `app/(public)/login/page.tsx` 로그인 페이지 UI 구현 ✅
   - 참조: `UI` 섹션 1.3
   - 회원가입과 동일 구조, 뒤로가기 버튼 추가
 
@@ -244,18 +244,18 @@
 #### Story 2.1.3: OAuth 로직 구현
 > 예상 시간: 2시간
 
-- [ ] **Task 2.1.3.1**: `app/(public)/login/actions.ts` Server Action 작성
+- [x] **Task 2.1.3.1**: `app/(public)/login/actions.ts` Server Action 작성 ✅
   - 참조: `Rules` 섹션 3.1.3 (카카오 OAuth 설정)
   - `signInWithKakao()` 함수 구현
 
-- [ ] **Task 2.1.3.2**: `app/(public)/auth/callback/route.ts` OAuth 콜백 핸들러 구현
+- [x] **Task 2.1.3.2**: `app/(public)/auth/callback/route.ts` OAuth 콜백 핸들러 구현 ✅
   - 참조: `Rules` 섹션 3.1.3
   - 코드 교환, 프로필 역할 확인, 리다이렉트 분기
 
-- [ ] **Task 2.1.3.3**: `app/(public)/auth/signout/route.ts` 로그아웃 핸들러 구현
+- [x] **Task 2.1.3.3**: `app/(public)/auth/signout/route.ts` 로그아웃 핸들러 구현 ✅
   - 세션 종료 후 홈으로 리다이렉트
 
-- [ ] **Task 2.1.3.4**: 로그인/회원가입 페이지에 Server Action 연결
+- [x] **Task 2.1.3.4**: 로그인/회원가입 페이지에 Server Action 연결 ✅
   - 버튼 클릭 시 `signInWithKakao` 호출
 
 ---
@@ -263,20 +263,20 @@
 #### Story 2.1.4: 역할 선택 구현
 > 예상 시간: 2시간
 
-- [ ] **Task 2.1.4.1**: `app/(protected)/layout.tsx` 보호된 라우트 레이아웃 생성
+- [x] **Task 2.1.4.1**: `app/(protected)/layout.tsx` 보호된 라우트 레이아웃 생성 ✅
   - 인증 체크 로직 포함
   - 미인증 시 로그인 리다이렉트
 
-- [ ] **Task 2.1.4.2**: `app/(protected)/select-role/page.tsx` 역할 선택 UI 구현
+- [x] **Task 2.1.4.2**: `app/(protected)/select-role/page.tsx` 역할 선택 UI 구현 ✅
   - 참조: `UI` 섹션 1.4 (역할 선택)
   - 사장님/알바생 카드 2개
   - 로직 제외
 
-- [ ] **Task 2.1.4.3**: `app/(protected)/select-role/actions.ts` 역할 저장 Server Action 구현
+- [x] **Task 2.1.4.3**: `app/(protected)/select-role/actions.ts` 역할 저장 Server Action 구현 ✅
   - profiles 테이블의 role 컬럼 업데이트
   - 역할에 따른 대시보드 리다이렉트
 
-- [ ] **Task 2.1.4.4**: 역할 선택 페이지에 Server Action 연결
+- [x] **Task 2.1.4.4**: 역할 선택 페이지에 Server Action 연결 ✅
   - 카드 선택 시 역할 저장 및 이동
 
 ---
