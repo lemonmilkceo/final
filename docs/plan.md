@@ -776,13 +776,13 @@
   - 터치 시 BottomSheet 표시
   - AI 생성 설명 (또는 사전 정의)
 
-- [ ] **Task 5.3.2.2**: 근로자 서명 Server Action 구현
+- [x] **Task 5.3.2.2**: 근로자 서명 Server Action 구현 ✅
   - signatures 테이블 INSERT
   - contracts 상태 → 'completed'
   - completed_at 설정
   - 사업자에게 알림 (별도 Task)
 
-- [ ] **Task 5.3.2.3**: "서명하고 계약하기" 버튼 연결
+- [x] **Task 5.3.2.3**: "서명하고 계약하기" 버튼 연결 ✅
   - 서명 완료 후 완료 화면 표시
   - 대시보드 이동
 
