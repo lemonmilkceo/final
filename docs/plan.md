@@ -817,18 +817,18 @@
 #### Story 6.1.1: 결제 화면 UI
 > 예상 시간: 3시간
 
-- [ ] **Task 6.1.1.1**: 토스페이먼츠 SDK 설치
+- [x] **Task 6.1.1.1**: 토스페이먼츠 SDK 설치 ✅
   ```bash
   npm install @tosspayments/tosspayments-sdk
   ```
 
-- [ ] **Task 6.1.1.2**: `app/(protected)/pricing/page.tsx` 크레딧 구매 UI 구현
+- [x] **Task 6.1.1.2**: `app/(protected)/pricing/page.tsx` 크레딧 구매 UI 구현 ✅
   - 참조: `UI` 섹션 4.1 (크레딧 구매)
   - 상품 카드 (5개, 15개, 50개)
   - 인기 태그, 할인율 표시
   - 보유 크레딧 표시
 
-- [ ] **Task 6.1.1.3**: 상품 선택 상태 관리 및 결제 버튼 연동
+- [x] **Task 6.1.1.3**: 상품 선택 상태 관리 및 결제 버튼 연동 ✅
   - 선택된 상품 하이라이트
   - "N원 결제하기" 버튼 텍스트 동적 변경
 
@@ -837,22 +837,22 @@
 #### Story 6.1.2: 토스페이먼츠 연동
 > 예상 시간: 4시간
 
-- [ ] **Task 6.1.2.1**: `app/api/payment/prepare/route.ts` 결제 준비 API 구현
+- [x] **Task 6.1.2.1**: `app/api/payment/prepare/route.ts` 결제 준비 API 구현 ✅
   - 참조: `Rules` 섹션 6.3 (토스페이먼츠 연동)
   - 주문 ID 생성
   - payments 테이블 INSERT
 
-- [ ] **Task 6.1.2.2**: `components/payment/PaymentWidget.tsx` 결제 위젯 컴포넌트 구현
+- [x] **Task 6.1.2.2**: `components/payment/PaymentWidget.tsx` 결제 위젯 컴포넌트 구현 ✅
   - 토스페이먼츠 SDK 위젯 렌더링
   - 결제 요청 로직
 
-- [ ] **Task 6.1.2.3**: `app/api/payment/confirm/route.ts` 결제 확인 API 구현
+- [x] **Task 6.1.2.3**: `app/api/payment/confirm/route.ts` 결제 확인 API 구현 ✅
   - 참조: `Rules` 섹션 6.3
   - 토스페이먼츠 승인 API 호출
   - 결제 상태 업데이트
   - 크레딧 지급 (add_credit 함수)
 
-- [ ] **Task 6.1.2.4**: 결제 성공/실패 화면 구현
+- [x] **Task 6.1.2.4**: 결제 성공/실패 화면 구현 ✅
   - 결제 완료 → 성공 메시지 + 대시보드 이동
   - 결제 실패 → 에러 메시지 + 재시도 버튼
 
@@ -861,10 +861,10 @@
 #### Story 6.1.3: 결제 내역
 > 예상 시간: 2시간
 
-- [ ] **Task 6.1.3.1**: `app/(protected)/payment-history/page.tsx` Server Component 구현
+- [x] **Task 6.1.3.1**: `app/(protected)/payment-history/page.tsx` Server Component 구현 ✅
   - payments 테이블 조회 (status = completed)
 
-- [ ] **Task 6.1.3.2**: 결제 내역 목록 UI 구현
+- [x] **Task 6.1.3.2**: 결제 내역 목록 UI 구현 ✅
   - 참조: `PRD` 섹션 4.5.5 (결제 내역)
   - 결제일시, 상품명, 금액, 영수증 링크
 
