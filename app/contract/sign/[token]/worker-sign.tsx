@@ -9,13 +9,37 @@ import Toast from '@/components/ui/Toast';
 import { signAsWorker } from './actions';
 import { formatCurrency } from '@/lib/utils/format';
 import clsx from 'clsx';
-import type { Contract, Signature, Profile } from '@/types';
+
+// 근로자 서명 페이지에서 사용하는 타입
+interface WorkerSignContract {
+  worker_name: string;
+  hourly_wage: number;
+  includes_weekly_allowance: boolean;
+  start_date: string;
+  end_date: string | null;
+  work_days: string[] | null;
+  work_days_per_week: number | null;
+  work_start_time: string;
+  work_end_time: string;
+  break_minutes: number;
+  work_location: string;
+  job_description: string;
+  pay_day: number;
+  signatures?: {
+    id: string;
+    signer_role: 'employer' | 'worker';
+    signed_at: string | null;
+    signature_data: string;
+  }[];
+  employer?: {
+    id: string;
+    name: string | null;
+    phone: string | null;
+  } | null;
+}
 
 interface WorkerSignPageProps {
-  contract: Contract & {
-    signatures?: Signature[];
-    employer?: Pick<Profile, 'id' | 'name' | 'phone'>;
-  };
+  contract: WorkerSignContract;
   token: string;
 }
 

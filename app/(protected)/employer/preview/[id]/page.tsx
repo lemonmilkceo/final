@@ -34,7 +34,7 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
         id,
         signer_role,
         signed_at,
-        signature_image_url
+        signature_data
       )
     `
     )

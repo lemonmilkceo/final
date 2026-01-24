@@ -20,7 +20,7 @@ export default async function SignPage({ params }: SignPageProps) {
         id,
         signer_role,
         signed_at,
-        signature_image_url
+        signature_data
       ),
       employer:profiles!contracts_employer_id_fkey (
         id,

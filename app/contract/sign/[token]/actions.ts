@@ -46,39 +46,23 @@ export async function signAsWorker(
     return { success: false, error: '이미 서명하셨어요' };
   }
 
-  // 서명 이미지를 Storage에 업로드
-  const fileName = `${contract.id}_worker_${Date.now()}.png`;
-  const base64Data = signatureImageData.split(',')[1];
-  const buffer = Buffer.from(base64Data, 'base64');
-
-  const { error: uploadError } = await supabase.storage
-    .from('signatures')
-    .upload(fileName, buffer, {
-      contentType: 'image/png',
-      upsert: false,
-    });
-
-  if (uploadError) {
-    console.error('Signature upload error:', uploadError);
-    return { success: false, error: '서명 저장에 실패했어요' };
-  }
-
-  // 서명 URL 가져오기
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from('signatures').getPublicUrl(fileName);
-
   // 현재 사용자 확인 (로그인한 경우)
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 서명 레코드 생성
+  // user_id는 필수이므로 로그인하지 않은 경우 처리 필요
+  // 스키마상 user_id가 NOT NULL이므로, 로그인하지 않은 사용자는 서명할 수 없음
+  if (!user) {
+    return { success: false, error: '서명하려면 로그인이 필요해요' };
+  }
+
+  // 서명 레코드 생성 (Base64 Data URL 직접 저장)
   const { error: signatureError } = await supabase.from('signatures').insert({
     contract_id: contract.id,
-    user_id: user?.id || null, // 로그인하지 않은 경우 null
+    user_id: user.id,
     signer_role: 'worker',
-    signature_image_url: publicUrl,
+    signature_data: signatureImageData,
     signed_at: new Date().toISOString(),
   });
 

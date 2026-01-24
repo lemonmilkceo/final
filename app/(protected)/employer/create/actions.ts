@@ -40,9 +40,10 @@ export async function createContract(
   // 유효성 검사
   const validation = contractFormSchema.safeParse(formData);
   if (!validation.success) {
+    const firstError = validation.error.issues[0];
     return {
       success: false,
-      error: validation.error.errors[0]?.message || '입력 내용을 확인해주세요',
+      error: firstError?.message || '입력 내용을 확인해주세요',
     };
   }
 
@@ -52,6 +53,7 @@ export async function createContract(
     {
       p_user_id: user.id,
       p_amount: 1,
+      p_credit_type: 'contract',
       p_description: '계약서 작성',
     }
   );

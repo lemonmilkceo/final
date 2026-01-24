@@ -8,15 +8,40 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import SignatureCanvas from '@/components/contract/SignatureCanvas';
 import Toast from '@/components/ui/Toast';
 import { useContractFormStore } from '@/stores/contractFormStore';
-import { createContract } from '../../../create/actions';
+import { createContract } from '@/app/(protected)/employer/create/actions';
 import { signContract, sendContract } from './actions';
 import { formatCurrency } from '@/lib/utils/format';
 import clsx from 'clsx';
-import type { Contract, Signature } from '@/types';
+import type { ContractStatus } from '@/types';
+
+// 미리보기에서 사용하는 계약서 타입
+interface PreviewContract {
+  worker_name: string;
+  hourly_wage: number;
+  includes_weekly_allowance: boolean;
+  start_date: string;
+  end_date: string | null;
+  work_days: string[] | null;
+  work_days_per_week: number | null;
+  work_start_time: string;
+  work_end_time: string;
+  break_minutes: number;
+  work_location: string;
+  job_description: string;
+  pay_day: number;
+  business_size: 'under_5' | 'over_5';
+  status: ContractStatus;
+  signatures?: {
+    id: string;
+    signer_role: 'employer' | 'worker';
+    signed_at: string | null;
+    signature_data: string;
+  }[];
+}
 
 interface ContractPreviewProps {
   contractId: string | null;
-  contract?: Contract & { signatures?: Signature[] };
+  contract?: PreviewContract;
   isNew: boolean;
 }
 

@@ -47,34 +47,12 @@ export async function signContract(
     return { success: false, error: '이미 서명하셨어요' };
   }
 
-  // 서명 이미지를 Storage에 업로드
-  const fileName = `${contractId}_employer_${Date.now()}.png`;
-  const base64Data = signatureImageData.split(',')[1];
-  const buffer = Buffer.from(base64Data, 'base64');
-
-  const { error: uploadError } = await supabase.storage
-    .from('signatures')
-    .upload(fileName, buffer, {
-      contentType: 'image/png',
-      upsert: false,
-    });
-
-  if (uploadError) {
-    console.error('Signature upload error:', uploadError);
-    return { success: false, error: '서명 저장에 실패했어요' };
-  }
-
-  // 서명 URL 가져오기
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from('signatures').getPublicUrl(fileName);
-
-  // 서명 레코드 생성
+  // 서명 레코드 생성 (Base64 Data URL 직접 저장)
   const { error: signatureError } = await supabase.from('signatures').insert({
     contract_id: contractId,
     user_id: user.id,
     signer_role: 'employer',
-    signature_image_url: publicUrl,
+    signature_data: signatureImageData,
     signed_at: new Date().toISOString(),
   });
 

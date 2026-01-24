@@ -3,11 +3,24 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import Badge from '@/components/ui/Badge';
-import { formatCurrency, formatDate } from '@/lib/utils/format';
-import type { ContractWithSignatures, ContractStatus } from '@/types';
+import { formatCurrency, formatDateShort } from '@/lib/utils/format';
+import type { ContractStatus } from '@/types';
+
+// 카드에서 필요한 계약서 필드
+interface ContractCardData {
+  id: string;
+  worker_name: string;
+  hourly_wage: number;
+  status: ContractStatus;
+  created_at: string;
+  signatures: {
+    signer_role: 'employer' | 'worker';
+    signed_at: string | null;
+  }[];
+}
 
 interface ContractCardProps {
-  contract: ContractWithSignatures;
+  contract: ContractCardData;
   basePath?: string;
 }
 
@@ -35,7 +48,7 @@ const getRelativeDate = (dateString: string) => {
   if (diffDays === 0) return '오늘';
   if (diffDays === 1) return '어제';
   if (diffDays < 7) return `${diffDays}일 전`;
-  return formatDate(dateString, 'MM월 dd일');
+  return formatDateShort(dateString);
 };
 
 const ContractCard: React.FC<ContractCardProps> = ({

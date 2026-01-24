@@ -19,11 +19,12 @@ export default async function EmployerDashboardPage() {
     .eq('id', user.id)
     .single();
 
-  // 크레딧 조회
+  // 계약서 크레딧 조회
   const { data: credit } = await supabase
     .from('credits')
-    .select('balance')
+    .select('amount')
     .eq('user_id', user.id)
+    .eq('credit_type', 'contract')
     .single();
 
   // 계약서 목록 조회
@@ -52,7 +53,7 @@ export default async function EmployerDashboardPage() {
         name: profile?.name || '사장님',
         avatarUrl: profile?.avatar_url,
       }}
-      credits={credit?.balance || 0}
+      credits={credit?.amount || 0}
       contracts={contracts || []}
     />
   );

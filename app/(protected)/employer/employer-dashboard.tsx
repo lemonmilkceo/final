@@ -8,7 +8,21 @@ import FAB from '@/components/layout/FAB';
 import ContractCard from '@/components/contract/ContractCard';
 import EmptyState from '@/components/shared/EmptyState';
 import { ROUTES } from '@/lib/constants/routes';
-import type { ContractWithSignatures, ContractStatus } from '@/types';
+import type { ContractStatus } from '@/types';
+
+// 대시보드에서 사용하는 계약서 타입 (필요한 필드만)
+interface DashboardContract {
+  id: string;
+  worker_name: string;
+  hourly_wage: number;
+  status: ContractStatus;
+  created_at: string;
+  folder_id: string | null;
+  signatures: {
+    signer_role: 'employer' | 'worker';
+    signed_at: string | null;
+  }[];
+}
 
 interface EmployerDashboardProps {
   profile: {
@@ -16,7 +30,7 @@ interface EmployerDashboardProps {
     avatarUrl?: string | null;
   };
   credits: number;
-  contracts: ContractWithSignatures[];
+  contracts: DashboardContract[];
 }
 
 type TabId = 'pending' | 'completed' | 'folder' | 'trash';
@@ -29,9 +43,9 @@ const tabs = [
 ];
 
 const filterContractsByTab = (
-  contracts: ContractWithSignatures[],
+  contracts: DashboardContract[],
   tab: TabId
-): ContractWithSignatures[] => {
+): DashboardContract[] => {
   switch (tab) {
     case 'pending':
       return contracts.filter(
