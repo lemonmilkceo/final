@@ -54,12 +54,14 @@ interface ContractPreviewProps {
   contractId: string | null;
   contract?: PreviewContract;
   isNew: boolean;
+  isGuestMode?: boolean;
 }
 
 export default function ContractPreview({
   contractId,
   contract,
   isNew,
+  isGuestMode = false,
 }: ContractPreviewProps) {
   const router = useRouter();
   const { data: formData, reset } = useContractFormStore();
@@ -137,6 +139,13 @@ export default function ContractPreview({
   };
 
   const handleSignAndSend = async () => {
+    // 게스트 모드에서는 체험 메시지만 표시
+    if (isGuestMode) {
+      setToastMessage('🎉 체험 완료! 로그인하면 실제로 계약서를 작성할 수 있어요');
+      setShowToast(true);
+      return;
+    }
+
     if (isNew) {
       // 새 계약서 저장
       setIsLoading(true);
@@ -604,6 +613,8 @@ export default function ContractPreview({
               <LoadingSpinner variant="button" />
               처리 중...
             </>
+          ) : isGuestMode ? (
+            '체험 완료하기 🎉'
           ) : isNew ? (
             '계약서 저장하기'
           ) : employerSigned ? (

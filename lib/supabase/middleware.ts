@@ -19,6 +19,7 @@ const PROTECTED_ROUTES = [
 const GUEST_ALLOWED_ROUTES = [
   '/employer',
   '/employer/create',
+  '/employer/preview',
   '/worker',
   '/worker/career',
 ];
