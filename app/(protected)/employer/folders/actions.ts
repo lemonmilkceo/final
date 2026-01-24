@@ -28,7 +28,7 @@ export async function getFolders() {
   return { success: true, data };
 }
 
-export async function createFolder(name: string) {
+export async function createFolder(name: string, color?: string) {
   const supabase = await createClient();
 
   const {
@@ -55,11 +55,15 @@ export async function createFolder(name: string) {
     return { success: false, error: '같은 이름의 폴더가 있어요' };
   }
 
+  // 참고: 현재 DB에 color 컬럼이 없음 - 추후 마이그레이션 필요
+  // const folderColor = color || '#3B82F6';
+
   const { data, error } = await supabase
     .from('folders')
     .insert({
       user_id: user.id,
       name: name.trim(),
+      // color: folderColor, // DB에 컬럼 추가 후 활성화
     })
     .select()
     .single();
@@ -75,7 +79,7 @@ export async function createFolder(name: string) {
   return { success: true, data };
 }
 
-export async function updateFolder(folderId: string, name: string) {
+export async function updateFolder(folderId: string, name: string, color?: string) {
   const supabase = await createClient();
 
   const {
@@ -97,12 +101,19 @@ export async function updateFolder(folderId: string, name: string) {
     return { success: false, error: '수정 권한이 없어요' };
   }
 
+  // 참고: 현재 DB에 color 컬럼이 없음 - 추후 마이그레이션 필요
+  const updateData: { name: string; updated_at: string } = {
+    name: name.trim(),
+    updated_at: new Date().toISOString(),
+  };
+
+  // if (color) {
+  //   updateData.color = color; // DB에 컬럼 추가 후 활성화
+  // }
+
   const { error } = await supabase
     .from('folders')
-    .update({
-      name: name.trim(),
-      updated_at: new Date().toISOString(),
-    })
+    .update(updateData)
     .eq('id', folderId);
 
   if (error) {

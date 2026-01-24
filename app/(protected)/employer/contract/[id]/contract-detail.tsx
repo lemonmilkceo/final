@@ -53,11 +53,13 @@ interface ContractDetailProps {
   contract: ContractData;
   aiReview: AIReviewData | null;
   employerName: string;
+  isGuestMode?: boolean;
 }
 
 export default function ContractDetail({
   contract,
   aiReview,
+  isGuestMode = false,
   employerName,
 }: ContractDetailProps) {
   const router = useRouter();
@@ -101,6 +103,13 @@ export default function ContractDetail({
   };
 
   const handleDelete = async () => {
+    if (isGuestMode) {
+      setToastMessage('게스트 모드에서는 삭제할 수 없어요');
+      setToastVariant('error');
+      setShowToast(true);
+      return;
+    }
+
     setIsDeleting(true);
     try {
       const result = await deleteContract(contract.id);
@@ -125,6 +134,13 @@ export default function ContractDetail({
   };
 
   const handleResend = async () => {
+    if (isGuestMode) {
+      setToastMessage('게스트 모드에서는 재전송할 수 없어요');
+      setToastVariant('error');
+      setShowToast(true);
+      return;
+    }
+
     if (!contract.shareToken) {
       setToastMessage('공유 링크가 없어요');
       setToastVariant('error');

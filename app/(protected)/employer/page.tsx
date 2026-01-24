@@ -112,11 +112,32 @@ export default async function EmployerDashboardPage() {
     .order('created_at', { ascending: false });
 
   // 폴더 목록 조회
+  // 주의: color 컬럼이 DB에 없는 경우 기본값 사용
   const { data: folders } = await supabase
     .from('folders')
     .select('id, name')
     .eq('user_id', user.id)
     .order('created_at', { ascending: true });
+
+  // 색상 팔레트 (color가 없는 폴더용 fallback)
+  const colorPalette = [
+    '#3B82F6', '#22C55E', '#EAB308', '#F97316',
+    '#EF4444', '#A855F7', '#EC4899', '#6B7280',
+  ];
+
+  // 폴더별 계약서 수 계산
+  const foldersWithCount = (folders || []).map((folder, index) => {
+    const count = (contracts || []).filter((c) => c.folder_id === folder.id).length;
+    return {
+      id: folder.id,
+      name: folder.name,
+      color: colorPalette[index % colorPalette.length], // 인덱스 기반 색상
+      contractCount: count,
+    };
+  });
+
+  // 미분류 계약서 수
+  const unfiledCount = (contracts || []).filter((c) => c.folder_id === null).length;
 
   return (
     <EmployerDashboard
@@ -127,7 +148,8 @@ export default async function EmployerDashboardPage() {
       }}
       credits={credit?.amount || 0}
       contracts={contracts || []}
-      folders={folders || []}
+      folders={foldersWithCount}
+      unfiledCount={unfiledCount}
     />
   );
 }

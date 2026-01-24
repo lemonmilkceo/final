@@ -10,6 +10,7 @@ interface HeaderProps {
   showMenu?: boolean;
   credits?: number;
   unreadCount?: number;
+  userName?: string; // 닉네임 표시를 위한 prop 추가
   onNotificationClick?: () => void;
   onMenuClick?: () => void;
   className?: string;
@@ -20,6 +21,7 @@ const Header: React.FC<HeaderProps> = ({
   showMenu = true,
   credits,
   unreadCount = 0,
+  userName,
   onNotificationClick,
   onMenuClick,
   className,
@@ -35,8 +37,14 @@ const Header: React.FC<HeaderProps> = ({
         {/* 좌측: 빈 공간 (균형을 위해) */}
         <div className="w-10" />
 
-        {/* 중앙: 서비스명 */}
-        <span className="text-[17px] font-bold text-gray-900">싸인해주세요</span>
+        {/* 중앙: 닉네임 인사말 또는 서비스명 */}
+        {userName ? (
+          <span className="text-[17px] font-bold text-gray-900">
+            {userName}님 👋
+          </span>
+        ) : (
+          <span className="text-[17px] font-bold text-gray-900">싸인해주세요</span>
+        )}
 
         {/* 우측: 크레딧 + 알림 + 메뉴 */}
         <div className="flex items-center gap-2">

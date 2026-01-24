@@ -1,14 +1,78 @@
 import { redirect, notFound } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { ROUTES } from '@/lib/constants/routes';
+import { SAMPLE_CONTRACT_DETAILS } from '@/lib/constants/sampleData';
 import ContractDetail from './contract-detail';
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+// 게스트 모드 체크 함수
+async function isGuestMode(): Promise<boolean> {
+  const cookieStore = await cookies();
+  const guestCookie = cookieStore.get('guest-storage');
+  
+  if (guestCookie?.value) {
+    try {
+      const decodedValue = decodeURIComponent(guestCookie.value);
+      const guestData = JSON.parse(decodedValue);
+      return guestData?.state?.isGuest && guestData?.state?.guestRole === 'employer';
+    } catch {
+      // JSON 파싱 실패 시 무시
+    }
+  }
+  
+  return false;
+}
+
 export default async function ContractDetailPage({ params }: PageProps) {
   const { id } = await params;
+  
+  // 게스트 모드 체크
+  const isGuest = await isGuestMode();
+  
+  // 게스트 모드: 샘플 데이터에서 조회
+  if (isGuest) {
+    const sampleContract = SAMPLE_CONTRACT_DETAILS[id];
+    
+    if (!sampleContract) {
+      notFound();
+    }
+    
+    return (
+      <ContractDetail
+        contract={{
+          id: sampleContract.id,
+          workerName: sampleContract.worker_name,
+          hourlyWage: sampleContract.hourly_wage,
+          includesWeeklyAllowance: sampleContract.includes_weekly_allowance,
+          startDate: sampleContract.start_date,
+          endDate: sampleContract.end_date,
+          workDays: sampleContract.work_days,
+          workDaysPerWeek: null,
+          workStartTime: sampleContract.work_start_time,
+          workEndTime: sampleContract.work_end_time,
+          breakMinutes: sampleContract.break_minutes,
+          workLocation: sampleContract.work_location,
+          jobDescription: sampleContract.job_description,
+          payDay: sampleContract.pay_day,
+          businessSize: sampleContract.business_size,
+          status: sampleContract.status,
+          createdAt: sampleContract.created_at,
+          expiresAt: sampleContract.expires_at,
+          completedAt: sampleContract.completed_at,
+          shareToken: sampleContract.share_token,
+          signatures: sampleContract.signatures || [],
+        }}
+        aiReview={null}
+        employerName={sampleContract.employer.name}
+        isGuestMode={true}
+      />
+    );
+  }
+  
   const supabase = await createClient();
 
   const {

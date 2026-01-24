@@ -8,8 +8,10 @@ import FAB from '@/components/layout/FAB';
 import ContractCard from '@/components/contract/ContractCard';
 import EmptyState from '@/components/shared/EmptyState';
 import NotificationSheet from '@/components/notification/NotificationSheet';
+import FolderModal from '@/components/folder/FolderModal';
 import { ROUTES } from '@/lib/constants/routes';
 import { getNotifications, getUnreadNotificationCount } from '@/app/actions/notifications';
+import { createFolder, updateFolder, deleteFolder } from './folders/actions';
 import type { ContractStatus } from '@/types';
 
 // 대시보드에서 사용하는 계약서 타입 (필요한 필드만)
@@ -38,6 +40,8 @@ interface Notification {
 interface Folder {
   id: string;
   name: string;
+  color?: string;
+  contractCount?: number;
 }
 
 interface EmployerDashboardProps {
@@ -49,6 +53,7 @@ interface EmployerDashboardProps {
   credits: number;
   contracts: DashboardContract[];
   folders?: Folder[];
+  unfiledCount?: number;
   isGuestMode?: boolean;
 }
 
@@ -57,11 +62,13 @@ export default function EmployerDashboard({
   credits,
   contracts,
   folders = [],
+  unfiledCount = 0,
   isGuestMode = false,
 }: EmployerDashboardProps) {
   const router = useRouter();
   const [isMenuSheetOpen, setIsMenuSheetOpen] = useState(false);
   const [isNotificationSheetOpen, setIsNotificationSheetOpen] = useState(false);
+  const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -98,17 +105,39 @@ export default function EmployerDashboard({
   };
 
   const handleFolderManage = () => {
-    router.push('/employer/folders');
+    setIsFolderModalOpen(true);
   };
+
+  // 폴더 CRUD 핸들러
+  const handleCreateFolder = async (name: string, color: string) => {
+    return await createFolder(name, color);
+  };
+
+  const handleUpdateFolder = async (id: string, name: string, color: string) => {
+    return await updateFolder(id, name, color);
+  };
+
+  const handleDeleteFolder = async (id: string) => {
+    return await deleteFolder(id);
+  };
+
+  // 폴더 데이터 변환 (FolderModal용)
+  const foldersForModal = folders.map((f) => ({
+    id: f.id,
+    name: f.name,
+    color: f.color || '#3B82F6',
+    contractCount: f.contractCount || 0,
+  }));
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header */}
+      {/* Header - 닉네임 표시 */}
       <Header
         credits={credits}
         showNotification={true}
         showMenu={true}
         unreadCount={unreadCount}
+        userName={profile.name}
         onNotificationClick={() => setIsNotificationSheetOpen(true)}
         onMenuClick={() => setIsMenuSheetOpen(true)}
       />
@@ -236,6 +265,18 @@ export default function EmployerDashboard({
         userName={profile.name}
         userEmail={profile.email}
         userRole="employer"
+      />
+
+      {/* Folder Modal */}
+      <FolderModal
+        isOpen={isFolderModalOpen}
+        onClose={() => setIsFolderModalOpen(false)}
+        folders={foldersForModal}
+        unfiledCount={unfiledCount}
+        onCreateFolder={handleCreateFolder}
+        onUpdateFolder={handleUpdateFolder}
+        onDeleteFolder={handleDeleteFolder}
+        isGuestMode={isGuestMode}
       />
     </div>
   );

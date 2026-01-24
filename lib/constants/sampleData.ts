@@ -2,7 +2,7 @@
  * 게스트 모드 샘플 데이터
  */
 
-// 사장님 샘플 계약서
+// 사장님 샘플 계약서 (목록용)
 export const SAMPLE_EMPLOYER_CONTRACTS = [
   {
     id: 'sample-1',
@@ -38,6 +38,124 @@ export const SAMPLE_EMPLOYER_CONTRACTS = [
     signatures: [],
   },
 ];
+
+// 사장님 샘플 계약서 상세 (상세 페이지용)
+export const SAMPLE_CONTRACT_DETAILS: Record<string, {
+  id: string;
+  worker_name: string;
+  hourly_wage: number;
+  includes_weekly_allowance: boolean;
+  status: 'draft' | 'pending' | 'completed' | 'expired' | 'deleted';
+  business_size: 'under_5' | 'over_5';
+  start_date: string;
+  end_date: string | null;
+  work_days: string[];
+  work_start_time: string;
+  work_end_time: string;
+  break_minutes: number;
+  work_location: string;
+  job_description: string;
+  pay_day: number;
+  created_at: string;
+  expires_at: string | null;
+  completed_at: string | null;
+  share_token: string;
+  employer: {
+    name: string;
+    phone: string | null;
+  };
+  signatures: {
+    id: string;
+    signer_role: 'employer' | 'worker';
+    signed_at: string | null;
+    signature_data: string;
+  }[];
+}> = {
+  'sample-1': {
+    id: 'sample-1',
+    worker_name: '김민수',
+    hourly_wage: 10030,
+    includes_weekly_allowance: true,
+    status: 'completed',
+    business_size: 'over_5',
+    start_date: '2026-01-01',
+    end_date: '2026-06-30',
+    work_days: ['월', '화', '수', '목', '금'],
+    work_start_time: '09:00',
+    work_end_time: '18:00',
+    break_minutes: 60,
+    work_location: '서울 강남구 테헤란로 123, 싸인빌딩 5층',
+    job_description: '카페 바리스타 (음료 제조, 매장 청소, 재고 관리)',
+    pay_day: 10,
+    created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    expires_at: null,
+    completed_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    share_token: 'sample-token-1',
+    employer: {
+      name: '게스트 사장님',
+      phone: '010-1234-5678',
+    },
+    signatures: [
+      { id: 'sig-1-1', signer_role: 'employer', signed_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(), signature_data: '' },
+      { id: 'sig-1-2', signer_role: 'worker', signed_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), signature_data: '' },
+    ],
+  },
+  'sample-2': {
+    id: 'sample-2',
+    worker_name: '이서연',
+    hourly_wage: 11000,
+    includes_weekly_allowance: false,
+    status: 'pending',
+    business_size: 'under_5',
+    start_date: '2026-02-01',
+    end_date: null,
+    work_days: ['토', '일'],
+    work_start_time: '10:00',
+    work_end_time: '17:00',
+    break_minutes: 30,
+    work_location: '서울 마포구 합정동 456, 카페모카',
+    job_description: '주말 홀서빙 (주문 접수, 음식 서빙, 테이블 정리)',
+    pay_day: 25,
+    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    expires_at: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+    completed_at: null,
+    share_token: 'sample-token-2',
+    employer: {
+      name: '게스트 사장님',
+      phone: '010-1234-5678',
+    },
+    signatures: [
+      { id: 'sig-2-1', signer_role: 'employer', signed_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), signature_data: '' },
+      { id: 'sig-2-2', signer_role: 'worker', signed_at: null, signature_data: '' },
+    ],
+  },
+  'sample-3': {
+    id: 'sample-3',
+    worker_name: '박지훈',
+    hourly_wage: 12000,
+    includes_weekly_allowance: true,
+    status: 'draft',
+    business_size: 'over_5',
+    start_date: '2026-03-01',
+    end_date: '2026-08-31',
+    work_days: ['월', '수', '금'],
+    work_start_time: '14:00',
+    work_end_time: '22:00',
+    break_minutes: 60,
+    work_location: '서울 송파구 잠실동 789, 롯데마트',
+    job_description: '마트 계산원 (상품 계산, 고객 응대, 매장 정리)',
+    pay_day: 15,
+    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    expires_at: null,
+    completed_at: null,
+    share_token: 'sample-token-3',
+    employer: {
+      name: '게스트 사장님',
+      phone: '010-1234-5678',
+    },
+    signatures: [],
+  },
+};
 
 // 알바생 샘플 계약서
 export const SAMPLE_WORKER_CONTRACTS = [

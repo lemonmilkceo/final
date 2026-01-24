@@ -1406,4 +1406,100 @@
 
 ---
 
+## 📝 Amendment 3: 폴더 모달 및 닉네임 표시 (2026년 1월 24일)
+
+> **추가일**: 2026년 1월 24일  
+> **변경 사유**: UX 개선 - 폴더 모달, 헤더 닉네임, 게스트 상세 페이지  
+> **우선순위**: P1  
+> **상태**: ✅ 완료
+
+---
+
+### Epic A3.1: 폴더 관리 모달
+> 예상 시간: 1시간 | **상태: ✅ 완료**
+
+#### Story A3.1.1: FolderModal 컴포넌트 생성
+> 예상 시간: 1시간 | **상태: ✅ 완료**
+
+- [x] **Task A3.1.1.1**: `components/folder/FolderModal.tsx` 생성
+  - BottomSheet 기반 모달
+  - 폴더 목록, 생성, 수정, 삭제 UI
+  - 색상 선택 팔레트 (8가지)
+
+- [x] **Task A3.1.1.2**: `employer-dashboard.tsx`에 FolderModal 연동
+  - 폴더 관리 버튼 클릭 → 모달 오픈
+  - router.push 대신 state로 관리
+
+- [x] **Task A3.1.1.3**: Server Actions 수정 (color 지원 준비)
+  - createFolder, updateFolder에 color 매개변수 추가
+  - DB 컬럼 추가 전까지 주석 처리
+
+---
+
+### Epic A3.2: 헤더 닉네임 표시
+> 예상 시간: 30분 | **상태: ✅ 완료**
+
+#### Story A3.2.1: Header 컴포넌트 수정
+> 예상 시간: 30분 | **상태: ✅ 완료**
+
+- [x] **Task A3.2.1.1**: `components/layout/Header.tsx` 수정
+  - userName prop 추가
+  - userName이 있으면 "{닉네임}님 👋" 표시, 없으면 "싸인해주세요"
+
+- [x] **Task A3.2.1.2**: `employer-dashboard.tsx`에서 userName 전달
+  - Header에 profile.name 전달
+
+---
+
+### Epic A3.3: 게스트 모드 계약서 상세
+> 예상 시간: 30분 | **상태: ✅ 완료**
+
+#### Story A3.3.1: 샘플 계약서 상세 데이터
+> 예상 시간: 30분 | **상태: ✅ 완료**
+
+- [x] **Task A3.3.1.1**: `lib/constants/sampleData.ts` 확장
+  - SAMPLE_CONTRACT_DETAILS 객체 추가
+  - 근무조건, 급여, 서명 등 상세 정보 포함
+
+- [x] **Task A3.3.1.2**: `employer/contract/[id]/page.tsx` 수정
+  - 게스트 모드 체크 함수 추가
+  - 샘플 ID로 접근 시 SAMPLE_CONTRACT_DETAILS에서 조회
+
+- [x] **Task A3.3.1.3**: `contract-detail.tsx` 게스트 모드 지원
+  - isGuestMode prop 추가
+  - 게스트 모드에서 삭제/재전송 비활성화
+
+---
+
+## 📊 Amendment 3 완료 요약
+
+| Task | 상태 | 설명 |
+|------|------|------|
+| A3.1.1.1 | ✅ | FolderModal 컴포넌트 생성 |
+| A3.1.1.2 | ✅ | 대시보드에 모달 연동 |
+| A3.1.1.3 | ✅ | Server Actions 수정 |
+| A3.2.1.1 | ✅ | Header에 userName prop |
+| A3.2.1.2 | ✅ | 대시보드에서 닉네임 전달 |
+| A3.3.1.1 | ✅ | 샘플 상세 데이터 추가 |
+| A3.3.1.2 | ✅ | 상세 페이지 게스트 지원 |
+| A3.3.1.3 | ✅ | contract-detail 게스트 모드 |
+
+---
+
+### 📌 향후 작업 (Backlog)
+
+#### DB 마이그레이션 필요
+```sql
+ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
+```
+마이그레이션 적용 후 코드에서 주석 해제 필요:
+- `folders/actions.ts`: createFolder, updateFolder의 color 저장
+- `employer/page.tsx`: folders.color 조회
+
+---
+
+> **Amendment 3 끝**
+
+---
+
 > **문서 끝**
