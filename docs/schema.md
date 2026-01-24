@@ -1290,3 +1290,41 @@ ALTER TABLE contracts ADD CONSTRAINT check_monthly_wage_required
 ---
 
 > **Amendment 6 끝**
+
+---
+
+## 📝 Amendment 9: 임금 지급일 필드 추가 (2026년 1월 24일)
+
+> **버전**: 1.9  
+> **변경 사유**: 당월/익월 지급 및 말일 지급 옵션 추가
+
+### A9.1 스키마 변경 사항
+
+#### contracts 테이블에 컬럼 추가 필요
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `payment_timing` | `text` | NO | `'current_month'` | 지급 시기 ('current_month' \| 'next_month') |
+| `is_last_day_payment` | `boolean` | NO | `false` | 말일 지급 여부 |
+
+**마이그레이션 SQL:**
+```sql
+-- 지급 시기 컬럼 추가
+ALTER TABLE contracts ADD COLUMN payment_timing text NOT NULL DEFAULT 'current_month';
+
+-- 말일 지급 컬럼 추가
+ALTER TABLE contracts ADD COLUMN is_last_day_payment boolean NOT NULL DEFAULT false;
+
+-- 지급 시기 제약 조건
+ALTER TABLE contracts ADD CONSTRAINT check_payment_timing 
+  CHECK (payment_timing IN ('current_month', 'next_month'));
+```
+
+### A9.2 현재 상태
+
+- **코드**: paymentTiming, isLastDayPayment 필드 추가 완료 (contractFormStore)
+- **DB**: 마이그레이션 대기 중
+
+---
+
+> **Amendment 9 끝**

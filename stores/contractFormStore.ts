@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import type { BusinessSize } from '@/types';
 
 export type WageType = 'hourly' | 'monthly';
+export type PaymentTiming = 'current_month' | 'next_month';
 
 export interface ContractFormData {
   businessSize: BusinessSize | null;
@@ -23,6 +24,8 @@ export interface ContractFormData {
   workLocation: string;
   jobDescription: string;
   payDay: number;
+  paymentTiming: PaymentTiming;
+  isLastDayPayment: boolean;
 }
 
 interface ContractFormStore {
@@ -56,6 +59,8 @@ const initialData: ContractFormData = {
   workLocation: '',
   jobDescription: '',
   payDay: 10,
+  paymentTiming: 'current_month',
+  isLastDayPayment: false,
 };
 
 export const useContractFormStore = create<ContractFormStore>()(
