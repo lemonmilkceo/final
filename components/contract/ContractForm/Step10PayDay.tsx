@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useContractFormStore, type PaymentTiming } from '@/stores/contractFormStore';
 import clsx from 'clsx';
 
@@ -8,8 +7,7 @@ import clsx from 'clsx';
 const PAY_DAYS = Array.from({ length: 28 }, (_, i) => i + 1);
 
 export default function Step10PayDay() {
-  const router = useRouter();
-  const { data, updateData } = useContractFormStore();
+  const { data, updateData, nextStep } = useContractFormStore();
 
   const handleTimingChange = (timing: PaymentTiming) => {
     updateData({ paymentTiming: timing });
@@ -30,8 +28,8 @@ export default function Step10PayDay() {
     }
   };
 
-  const handlePreview = () => {
-    router.push('/employer/preview/new');
+  const handleNext = () => {
+    nextStep(); // Step 10 (업무 내용)으로 이동
   };
 
   // 말일 지급이면 무조건 유효, 아니면 1~28 사이 선택 필요
@@ -129,7 +127,7 @@ export default function Step10PayDay() {
 
       <div className="px-6 pb-4 safe-bottom">
         <button
-          onClick={handlePreview}
+          onClick={handleNext}
           disabled={!isValid}
           className={clsx(
             'w-full py-4 rounded-2xl font-semibold text-lg transition-colors',
