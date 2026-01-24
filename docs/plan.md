@@ -500,19 +500,19 @@
 #### Story 4.2.4: 계약서 생성 로직
 > 예상 시간: 2시간
 
-- [ ] **Task 4.2.4.1**: `lib/utils/validation.ts` 계약서 유효성 검사 스키마 작성
+- [x] **Task 4.2.4.1**: `lib/utils/validation.ts` 계약서 유효성 검사 스키마 작성 ✅
   - 참조: `Rules` 섹션 4.3 (Server Actions)
   - Zod 스키마: contractSchema
   - 모든 필드 검증 규칙
 
-- [ ] **Task 4.2.4.2**: `app/(protected)/employer/create/actions.ts` Server Action 구현
+- [x] **Task 4.2.4.2**: `app/(protected)/employer/create/actions.ts` Server Action 구현 ✅
   - 참조: `Rules` 섹션 4.3
   - 인증 확인
   - 역할 확인
   - 크레딧 차감 (use_credit 함수 호출)
   - contracts 테이블 INSERT
 
-- [ ] **Task 4.2.4.3**: Step 10에서 Server Action 연결 및 미리보기 이동
+- [x] **Task 4.2.4.3**: Step 10에서 Server Action 연결 및 미리보기 이동 ✅
   - "계약서 미리보기" 버튼 클릭 시 저장 후 이동
   - 에러 처리 (크레딧 부족, 유효성 실패)
 
@@ -523,16 +523,16 @@
 #### Story 4.3.1: 미리보기 화면
 > 예상 시간: 3시간
 
-- [ ] **Task 4.3.1.1**: `app/(protected)/employer/preview/[id]/page.tsx` Server Component 구현
+- [x] **Task 4.3.1.1**: `app/(protected)/employer/preview/[id]/page.tsx` Server Component 구현 ✅
   - 계약서 데이터 조회 (contracts + signatures)
   - 권한 체크 (employer_id 일치)
 
-- [ ] **Task 4.3.1.2**: `components/contract/ContractPreview.tsx` 미리보기 UI 구현
+- [x] **Task 4.3.1.2**: `components/contract/ContractPreview.tsx` 미리보기 UI 구현 ✅
   - 참조: `UI` 섹션 2.3 (계약서 미리보기)
   - 표준근로계약서 형식
   - 모든 필드 표시
 
-- [ ] **Task 4.3.1.3**: 공유 옵션 버튼 UI 구현
+- [x] **Task 4.3.1.3**: 공유 옵션 버튼 UI 구현 ✅
   - 참조: `UI` 섹션 2.3 (공유 옵션)
   - PDF, 링크, 카카오톡 버튼
   - 로직은 별도 Task
