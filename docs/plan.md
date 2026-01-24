@@ -961,18 +961,18 @@
 #### Story 9.1.1: 게스트 기본 설정
 > 예상 시간: 3시간
 
-- [ ] **Task 9.1.1.1**: `stores/guestStore.ts` 게스트 스토어 구현
+- [x] **Task 9.1.1.1**: `stores/guestStore.ts` 게스트 스토어 구현 ✅
   - 참조: `Rules` 섹션 5.2 (게스트 모드 스토어)
   - isGuest, guestRole, aiReviewUsed
 
-- [ ] **Task 9.1.1.2**: `app/(public)/guest/page.tsx` 게스트 역할 선택 UI 구현
+- [x] **Task 9.1.1.2**: `app/(public)/guest/page.tsx` 게스트 역할 선택 UI 구현 ✅
   - 참조: `UI` 섹션 1.5 (둘러보기 역할 선택)
 
-- [ ] **Task 9.1.1.3**: `components/shared/GuestBanner.tsx` 게스트 배너 컴포넌트 구현
+- [x] **Task 9.1.1.3**: `components/shared/GuestBanner.tsx` 게스트 배너 컴포넌트 구현 ✅
   - 참조: `UI` 섹션 1.6 (게스트 모드 배너)
   - 상단 고정, 가입하기 버튼
 
-- [ ] **Task 9.1.1.4**: `components/shared/SignupPromptSheet.tsx` 회원가입 유도 BottomSheet 구현
+- [x] **Task 9.1.1.4**: `components/shared/SignupPromptSheet.tsx` 회원가입 유도 BottomSheet 구현 ✅
   - 참조: `UI` 섹션 1.7 (회원가입 유도)
 
 ---
@@ -980,21 +980,21 @@
 #### Story 9.1.2: 샘플 데이터 및 제한 처리
 > 예상 시간: 4시간
 
-- [ ] **Task 9.1.2.1**: `lib/constants/sampleData.ts` 샘플 데이터 정의
+- [x] **Task 9.1.2.1**: `lib/constants/sampleData.ts` 샘플 데이터 정의 ✅
   - 참조: `PRD` 섹션 7.3 (샘플 데이터 정의)
   - 사장님 샘플 계약서 3개
   - 알바생 샘플 계약서 2개
   - 알바생 샘플 경력 2개
 
-- [ ] **Task 9.1.2.2**: 대시보드에 게스트 모드 분기 처리
+- [ ] **Task 9.1.2.2**: 대시보드에 게스트 모드 분기 처리 (P3 - 추후)
   - isGuest일 때 샘플 데이터 표시
   - GuestBanner 렌더링
 
-- [ ] **Task 9.1.2.3**: 제한 기능 시도 시 회원가입 유도 로직 구현
+- [ ] **Task 9.1.2.3**: 제한 기능 시도 시 회원가입 유도 로직 구현 (P3 - 추후)
   - 서명, 전송, PDF, 결제, 채팅 시도 시
   - SignupPromptSheet 표시
 
-- [ ] **Task 9.1.2.4**: AI 검토 1회 체험 제한 로직 구현
+- [ ] **Task 9.1.2.4**: AI 검토 1회 체험 제한 로직 구현 (P3 - 추후)
   - aiReviewUsed 상태 체크
   - 사용 후 회원가입 유도
 
