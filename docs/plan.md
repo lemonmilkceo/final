@@ -568,25 +568,25 @@
 #### Story 4.4.1: AI 검토 기능
 > 예상 시간: 4시간
 
-- [ ] **Task 4.4.1.1**: OpenAI 패키지 설치
+- [x] **Task 4.4.1.1**: OpenAI 패키지 설치 ✅
   ```bash
   npm install openai
   ```
 
-- [ ] **Task 4.4.1.2**: `app/api/ai-review/route.ts` API Route 구현
+- [x] **Task 4.4.1.2**: `app/api/ai-review/route.ts` API Route 구현 ✅
   - 참조: `Rules` 섹션 6.4 (AI 노무사 검토)
   - 인증/권한 확인
   - 크레딧 차감
-  - OpenAI API 호출
+  - OpenAI API 호출 (선택적)
   - ai_reviews 테이블 저장
 
-- [ ] **Task 4.4.1.3**: AI 검토 결과 BottomSheet UI 구현
+- [x] **Task 4.4.1.3**: AI 검토 결과 BottomSheet UI 구현 ✅
   - 참조: `UI` 섹션 2.5 (AI 검토 결과)
   - overall_status 표시
   - 항목별 상태 (✅, ⚠️, ❌)
   - 수정 제안 표시
 
-- [ ] **Task 4.4.1.4**: 미리보기 화면에 AI 검토 버튼 연동
+- [x] **Task 4.4.1.4**: 미리보기 화면에 AI 검토 버튼 연동 ✅
   - "AI 노무사 검토 받기" 버튼
   - 로딩 상태
   - 결과 BottomSheet 표시
