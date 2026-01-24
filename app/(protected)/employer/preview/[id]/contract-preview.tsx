@@ -12,6 +12,8 @@ import { useContractFormStore } from '@/stores/contractFormStore';
 import { createContract } from '@/app/(protected)/employer/create/actions';
 import { signContract, sendContract } from './actions';
 import { formatCurrency } from '@/lib/utils/format';
+import { copyContractLink } from '@/lib/utils/share';
+import { shareContractViaKakao, initKakao } from '@/lib/kakao';
 import clsx from 'clsx';
 import type { ContractStatus } from '@/types';
 
@@ -76,6 +78,11 @@ export default function ContractPreview({
     overall_status: 'pass' | 'warning' | 'fail';
     items: ReviewItem[];
   } | null>(null);
+  
+  // PDF 상태
+  const [isPDFLoading, setIsPDFLoading] = useState(false);
+  // Share token (from shareUrl)
+  const shareToken = shareUrl?.split('/').pop() || '';
 
   // 사업자가 이미 서명했는지 확인
   const employerSigned = contract?.signatures?.some(
@@ -300,6 +307,91 @@ export default function ContractPreview({
     }
   };
 
+  // PDF 다운로드
+  const handleDownloadPDF = async () => {
+    if (!contractId) {
+      setError('계약서를 먼저 저장해주세요');
+      return;
+    }
+
+    setIsPDFLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/pdf/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contractId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'PDF 생성에 실패했어요');
+        return;
+      }
+
+      // Base64를 Blob으로 변환하여 다운로드
+      const byteCharacters = atob(data.pdf);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'application/pdf' });
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = data.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      setToastMessage('PDF가 다운로드됐어요! 📄');
+      setShowToast(true);
+    } catch {
+      setError('PDF 다운로드 중 오류가 발생했어요');
+    } finally {
+      setIsPDFLoading(false);
+    }
+  };
+
+  // 링크 복사
+  const handleCopyShareLink = async () => {
+    if (!shareToken) {
+      setError('먼저 근로자에게 보내기를 해주세요');
+      return;
+    }
+
+    const success = await copyContractLink(shareToken);
+    if (success) {
+      setToastMessage('링크가 복사됐어요! 📋');
+      setShowToast(true);
+    } else {
+      setError('링크 복사에 실패했어요');
+    }
+  };
+
+  // 카카오톡 공유
+  const handleKakaoShare = () => {
+    if (!shareUrl) {
+      setError('먼저 근로자에게 보내기를 해주세요');
+      return;
+    }
+
+    initKakao();
+    const success = shareContractViaKakao({
+      workerName: displayData.workerName,
+      shareUrl,
+    });
+
+    if (!success) {
+      setError('카카오톡 공유에 실패했어요');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
@@ -405,25 +497,43 @@ export default function ContractPreview({
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-5 pt-3 pb-4 safe-bottom">
         {/* Share Options */}
         <div className="flex justify-center gap-6 mb-4">
-          <button className="flex flex-col items-center gap-1">
+          <button
+            onClick={handleDownloadPDF}
+            disabled={isPDFLoading || isNew}
+            className={clsx(
+              'flex flex-col items-center gap-1',
+              (isPDFLoading || isNew) && 'opacity-50'
+            )}
+          >
             <span className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-              <svg
-                className="w-6 h-6 text-gray-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
+              {isPDFLoading ? (
+                <LoadingSpinner variant="inline" className="w-5 h-5" />
+              ) : (
+                <svg
+                  className="w-6 h-6 text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              )}
             </span>
             <span className="text-[12px] text-gray-500">PDF</span>
           </button>
-          <button className="flex flex-col items-center gap-1">
+          <button
+            onClick={handleCopyShareLink}
+            disabled={!shareUrl}
+            className={clsx(
+              'flex flex-col items-center gap-1',
+              !shareUrl && 'opacity-50'
+            )}
+          >
             <span className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
               <svg
                 className="w-6 h-6 text-gray-600"
@@ -441,7 +551,14 @@ export default function ContractPreview({
             </span>
             <span className="text-[12px] text-gray-500">링크</span>
           </button>
-          <button className="flex flex-col items-center gap-1">
+          <button
+            onClick={handleKakaoShare}
+            disabled={!shareUrl}
+            className={clsx(
+              'flex flex-col items-center gap-1',
+              !shareUrl && 'opacity-50'
+            )}
+          >
             <span className="w-12 h-12 bg-[#FEE500] rounded-full flex items-center justify-center">
               <svg className="w-6 h-6 text-[#191919]" viewBox="0 0 20 20">
                 <path
