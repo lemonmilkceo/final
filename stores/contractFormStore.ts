@@ -5,6 +5,8 @@ import type { BusinessSize } from '@/types';
 export type WageType = 'hourly' | 'monthly';
 export type PaymentTiming = 'current_month' | 'next_month';
 
+export type BusinessType = 'restaurant' | 'cafe' | 'convenience_store' | 'retail' | 'beauty' | 'office' | null;
+
 export interface ContractFormData {
   businessSize: BusinessSize | null;
   workerName: string;
@@ -22,6 +24,7 @@ export interface ContractFormData {
   workEndTime: string;
   breakMinutes: number;
   workLocation: string;
+  businessType: BusinessType;
   jobDescription: string;
   payDay: number;
   paymentTiming: PaymentTiming;
@@ -57,6 +60,7 @@ const initialData: ContractFormData = {
   workEndTime: '18:00',
   breakMinutes: 30,
   workLocation: '',
+  businessType: null,
   jobDescription: '',
   payDay: 10,
   paymentTiming: 'current_month',
