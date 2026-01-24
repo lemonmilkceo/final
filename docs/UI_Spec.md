@@ -2576,4 +2576,584 @@ module.exports = {
 
 ---
 
-> **문서 끝**
+---
+
+## 📝 Amendment 1: UI/UX 개선 스펙 (2026년 1월 24일)
+
+> **버전**: 1.1  
+> **변경 사유**: 네비게이션 메뉴 추가 및 대시보드 레이아웃 단순화
+
+---
+
+### A1.1 헤더 컴포넌트 변경
+
+#### A1.1.1 기존 헤더 → 변경된 헤더
+
+**기존:**
+```
+┌─────────────────────────────┐
+│ 😊  싸인해주세요    🔔  5개  │
+└─────────────────────────────┘
+```
+
+**변경:**
+```
+┌─────────────────────────────┐
+│     싸인해주세요   💎5 🔔 ☰  │
+└─────────────────────────────┘
+```
+
+#### A1.1.2 Tailwind Implementation
+
+```html
+<header class="bg-white px-5 safe-top sticky top-0 z-40">
+  <div class="h-14 flex items-center justify-between">
+    <!-- 좌측: 빈 공간 또는 뒤로가기 (서브페이지) -->
+    <div class="w-10"></div>
+    
+    <!-- 중앙: 서비스명 -->
+    <span class="text-[17px] font-bold text-gray-900">싸인해주세요</span>
+    
+    <!-- 우측: 크레딧 + 알림 + 메뉴 -->
+    <div class="flex items-center gap-2">
+      <!-- 크레딧 (사업자만) -->
+      <button class="flex items-center gap-1 bg-blue-50 text-blue-500 text-[13px] font-semibold px-2.5 py-1 rounded-full">
+        <span>💎</span>
+        <span>5</span>
+      </button>
+      
+      <!-- 알림 -->
+      <button class="relative w-9 h-9 flex items-center justify-center">
+        <svg class="w-6 h-6 text-gray-700"><!-- bell icon --></svg>
+        <span class="absolute top-0.5 right-0.5 w-2 h-2 bg-red-500 rounded-full"></span>
+      </button>
+      
+      <!-- 햄버거 메뉴 -->
+      <button class="w-9 h-9 flex items-center justify-center">
+        <svg class="w-6 h-6 text-gray-700"><!-- menu icon (3 lines) --></svg>
+      </button>
+    </div>
+  </div>
+</header>
+```
+
+---
+
+### A1.2 메뉴 시트 (MenuSheet) 컴포넌트
+
+**Design Intent**  
+햄버거 메뉴 터치 시 우측에서 슬라이드하는 사이드시트. 프로필 정보와 주요 메뉴 제공.
+
+#### A1.2.1 Layout Structure
+
+```
+┌─────────────────────────────────────┐
+│                            [X]      │   ← 닫기 버튼
+├─────────────────────────────────────┤
+│                                     │
+│  ┌───────────────────────────────┐  │
+│  │  [👤 40x40]  김사장님          │  │   ← 프로필 영역
+│  │             example@kakao.com │  │
+│  └───────────────────────────────┘  │
+│                                     │
+├─────────────────────────────────────┤
+│  👤 프로필 설정                  →  │
+│  💳 크레딧 충전                  →  │
+│  📋 결제 내역                    →  │
+│  🗑️ 휴지통                      →  │
+├─────────────────────────────────────┤
+│  📄 이용약관                     →  │
+│  🔒 개인정보처리방침              →  │
+├─────────────────────────────────────┤
+│  🚪 로그아웃                        │   ← 빨간색 텍스트
+└─────────────────────────────────────┘
+```
+
+#### A1.2.2 Tailwind Implementation
+
+```html
+<!-- Backdrop -->
+<div class="fixed inset-0 bg-black/40 z-50" onclick="closeMenu()"></div>
+
+<!-- Side Sheet (우측에서 슬라이드) -->
+<div class="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white z-50 shadow-xl animate-slide-in-right safe-top safe-bottom">
+  <!-- Header -->
+  <div class="h-14 flex items-center justify-end px-4">
+    <button class="w-10 h-10 flex items-center justify-center">
+      <svg class="w-6 h-6 text-gray-500"><!-- X icon --></svg>
+    </button>
+  </div>
+  
+  <!-- Profile Section -->
+  <div class="px-5 pb-5 border-b border-gray-100">
+    <div class="flex items-center gap-4">
+      <div class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center">
+        <span class="text-2xl">👤</span>
+      </div>
+      <div>
+        <p class="text-[17px] font-bold text-gray-900">김사장님</p>
+        <p class="text-[14px] text-gray-500">example@kakao.com</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Menu Items -->
+  <div class="py-2">
+    <!-- Group 1: 주요 메뉴 -->
+    <div class="border-b border-gray-100">
+      <a href="/profile" class="flex items-center justify-between px-5 py-4 active:bg-gray-50">
+        <div class="flex items-center gap-3">
+          <span class="text-lg">👤</span>
+          <span class="text-[15px] text-gray-900">프로필 설정</span>
+        </div>
+        <svg class="w-5 h-5 text-gray-400"><!-- chevron-right --></svg>
+      </a>
+      <a href="/pricing" class="flex items-center justify-between px-5 py-4 active:bg-gray-50">
+        <div class="flex items-center gap-3">
+          <span class="text-lg">💳</span>
+          <span class="text-[15px] text-gray-900">크레딧 충전</span>
+        </div>
+        <svg class="w-5 h-5 text-gray-400"><!-- chevron-right --></svg>
+      </a>
+      <a href="/payment-history" class="flex items-center justify-between px-5 py-4 active:bg-gray-50">
+        <div class="flex items-center gap-3">
+          <span class="text-lg">📋</span>
+          <span class="text-[15px] text-gray-900">결제 내역</span>
+        </div>
+        <svg class="w-5 h-5 text-gray-400"><!-- chevron-right --></svg>
+      </a>
+      <a href="/employer/trash" class="flex items-center justify-between px-5 py-4 active:bg-gray-50">
+        <div class="flex items-center gap-3">
+          <span class="text-lg">🗑️</span>
+          <span class="text-[15px] text-gray-900">휴지통</span>
+        </div>
+        <svg class="w-5 h-5 text-gray-400"><!-- chevron-right --></svg>
+      </a>
+    </div>
+    
+    <!-- Group 2: 약관 -->
+    <div class="border-b border-gray-100">
+      <a href="/terms" class="flex items-center justify-between px-5 py-4 active:bg-gray-50">
+        <div class="flex items-center gap-3">
+          <span class="text-lg">📄</span>
+          <span class="text-[15px] text-gray-900">이용약관</span>
+        </div>
+        <svg class="w-5 h-5 text-gray-400"><!-- chevron-right --></svg>
+      </a>
+      <a href="/privacy" class="flex items-center justify-between px-5 py-4 active:bg-gray-50">
+        <div class="flex items-center gap-3">
+          <span class="text-lg">🔒</span>
+          <span class="text-[15px] text-gray-900">개인정보처리방침</span>
+        </div>
+        <svg class="w-5 h-5 text-gray-400"><!-- chevron-right --></svg>
+      </a>
+    </div>
+    
+    <!-- Logout -->
+    <a href="/auth/signout" class="flex items-center px-5 py-4 active:bg-gray-50">
+      <div class="flex items-center gap-3">
+        <span class="text-lg">🚪</span>
+        <span class="text-[15px] text-red-500">로그아웃</span>
+      </div>
+    </a>
+  </div>
+</div>
+```
+
+#### A1.2.3 Animation (tailwind.config.js에 추가)
+
+```javascript
+// tailwind.config.js extend
+animation: {
+  'slide-in-right': 'slideInRight 0.3s ease-out',
+},
+keyframes: {
+  slideInRight: {
+    '0%': { transform: 'translateX(100%)' },
+    '100%': { transform: 'translateX(0)' },
+  },
+},
+```
+
+---
+
+### A1.3 사업자 대시보드 변경
+
+#### A1.3.1 Layout Structure (변경)
+
+**기존: 탭 기반**
+```
+┌─────────────────────────────┐
+│ 대기중 │ 완료 │ 폴더 │ 휴지통 │
+├─────────────────────────────┤
+│                             │
+│     (탭별 컨텐츠)            │
+│                             │
+└─────────────────────────────┘
+```
+
+**변경: 섹션 기반 스크롤**
+```
+┌─────────────────────────────┐
+│     싸인해주세요   💎5 🔔 ☰  │
+├─────────────────────────────┤
+│                             │
+│ ┌─────────────────────────┐ │
+│ │ 💎 크레딧 5개   [충전 →] │ │   ← 크레딧 카드
+│ └─────────────────────────┘ │
+│                             │
+│ 📋 대기중인 계약서 (2)       │   ← 섹션 제목 + 카운트
+│ ┌─────────────────────────┐ │
+│ │ 홍길동                   │ │   ← 계약서 카드
+│ │ 12,000원 · 🟡 대기중     │ │
+│ └─────────────────────────┘ │
+│ ┌─────────────────────────┐ │
+│ │ 김철수                   │ │
+│ │ 11,000원 · 🟡 대기중     │ │
+│ └─────────────────────────┘ │
+│                             │
+│ ✅ 완료된 계약서 (3) [📁]    │   ← 섹션 제목 + 폴더 버튼
+│ ┌─────────────────────────┐ │
+│ │ 이영희                   │ │
+│ │ 13,000원 · 🟢 완료       │ │
+│ └─────────────────────────┘ │
+│ ┌─────────────────────────┐ │
+│ │ 박민수                   │ │
+│ │ 10,500원 · 🟢 완료       │ │
+│ └─────────────────────────┘ │
+│                             │
+│                       [+]   │   ← FAB
+└─────────────────────────────┘
+```
+
+#### A1.3.2 Tailwind Implementation
+
+```html
+<div class="min-h-screen bg-gray-50 pb-24">
+  <!-- Header (변경된 버전) -->
+  <!-- ... (A1.1.2 참조) -->
+  
+  <!-- Content -->
+  <div class="p-4 space-y-6">
+    <!-- Credit Card -->
+    <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-5 text-white">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-[14px] text-blue-100 mb-1">보유 크레딧</p>
+          <p class="text-[28px] font-bold">💎 5개</p>
+        </div>
+        <a href="/pricing" class="bg-white/20 text-white text-[14px] font-semibold px-4 py-2 rounded-full">
+          충전 →
+        </a>
+      </div>
+    </div>
+    
+    <!-- 대기중인 계약서 섹션 -->
+    <section>
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-[17px] font-bold text-gray-900 flex items-center gap-2">
+          📋 대기중인 계약서
+          <span class="text-[14px] font-normal text-gray-500">(2)</span>
+        </h2>
+      </div>
+      
+      <div class="space-y-3">
+        <!-- Contract Card -->
+        <a href="/employer/contract/123" class="block bg-white rounded-2xl p-5 active:bg-gray-50 transition-colors">
+          <div class="flex items-start justify-between mb-2">
+            <h3 class="text-[17px] font-bold text-gray-900">홍길동</h3>
+            <span class="bg-amber-100 text-amber-600 px-2.5 py-1 rounded-full text-[12px] font-medium">
+              대기중
+            </span>
+          </div>
+          <p class="text-[15px] text-gray-600">시급 12,000원</p>
+          <p class="text-[13px] text-gray-400 mt-1">오늘 생성</p>
+        </a>
+        
+        <!-- 더 많은 카드... -->
+      </div>
+    </section>
+    
+    <!-- 완료된 계약서 섹션 -->
+    <section>
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-[17px] font-bold text-gray-900 flex items-center gap-2">
+          ✅ 완료된 계약서
+          <span class="text-[14px] font-normal text-gray-500">(3)</span>
+        </h2>
+        <!-- 폴더 관리 버튼 -->
+        <a href="/employer/folders" class="flex items-center gap-1 text-[14px] text-gray-500 font-medium">
+          <span>📁</span>
+          <span>폴더</span>
+        </a>
+      </div>
+      
+      <div class="space-y-3">
+        <!-- Contract Card -->
+        <a href="/employer/contract/456" class="block bg-white rounded-2xl p-5 active:bg-gray-50 transition-colors">
+          <div class="flex items-start justify-between mb-2">
+            <h3 class="text-[17px] font-bold text-gray-900">이영희</h3>
+            <span class="bg-green-100 text-green-600 px-2.5 py-1 rounded-full text-[12px] font-medium">
+              완료
+            </span>
+          </div>
+          <p class="text-[15px] text-gray-600">시급 13,000원</p>
+          <p class="text-[13px] text-gray-400 mt-1">1주일 전 완료</p>
+        </a>
+        
+        <!-- 더 많은 카드... -->
+      </div>
+    </section>
+  </div>
+  
+  <!-- FAB -->
+  <a href="/employer/create" class="fixed bottom-6 right-6 w-14 h-14 bg-blue-500 rounded-full shadow-lg flex items-center justify-center active:bg-blue-600 safe-bottom">
+    <svg class="w-7 h-7 text-white"><!-- plus icon --></svg>
+  </a>
+</div>
+```
+
+---
+
+### A1.4 프로필 설정 페이지 (`/profile`)
+
+**Design Intent**  
+사용자 정보 조회/수정, 역할 변경, 로그아웃 기능 제공.
+
+#### A1.4.1 Layout Structure
+
+```
+┌─────────────────────────────┐
+│ ←  프로필 설정               │
+├─────────────────────────────┤
+│                             │
+│     ┌─────────────────┐     │
+│     │   [👤 64x64]    │     │   ← 아바타
+│     │    김사장님      │     │
+│     │example@kakao.com│     │
+│     └─────────────────┘     │
+│                             │
+│ 내 정보                      │
+│ ┌─────────────────────────┐ │
+│ │ 이름                    │ │
+│ │ 김사장님            [→] │ │
+│ ├─────────────────────────┤ │
+│ │ 연락처                  │ │
+│ │ 010-1234-5678       [→] │ │
+│ └─────────────────────────┘ │
+│                             │
+│ 역할                        │
+│ ┌─────────────────────────┐ │
+│ │ 현재 역할: 사장님    [→] │ │
+│ │ 알바생으로 전환 가능     │ │
+│ └─────────────────────────┘ │
+│                             │
+│ 앱 설정                      │
+│ ┌─────────────────────────┐ │
+│ │ 알림 설정            [→] │ │
+│ └─────────────────────────┘ │
+│                             │
+│ ┌─────────────────────────┐ │
+│ │    🚪 로그아웃          │ │   ← 빨간색
+│ └─────────────────────────┘ │
+│                             │
+└─────────────────────────────┘
+```
+
+#### A1.4.2 Tailwind Implementation
+
+```html
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <header class="bg-white px-5 safe-top sticky top-0 z-40 border-b border-gray-100">
+    <div class="h-14 flex items-center">
+      <a href="/employer" class="w-10 h-10 flex items-center justify-center -ml-2">
+        <svg class="w-6 h-6 text-gray-900"><!-- back arrow --></svg>
+      </a>
+      <span class="text-[17px] font-bold text-gray-900 ml-2">프로필 설정</span>
+    </div>
+  </header>
+  
+  <!-- Profile Header -->
+  <div class="bg-white px-5 py-8 text-center border-b border-gray-100">
+    <div class="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+      <span class="text-4xl">👤</span>
+    </div>
+    <h1 class="text-[20px] font-bold text-gray-900">김사장님</h1>
+    <p class="text-[14px] text-gray-500 mt-1">example@kakao.com</p>
+  </div>
+  
+  <!-- Settings Sections -->
+  <div class="p-4 space-y-4">
+    <!-- 내 정보 -->
+    <section>
+      <h2 class="text-[14px] font-medium text-gray-500 px-1 mb-2">내 정보</h2>
+      <div class="bg-white rounded-2xl overflow-hidden">
+        <button class="w-full flex items-center justify-between px-5 py-4 border-b border-gray-100 active:bg-gray-50">
+          <div>
+            <p class="text-[13px] text-gray-500 mb-0.5">이름</p>
+            <p class="text-[15px] text-gray-900">김사장님</p>
+          </div>
+          <svg class="w-5 h-5 text-gray-400"><!-- chevron-right --></svg>
+        </button>
+        <button class="w-full flex items-center justify-between px-5 py-4 active:bg-gray-50">
+          <div>
+            <p class="text-[13px] text-gray-500 mb-0.5">연락처</p>
+            <p class="text-[15px] text-gray-900">010-1234-5678</p>
+          </div>
+          <svg class="w-5 h-5 text-gray-400"><!-- chevron-right --></svg>
+        </button>
+      </div>
+    </section>
+    
+    <!-- 역할 -->
+    <section>
+      <h2 class="text-[14px] font-medium text-gray-500 px-1 mb-2">역할</h2>
+      <div class="bg-white rounded-2xl overflow-hidden">
+        <button class="w-full flex items-center justify-between px-5 py-4 active:bg-gray-50">
+          <div>
+            <p class="text-[15px] text-gray-900">현재 역할: <strong class="text-blue-500">사장님</strong></p>
+            <p class="text-[13px] text-gray-500 mt-0.5">알바생으로 전환 가능</p>
+          </div>
+          <svg class="w-5 h-5 text-gray-400"><!-- chevron-right --></svg>
+        </button>
+      </div>
+    </section>
+    
+    <!-- 앱 설정 -->
+    <section>
+      <h2 class="text-[14px] font-medium text-gray-500 px-1 mb-2">앱 설정</h2>
+      <div class="bg-white rounded-2xl overflow-hidden">
+        <button class="w-full flex items-center justify-between px-5 py-4 active:bg-gray-50">
+          <span class="text-[15px] text-gray-900">알림 설정</span>
+          <svg class="w-5 h-5 text-gray-400"><!-- chevron-right --></svg>
+        </button>
+      </div>
+    </section>
+    
+    <!-- 로그아웃 -->
+    <section>
+      <a href="/auth/signout" class="block bg-white rounded-2xl">
+        <button class="w-full flex items-center justify-center px-5 py-4 active:bg-gray-50">
+          <span class="text-[15px] text-red-500 font-medium">🚪 로그아웃</span>
+        </button>
+      </a>
+    </section>
+  </div>
+</div>
+```
+
+---
+
+### A1.5 근로자 대시보드 변경
+
+사업자 대시보드와 동일한 패턴 적용:
+- 탭 제거
+- 2개 섹션 (대기중, 완료)
+- 헤더에 햄버거 메뉴 추가
+- 크레딧 카드는 표시하지 않음 (근로자는 크레딧 불필요)
+
+---
+
+### A1.6 UX Writing 가이드 (추가)
+
+| 위치 | 기존 | 변경 |
+|------|------|------|
+| 대시보드 섹션 제목 | "대기중" | "📋 대기중인 계약서" |
+| 대시보드 섹션 제목 | "완료" | "✅ 완료된 계약서" |
+| 메뉴 항목 | - | 아이콘 + 텍스트 조합 |
+| 로그아웃 | "로그아웃" | "🚪 로그아웃" (빨간색) |
+
+---
+
+> **Amendment 1 끝**
+
+---
+
+## 📝 Amendment 2: 게스트 모드 UI (2026년 1월 24일)
+
+> **버전**: 1.2  
+> **변경 사유**: 게스트 모드 UI 및 환영 메시지
+
+### A2.1 역할 선택 페이지 환영 메시지
+
+#### 기존
+```html
+<h1 class="text-[26px] font-bold text-gray-900 mb-2">
+  반가워요! 👋
+</h1>
+```
+
+#### 변경
+```html
+<h1 class="text-[26px] font-bold text-gray-900 mb-2">
+  {userName}님, 환영합니다! 👋
+</h1>
+```
+
+---
+
+### A2.2 게스트 모드 대시보드 표시
+
+게스트 모드에서는 프로필 이름에 "게스트"가 포함됩니다.
+
+**사업자:**
+```
+┌─────────────────────────────────────┐
+│     싸인해주세요    💎3  🔔  ☰     │
+├─────────────────────────────────────┤
+│                                     │
+│ 대기중인 계약서 (1)                  │
+│ ┌─────────────────────────────────┐ │
+│ │ 홍길동 | 9,860원 | 🟡 대기중    │ │
+│ └─────────────────────────────────┘ │
+│                                     │
+│ 완료된 계약서 (1)       [📁 폴더]   │
+│ ┌─────────────────────────────────┐ │
+│ │ 김철수 | 10,000원 | 🟢 완료    │ │
+│ └─────────────────────────────────┘ │
+└─────────────────────────────────────┘
+```
+
+**근로자:**
+```
+┌─────────────────────────────────────┐
+│     싸인해주세요          🔔  ☰     │
+├─────────────────────────────────────┤
+│                                     │
+│ 안녕하세요, 게스트 알바생님 👋       │
+│ 서명할 계약서가 1건 있어요          │
+│                                     │
+│ 서명 대기중                          │
+│ ┌─────────────────────────────────┐ │
+│ │ 김사장 | D-2 | 9,860원 [서명] │ │
+│ └─────────────────────────────────┘ │
+│                                     │
+│ 체결된 계약서                        │
+│ ┌─────────────────────────────────┐ │
+│ │ 이사장 | 10,500원 | 완료       │ │
+│ └─────────────────────────────────┘ │
+└─────────────────────────────────────┘
+```
+
+---
+
+### A2.3 메뉴 시트 게스트 표시
+
+게스트 모드에서 메뉴 시트:
+```
+┌─────────────────────────────────────┐
+│ 😊 게스트 사장님님                   │
+│ (이메일 없음)                        │
+├─────────────────────────────────────┤
+│ 👤 프로필 설정        →             │
+│ 💳 크레딧 충전        →             │
+│ 📋 결제 내역          →             │
+├─────────────────────────────────────┤
+│ 🚪 로그아웃           →             │
+└─────────────────────────────────────┘
+```
+
+---
+
+> **Amendment 2 끝**

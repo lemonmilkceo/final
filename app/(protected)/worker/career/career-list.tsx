@@ -57,7 +57,7 @@ export default function CareerList({
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <Header showProfile={false} showNotification={false} />
+      <Header showNotification={false} showMenu={false} />
 
       <div className="px-5 pt-4 pb-24">
         {/* Title */}

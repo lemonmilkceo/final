@@ -6,22 +6,22 @@ import clsx from 'clsx';
 import { ROUTES } from '@/lib/constants/routes';
 
 interface HeaderProps {
-  showProfile?: boolean;
   showNotification?: boolean;
+  showMenu?: boolean;
   credits?: number;
-  avatarEmoji?: string;
   unreadCount?: number;
   onNotificationClick?: () => void;
+  onMenuClick?: () => void;
   className?: string;
 }
 
 const Header: React.FC<HeaderProps> = ({
-  showProfile = true,
   showNotification = true,
+  showMenu = true,
   credits,
-  avatarEmoji = '😊',
   unreadCount = 0,
   onNotificationClick,
+  onMenuClick,
   className,
 }) => {
   return (
@@ -32,27 +32,30 @@ const Header: React.FC<HeaderProps> = ({
       )}
     >
       <div className="h-14 flex items-center justify-between">
-        {/* Profile */}
-        {showProfile ? (
-          <Link
-            href={ROUTES.PROFILE}
-            className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center"
-          >
-            <span className="text-lg">{avatarEmoji}</span>
-          </Link>
-        ) : (
-          <div className="w-9" />
-        )}
+        {/* 좌측: 빈 공간 (균형을 위해) */}
+        <div className="w-10" />
 
-        {/* Title */}
+        {/* 중앙: 서비스명 */}
         <span className="text-[17px] font-bold text-gray-900">싸인해주세요</span>
 
-        {/* Right Actions */}
-        <div className="flex items-center gap-3">
+        {/* 우측: 크레딧 + 알림 + 메뉴 */}
+        <div className="flex items-center gap-2">
+          {/* 크레딧 (사업자만) */}
+          {credits !== undefined && (
+            <Link
+              href={ROUTES.PRICING}
+              className="flex items-center gap-1 bg-blue-50 text-blue-500 text-[13px] font-semibold px-2.5 py-1 rounded-full"
+            >
+              <span>💎</span>
+              <span>{credits}</span>
+            </Link>
+          )}
+
+          {/* 알림 아이콘 */}
           {showNotification && (
-            <button 
+            <button
               onClick={onNotificationClick}
-              className="relative"
+              className="relative w-10 h-10 flex items-center justify-center"
               aria-label="알림"
             >
               <svg
@@ -69,20 +72,34 @@ const Header: React.FC<HeaderProps> = ({
                 />
               </svg>
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-[11px] text-white flex items-center justify-center font-medium">
+                <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full text-[11px] text-white flex items-center justify-center font-medium">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
             </button>
           )}
 
-          {credits !== undefined && (
-            <Link
-              href={ROUTES.PRICING}
-              className="bg-blue-50 text-blue-500 text-[13px] font-semibold px-2.5 py-1 rounded-full"
+          {/* 햄버거 메뉴 아이콘 */}
+          {showMenu && (
+            <button
+              onClick={onMenuClick}
+              className="w-10 h-10 flex items-center justify-center"
+              aria-label="메뉴"
             >
-              {credits}개
-            </Link>
+              <svg
+                className="w-6 h-6 text-gray-700"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </button>
           )}
         </div>
       </div>

@@ -11,6 +11,10 @@ interface RoleOption {
   description: string;
 }
 
+interface RoleSelectorProps {
+  userName?: string | null;
+}
+
 const roleOptions: RoleOption[] = [
   {
     value: 'employer',
@@ -26,7 +30,7 @@ const roleOptions: RoleOption[] = [
   },
 ];
 
-export function RoleSelector() {
+export function RoleSelector({ userName }: RoleSelectorProps) {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -41,12 +45,17 @@ export function RoleSelector() {
     }, 300);
   };
 
+  // 환영 메시지
+  const welcomeMessage = userName 
+    ? `${userName}님, 환영합니다! 👋` 
+    : '반가워요! 👋';
+
   return (
     <div className="min-h-screen bg-white px-6 py-12 safe-top safe-bottom">
       {/* Header */}
       <div className="mb-10">
         <h1 className="text-[26px] font-bold text-gray-900 mb-2">
-          반가워요! 👋
+          {welcomeMessage}
         </h1>
         <p className="text-[17px] text-gray-500">어떻게 사용할 건가요?</p>
       </div>

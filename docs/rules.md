@@ -1521,4 +1521,203 @@ export function useContracts() {
 
 ---
 
-> **문서 끝**
+---
+
+## 📝 Amendment 1: 코딩 규칙 추가 (2026년 1월 24일)
+
+> **버전**: 1.1  
+> **변경 사유**: 메뉴 시트 컴포넌트 및 대시보드 레이아웃 변경 관련 규칙 추가
+
+### A1.1 신규 컴포넌트 경로
+
+| 컴포넌트 | 경로 | 설명 |
+|----------|------|------|
+| MenuSheet | `components/layout/MenuSheet.tsx` | 햄버거 메뉴 사이드시트 |
+| CreditCard | `components/shared/CreditCard.tsx` | 대시보드 크레딧 표시 카드 |
+
+### A1.2 라우트 상수 추가 (`lib/constants/routes.ts`)
+
+```typescript
+// 메뉴 시트에서 사용하는 라우트
+export const MENU_ROUTES = {
+  PROFILE: '/profile',
+  PRICING: '/pricing',
+  PAYMENT_HISTORY: '/payment-history',
+  TRASH: '/employer/trash', // 또는 대시보드 내 섹션
+  TERMS: '/terms',
+  PRIVACY: '/privacy',
+  SIGNOUT: '/auth/signout',
+} as const;
+```
+
+### A1.3 헤더 컴포넌트 Props 변경
+
+**기존:**
+```typescript
+interface HeaderProps {
+  showProfile?: boolean;
+  showNotification?: boolean;
+  credits?: number;
+}
+```
+
+**변경:**
+```typescript
+interface HeaderProps {
+  showCredits?: boolean;      // 크레딧 표시 여부 (사업자만)
+  showNotification?: boolean; // 알림 아이콘 표시
+  showMenu?: boolean;         // 햄버거 메뉴 표시 (기본값: true)
+  credits?: number;           // 보유 크레딧 수
+  onMenuOpen?: () => void;    // 메뉴 열기 핸들러
+}
+```
+
+### A1.4 대시보드 데이터 페칭 패턴
+
+```typescript
+// app/(protected)/employer/page.tsx
+export default async function EmployerDashboard() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  // 대기중 계약서와 완료 계약서를 한 번에 조회
+  const [pendingResult, completedResult] = await Promise.all([
+    supabase
+      .from('contracts')
+      .select('*')
+      .eq('employer_id', user.id)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('contracts')
+      .select('*')
+      .eq('employer_id', user.id)
+      .eq('status', 'completed')
+      .order('completed_at', { ascending: false }),
+  ]);
+
+  return (
+    <EmployerDashboardClient 
+      pendingContracts={pendingResult.data ?? []}
+      completedContracts={completedResult.data ?? []}
+    />
+  );
+}
+```
+
+### A1.5 메뉴 시트 상태 관리
+
+메뉴 시트 열기/닫기 상태는 로컬 상태로 관리합니다 (Zustand 불필요):
+
+```typescript
+// 사용 예시 (클라이언트 컴포넌트)
+'use client';
+
+import { useState } from 'react';
+import { MenuSheet } from '@/components/layout/MenuSheet';
+
+export function DashboardClient() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  return (
+    <>
+      <Header onMenuOpen={() => setIsMenuOpen(true)} />
+      <MenuSheet 
+        isOpen={isMenuOpen} 
+        onClose={() => setIsMenuOpen(false)} 
+      />
+    </>
+  );
+}
+```
+
+---
+
+> **Amendment 1 끝**
+
+---
+
+## 📝 Amendment 2: 게스트 모드 코딩 규칙 (2026년 1월 24일)
+
+> **버전**: 1.2  
+> **변경 사유**: 게스트 모드 지원을 위한 코딩 규칙 추가
+
+### A2.1 게스트 모드 체크 패턴
+
+모든 `(protected)` 폴더의 Server Component에서 게스트 모드를 체크해야 합니다.
+
+```typescript
+import { cookies } from 'next/headers';
+
+async function isGuestMode(): Promise<boolean> {
+  const cookieStore = await cookies();
+  const guestCookie = cookieStore.get('guest-storage');
+  
+  if (guestCookie?.value) {
+    try {
+      const decodedValue = decodeURIComponent(guestCookie.value);
+      const guestData = JSON.parse(decodedValue);
+      return guestData?.state?.isGuest || false;
+    } catch {
+      return false;
+    }
+  }
+  
+  return false;
+}
+```
+
+### A2.2 게스트 모드 샘플 데이터
+
+게스트 모드에서는 DB 조회 대신 하드코딩된 샘플 데이터를 반환합니다.
+
+```typescript
+// 게스트 모드 체크
+const isGuest = await isGuestMode();
+
+if (isGuest) {
+  return (
+    <Dashboard
+      profile={{ name: '게스트', email: null }}
+      contracts={GUEST_SAMPLE_CONTRACTS}
+      isGuestMode={true}
+    />
+  );
+}
+
+// 실제 사용자 처리...
+```
+
+### A2.3 쿠키 저장소 (guestStore)
+
+Zustand persist를 쿠키 기반으로 변경:
+
+```typescript
+import { createJSONStorage } from 'zustand/middleware';
+
+const cookieStorage = {
+  getItem: (name: string) => { /* 쿠키 읽기 */ },
+  setItem: (name: string, value: string) => { /* 쿠키 저장 */ },
+  removeItem: (name: string) => { /* 쿠키 삭제 */ },
+};
+
+// persist 옵션
+{
+  name: 'guest-storage',
+  storage: createJSONStorage(() => cookieStorage),
+}
+```
+
+### A2.4 카카오 닉네임 가져오기
+
+카카오 로그인 후 `user_metadata`에서 닉네임을 가져옵니다:
+
+```typescript
+const kakaoName = user.user_metadata?.name || 
+                  user.user_metadata?.full_name || 
+                  profile?.name;
+```
+
+---
+
+> **Amendment 2 끝**

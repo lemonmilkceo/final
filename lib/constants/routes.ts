@@ -61,6 +61,16 @@ export const PAYMENT_ROUTES = {
   HISTORY: '/payment-history',
 } as const;
 
+// 메뉴 시트에서 사용하는 라우트
+export const MENU_ROUTES = {
+  PROFILE: '/profile',
+  PRICING: '/pricing',
+  PAYMENT_HISTORY: '/payment-history',
+  TERMS: '/terms',
+  PRIVACY: '/privacy',
+  SIGNOUT: '/auth/signout',
+} as const;
+
 // 설정 라우트
 export const SETTINGS_ROUTES = {
   PROFILE: '/profile',

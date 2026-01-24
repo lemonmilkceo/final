@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGuestStore } from '@/stores/guestStore';
 import Image from 'next/image';
@@ -7,10 +8,17 @@ import Image from 'next/image';
 export default function GuestRoleSelectPage() {
   const router = useRouter();
   const { setGuestMode } = useGuestStore();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleRoleSelect = (role: 'employer' | 'worker') => {
+  const handleRoleSelect = async (role: 'employer' | 'worker') => {
+    setIsLoading(true);
     setGuestMode(role);
-    router.push(`/${role}`);
+    
+    // 쿠키가 설정될 시간을 확보하기 위해 약간의 딜레이
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // full page reload로 미들웨어가 쿠키를 읽을 수 있게 함
+    window.location.href = `/${role}`;
   };
 
   return (
@@ -44,7 +52,8 @@ export default function GuestRoleSelectPage() {
           {/* 사장님 */}
           <button
             onClick={() => handleRoleSelect('employer')}
-            className="w-full bg-blue-50 rounded-2xl p-6 text-left active:bg-blue-100 transition-colors"
+            disabled={isLoading}
+            className={`w-full bg-blue-50 rounded-2xl p-6 text-left active:bg-blue-100 transition-colors ${isLoading ? 'opacity-50' : ''}`}
           >
             <div className="flex items-center gap-4">
               <span className="text-4xl">👔</span>
@@ -62,7 +71,8 @@ export default function GuestRoleSelectPage() {
           {/* 알바생 */}
           <button
             onClick={() => handleRoleSelect('worker')}
-            className="w-full bg-green-50 rounded-2xl p-6 text-left active:bg-green-100 transition-colors"
+            disabled={isLoading}
+            className={`w-full bg-green-50 rounded-2xl p-6 text-left active:bg-green-100 transition-colors ${isLoading ? 'opacity-50' : ''}`}
           >
             <div className="flex items-center gap-4">
               <span className="text-4xl">🧑‍💼</span>

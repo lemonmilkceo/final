@@ -1117,4 +1117,293 @@
 
 ---
 
+---
+
+## 📝 Amendment 1: UI/UX 개선 작업 계획 (2026년 1월 24일)
+
+> **추가일**: 2026년 1월 24일  
+> **변경 사유**: 네비게이션 메뉴 추가 및 대시보드 레이아웃 개선  
+> **우선순위**: P0 (핵심 UX 개선)
+
+---
+
+### Epic A1.1: 헤더 네비게이션 개선
+> 예상 시간: 4시간
+
+#### Story A1.1.1: 헤더 컴포넌트 수정
+> 예상 시간: 1시간
+
+- [ ] **Task A1.1.1.1**: `components/layout/Header.tsx` 수정
+  - 참조: `UI_Spec` Amendment A1.1.2
+  - 작업 내용:
+    - 좌측 프로필 이모지 제거
+    - 우측에 햄버거 메뉴 아이콘 (☰) 추가
+    - Props에 `onMenuOpen` 핸들러 추가
+    - 크레딧 표시 스타일 변경 (💎 아이콘 추가)
+
+- [ ] **Task A1.1.1.2**: 햄버거 메뉴 아이콘 SVG 생성
+  - `public/images/icons/menu.svg` 또는 Heroicons 사용
+  - 3줄 가로선 아이콘
+
+---
+
+#### Story A1.1.2: 메뉴 시트 컴포넌트 구현
+> 예상 시간: 2시간
+
+- [ ] **Task A1.1.2.1**: `components/layout/MenuSheet.tsx` 신규 생성
+  - 참조: `UI_Spec` Amendment A1.2
+  - 작업 내용:
+    - 우측에서 슬라이드하는 사이드시트
+    - 프로필 영역 (아바타, 이름, 이메일)
+    - 메뉴 항목 목록 (아이콘 + 텍스트 + 화살표)
+    - 로그아웃 버튼 (빨간색)
+    - 백드롭 클릭 시 닫기
+    - 애니메이션 (slide-in-right)
+
+- [ ] **Task A1.1.2.2**: Tailwind 애니메이션 추가
+  - `tailwind.config.ts`에 `slide-in-right` 키프레임 추가
+
+- [ ] **Task A1.1.2.3**: 메뉴 시트에서 사용자 정보 표시 로직 구현
+  - Server Component에서 profile 데이터 조회
+  - 메뉴시트에 props로 전달
+
+---
+
+#### Story A1.1.3: 메뉴 시트 연동
+> 예상 시간: 1시간
+
+- [ ] **Task A1.1.3.1**: `app/(protected)/employer/layout.tsx` 수정
+  - MenuSheet 상태 관리 (useState)
+  - Header와 MenuSheet 연결
+  - profile 데이터 조회 및 전달
+
+- [ ] **Task A1.1.3.2**: `app/(protected)/worker/layout.tsx` 수정
+  - 동일한 패턴 적용
+  - 근로자 전용 메뉴 항목 표시 (크레딧 충전 제외)
+
+---
+
+### Epic A1.2: 대시보드 레이아웃 변경
+> 예상 시간: 5시간
+
+#### Story A1.2.1: 사업자 대시보드 재구성
+> 예상 시간: 3시간
+
+- [ ] **Task A1.2.1.1**: `components/shared/CreditCard.tsx` 신규 생성
+  - 참조: `UI_Spec` Amendment A1.3.2
+  - 그라데이션 배경의 크레딧 표시 카드
+  - 충전 버튼 (→ /pricing)
+
+- [ ] **Task A1.2.1.2**: `app/(protected)/employer/employer-dashboard.tsx` 수정
+  - TabBar 제거
+  - 섹션 기반 레이아웃으로 변경
+  - "대기중인 계약서" 섹션 구현
+  - "완료된 계약서" 섹션 구현
+  - 각 섹션에 카운트 표시
+
+- [ ] **Task A1.2.1.3**: 폴더 버튼 UI 추가
+  - 완료 섹션 제목 우측에 [📁 폴더] 버튼
+  - 클릭 시 `/employer/folders`로 이동
+
+- [ ] **Task A1.2.1.4**: `app/(protected)/employer/page.tsx` 데이터 페칭 수정
+  - pending, completed 계약서를 병렬로 조회
+  - 참조: `rules.md` Amendment A1.4
+
+---
+
+#### Story A1.2.2: 근로자 대시보드 재구성
+> 예상 시간: 2시간
+
+- [ ] **Task A1.2.2.1**: `app/(protected)/worker/worker-dashboard.tsx` 수정
+  - 사업자 대시보드와 동일한 패턴 적용
+  - 크레딧 카드 제외
+  - TabBar 제거
+  - 섹션 기반 레이아웃
+
+- [ ] **Task A1.2.2.2**: `app/(protected)/worker/page.tsx` 데이터 페칭 수정
+  - pending, completed 계약서를 병렬로 조회
+
+---
+
+### Epic A1.3: 프로필 페이지 구현
+> 예상 시간: 3시간
+
+#### Story A1.3.1: 프로필 페이지 UI
+> 예상 시간: 2시간
+
+- [ ] **Task A1.3.1.1**: `app/(protected)/profile/page.tsx` 신규 생성
+  - 참조: `UI_Spec` Amendment A1.4
+  - 프로필 헤더 (아바타, 이름, 이메일)
+  - 내 정보 섹션 (이름, 연락처)
+  - 역할 변경 섹션
+  - 앱 설정 섹션 (알림)
+  - 로그아웃 버튼
+
+- [ ] **Task A1.3.1.2**: 프로필 정보 조회 Server Component 구현
+  - profiles 테이블에서 현재 사용자 정보 조회
+
+---
+
+#### Story A1.3.2: 프로필 수정 기능
+> 예상 시간: 1시간
+
+- [ ] **Task A1.3.2.1**: `app/(protected)/profile/actions.ts` Server Actions 구현
+  - updateProfile: 이름, 연락처 수정
+  - changeRole: 역할 변경 (사장님 ↔ 알바생)
+
+- [ ] **Task A1.3.2.2**: 역할 변경 ConfirmSheet 연동
+  - 역할 변경 시 확인 모달 표시
+  - 변경 후 해당 역할 대시보드로 리다이렉트
+
+---
+
+### Epic A1.4: 법적 문서 페이지 (선택)
+> 예상 시간: 2시간 | 우선순위: P2
+
+#### Story A1.4.1: 이용약관 및 개인정보처리방침
+> 예상 시간: 2시간
+
+- [ ] **Task A1.4.1.1**: `app/(public)/terms/page.tsx` 생성
+  - 이용약관 텍스트 표시
+  - 정적 페이지
+
+- [ ] **Task A1.4.1.2**: `app/(public)/privacy/page.tsx` 생성
+  - 개인정보처리방침 텍스트 표시
+  - 정적 페이지
+
+---
+
+## 📊 Amendment 1 일정 요약
+
+| Epic | 예상 시간 | 우선순위 | 완료 기준 |
+|------|----------|----------|----------|
+| A1.1: 헤더 네비게이션 개선 | 4시간 | P0 | 햄버거 메뉴 클릭 시 사이드시트 열림 |
+| A1.2: 대시보드 레이아웃 변경 | 5시간 | P0 | 탭 제거, 섹션 기반 UI 동작 |
+| A1.3: 프로필 페이지 구현 | 3시간 | P0 | 프로필 조회/수정/역할변경 동작 |
+| A1.4: 법적 문서 페이지 | 2시간 | P2 | (선택) 약관 페이지 표시 |
+| **Total** | **14시간** | - | 약 2일 (풀타임 기준) |
+
+---
+
+## 🚀 Amendment 1 실행 순서
+
+### 1단계: 헤더 및 메뉴 시트 (4시간)
+1. Task A1.1.1.1: Header 컴포넌트 수정
+2. Task A1.1.2.1: MenuSheet 컴포넌트 생성
+3. Task A1.1.2.2: Tailwind 애니메이션 추가
+4. Task A1.1.3.1, A1.1.3.2: 레이아웃에 연동
+
+### 2단계: 대시보드 재구성 (5시간)
+1. Task A1.2.1.1: CreditCard 컴포넌트 생성
+2. Task A1.2.1.2, A1.2.1.3: 사업자 대시보드 UI 변경
+3. Task A1.2.1.4: 데이터 페칭 수정
+4. Task A1.2.2.1, A1.2.2.2: 근로자 대시보드 변경
+
+### 3단계: 프로필 페이지 (3시간)
+1. Task A1.3.1.1, A1.3.1.2: 프로필 페이지 UI
+2. Task A1.3.2.1, A1.3.2.2: 프로필 수정 기능
+
+### 4단계 (선택): 법적 문서 (2시간)
+1. Task A1.4.1.1, A1.4.1.2: 약관 페이지
+
+---
+
+> **Amendment 1 끝**
+
+---
+
+## 📝 Amendment 2: 게스트 모드 및 환영 메시지 (2026년 1월 24일)
+
+> **추가일**: 2026년 1월 24일  
+> **변경 사유**: 게스트 모드 지원 및 환영 메시지 개선  
+> **우선순위**: P0 (핵심 기능)  
+> **상태**: ✅ 완료
+
+---
+
+### Epic A2.1: 환영 메시지 개선
+> 예상 시간: 30분 | **상태: ✅ 완료**
+
+#### Story A2.1.1: 역할 선택 페이지 닉네임 표시
+> 예상 시간: 30분 | **상태: ✅ 완료**
+
+- [x] **Task A2.1.1.1**: `app/(protected)/select-role/page.tsx` 수정
+  - 카카오 `user_metadata`에서 닉네임 추출
+  - RoleSelector에 userName prop 전달
+
+- [x] **Task A2.1.1.2**: `app/(protected)/select-role/role-selector.tsx` 수정
+  - userName prop 추가
+  - "닉네임님, 환영합니다! 👋" 메시지 표시
+
+---
+
+### Epic A2.2: 게스트 모드 지원
+> 예상 시간: 2시간 | **상태: ✅ 완료**
+
+#### Story A2.2.1: 쿠키 기반 게스트 저장소
+> 예상 시간: 30분 | **상태: ✅ 완료**
+
+- [x] **Task A2.2.1.1**: `stores/guestStore.ts` 수정
+  - localStorage → 쿠키 기반 저장소로 변경
+  - `createJSONStorage` + `cookieStorage` 사용
+  - 7일 유효기간 설정
+
+---
+
+#### Story A2.2.2: Protected Layout 게스트 체크
+> 예상 시간: 30분 | **상태: ✅ 완료**
+
+- [x] **Task A2.2.2.1**: `app/(protected)/layout.tsx` 수정
+  - 게스트 쿠키 체크 함수 추가
+  - 게스트 모드일 경우 인증 스킵
+
+- [x] **Task A2.2.2.2**: `app/(protected)/employer/layout.tsx` 수정
+  - 게스트 모드 체크 추가
+  - guestRole === 'employer' 확인
+
+- [x] **Task A2.2.2.3**: `app/(protected)/worker/layout.tsx` 수정
+  - 게스트 모드 체크 추가
+  - guestRole === 'worker' 확인
+
+---
+
+#### Story A2.2.3: 게스트용 샘플 데이터
+> 예상 시간: 1시간 | **상태: ✅ 완료**
+
+- [x] **Task A2.2.3.1**: `app/(protected)/employer/page.tsx` 수정
+  - 게스트 모드 체크 추가
+  - `GUEST_SAMPLE_CONTRACTS` 샘플 데이터 정의
+  - 게스트일 경우 샘플 데이터 반환
+
+- [x] **Task A2.2.3.2**: `app/(protected)/worker/page.tsx` 수정
+  - 게스트 모드 체크 추가
+  - 근로자용 샘플 계약서 데이터 정의
+  - 게스트일 경우 샘플 데이터 반환
+
+- [x] **Task A2.2.3.3**: `app/(public)/guest/page.tsx` 수정
+  - 쿠키 설정 후 full page reload로 변경
+  - `window.location.href` 사용
+
+---
+
+## 📊 Amendment 2 완료 요약
+
+| Task | 상태 | 설명 |
+|------|------|------|
+| A2.1.1.1 | ✅ | 역할 선택 페이지 닉네임 전달 |
+| A2.1.1.2 | ✅ | 환영 메시지 표시 |
+| A2.2.1.1 | ✅ | 쿠키 기반 guestStore |
+| A2.2.2.1 | ✅ | protected layout 게스트 체크 |
+| A2.2.2.2 | ✅ | employer layout 게스트 체크 |
+| A2.2.2.3 | ✅ | worker layout 게스트 체크 |
+| A2.2.3.1 | ✅ | employer 샘플 데이터 |
+| A2.2.3.2 | ✅ | worker 샘플 데이터 |
+| A2.2.3.3 | ✅ | guest 페이지 수정 |
+
+---
+
+> **Amendment 2 끝**
+
+---
+
 > **문서 끝**

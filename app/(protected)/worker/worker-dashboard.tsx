@@ -1,12 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/layout/Header';
+import MenuSheet from '@/components/layout/MenuSheet';
+import NotificationSheet from '@/components/notification/NotificationSheet';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
 import EmptyState from '@/components/shared/EmptyState';
 import { formatCurrency, formatDday } from '@/lib/utils/format';
+import { getNotifications, getUnreadNotificationCount } from '@/app/actions/notifications';
 import clsx from 'clsx';
 import type { ContractStatus } from '@/types';
 
@@ -26,9 +29,19 @@ interface DashboardContract {
   }[];
 }
 
+interface Notification {
+  id: string;
+  type: 'contract_sent' | 'contract_signed' | 'contract_expired_soon' | 'contract_expired';
+  title: string;
+  body: string;
+  is_read: boolean;
+  created_at: string;
+}
+
 interface WorkerDashboardProps {
   profile: {
     name: string;
+    email?: string | null;
     avatarUrl?: string | null;
   };
   contracts: DashboardContract[];
@@ -39,6 +52,10 @@ export default function WorkerDashboard({
   contracts,
 }: WorkerDashboardProps) {
   const router = useRouter();
+  const [isMenuSheetOpen, setIsMenuSheetOpen] = useState(false);
+  const [isNotificationSheetOpen, setIsNotificationSheetOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // 대기중인 계약서 (서명 필요)
   const pendingContracts = contracts.filter(
@@ -49,6 +66,26 @@ export default function WorkerDashboard({
 
   // 완료된 계약서
   const completedContracts = contracts.filter((c) => c.status === 'completed');
+
+  // 알림 데이터 로드
+  useEffect(() => {
+    const loadNotifications = async () => {
+      const [notifResult, count] = await Promise.all([
+        getNotifications(),
+        getUnreadNotificationCount(),
+      ]);
+      if (notifResult.success) {
+        setNotifications(notifResult.data as Notification[]);
+      }
+      setUnreadCount(count);
+    };
+    loadNotifications();
+  }, []);
+
+  const handleNotificationsUpdate = async () => {
+    const count = await getUnreadNotificationCount();
+    setUnreadCount(count);
+  };
 
   const getDdayBadge = (expiresAt: string | null) => {
     if (!expiresAt) return null;
@@ -76,7 +113,13 @@ export default function WorkerDashboard({
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <Header showProfile avatarEmoji="👷" />
+      <Header
+        showNotification={true}
+        showMenu={true}
+        unreadCount={unreadCount}
+        onNotificationClick={() => setIsNotificationSheetOpen(true)}
+        onMenuClick={() => setIsMenuSheetOpen(true)}
+      />
 
       {/* Content */}
       <div className="px-5 pt-4 pb-24">
@@ -182,6 +225,23 @@ export default function WorkerDashboard({
           />
         )}
       </div>
+
+      {/* Notification Sheet */}
+      <NotificationSheet
+        isOpen={isNotificationSheetOpen}
+        onClose={() => setIsNotificationSheetOpen(false)}
+        notifications={notifications}
+        onNotificationsUpdate={handleNotificationsUpdate}
+      />
+
+      {/* Menu Sheet */}
+      <MenuSheet
+        isOpen={isMenuSheetOpen}
+        onClose={() => setIsMenuSheetOpen(false)}
+        userName={profile.name}
+        userEmail={profile.email}
+        userRole="worker"
+      />
     </div>
   );
 }

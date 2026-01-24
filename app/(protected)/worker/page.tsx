@@ -1,9 +1,72 @@
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { ROUTES } from '@/lib/constants/routes';
 import WorkerDashboard from './worker-dashboard';
 
+// 게스트 모드 체크 함수
+async function isGuestMode(): Promise<boolean> {
+  const cookieStore = await cookies();
+  const guestCookie = cookieStore.get('guest-storage');
+  
+  if (guestCookie?.value) {
+    try {
+      const decodedValue = decodeURIComponent(guestCookie.value);
+      const guestData = JSON.parse(decodedValue);
+      return guestData?.state?.isGuest && guestData?.state?.guestRole === 'worker';
+    } catch {
+      // JSON 파싱 실패 시 무시
+    }
+  }
+  
+  return false;
+}
+
+// 샘플 데이터 (게스트 모드용)
+const GUEST_SAMPLE_CONTRACTS = [
+  {
+    id: 'sample-1',
+    worker_name: '게스트',
+    hourly_wage: 9860,
+    status: 'pending' as const,
+    expires_at: new Date(Date.now() + 86400000 * 3).toISOString(), // 3일 후
+    created_at: new Date().toISOString(),
+    employer: { name: '김사장' },
+    signatures: [{ signer_role: 'employer' as const, signed_at: new Date().toISOString() }],
+  },
+  {
+    id: 'sample-2',
+    worker_name: '게스트',
+    hourly_wage: 10500,
+    status: 'completed' as const,
+    expires_at: null,
+    created_at: new Date(Date.now() - 86400000 * 7).toISOString(),
+    employer: { name: '이사장' },
+    signatures: [
+      { signer_role: 'employer' as const, signed_at: new Date().toISOString() },
+      { signer_role: 'worker' as const, signed_at: new Date().toISOString() },
+    ],
+  },
+];
+
 export default async function WorkerDashboardPage() {
+  // 게스트 모드 체크
+  const isGuest = await isGuestMode();
+  
+  if (isGuest) {
+    // 게스트 모드: 샘플 데이터 반환
+    return (
+      <WorkerDashboard
+        profile={{
+          name: '게스트 알바생',
+          email: null,
+          avatarUrl: null,
+        }}
+        contracts={GUEST_SAMPLE_CONTRACTS}
+      />
+    );
+  }
+
   const supabase = await createClient();
 
   const {
@@ -61,6 +124,7 @@ export default async function WorkerDashboardPage() {
     <WorkerDashboard
       profile={{
         name: profile?.name || '알바생',
+        email: user.email,
         avatarUrl: profile?.avatar_url,
       }}
       contracts={contracts || []}

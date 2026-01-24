@@ -1,14 +1,49 @@
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { ROUTES } from '@/lib/constants/routes';
 import BottomNav from '@/components/layout/BottomNav';
 import React from 'react';
+
+// 게스트 모드 체크 함수
+async function isGuestMode(): Promise<{ isGuest: boolean; guestRole: string | null }> {
+  const cookieStore = await cookies();
+  const guestCookie = cookieStore.get('guest-storage');
+  
+  if (guestCookie?.value) {
+    try {
+      const decodedValue = decodeURIComponent(guestCookie.value);
+      const guestData = JSON.parse(decodedValue);
+      return {
+        isGuest: guestData?.state?.isGuest || false,
+        guestRole: guestData?.state?.guestRole || null,
+      };
+    } catch {
+      // JSON 파싱 실패 시 무시
+    }
+  }
+  
+  return { isGuest: false, guestRole: null };
+}
 
 export default async function WorkerLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // 게스트 모드 체크
+  const { isGuest, guestRole } = await isGuestMode();
+  
+  if (isGuest && guestRole === 'worker') {
+    // 게스트 모드 근로자인 경우 인증 없이 통과
+    return (
+      <div className="min-h-screen bg-gray-50 pb-20">
+        {children}
+        <BottomNav userRole="worker" />
+      </div>
+    );
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
