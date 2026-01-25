@@ -60,9 +60,10 @@ export default async function WorkerLayout({
     .eq('id', user.id)
     .single();
 
-  // 역할 체크
-  if (profile?.role !== 'worker') {
-    redirect('/employer');
+  // 역할 전환 기능 도입으로 역할 강제 리다이렉트 제거
+  // 사용자는 employer/worker 경로 모두 접근 가능
+  if (!profile?.role) {
+    redirect(ROUTES.SELECT_ROLE);
   }
 
   // 온보딩 완료 여부 확인

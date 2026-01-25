@@ -19,13 +19,13 @@ const roleOptions: RoleOption[] = [
   {
     value: 'employer',
     emoji: '👔',
-    title: '사장님이에요',
+    title: '사장님으로 시작',
     description: '계약서를 작성해요',
   },
   {
     value: 'worker',
     emoji: '👷',
-    title: '알바생이에요',
+    title: '알바생으로 시작',
     description: '계약서에 서명해요',
   },
 ];
@@ -57,7 +57,7 @@ export function RoleSelector({ userName }: RoleSelectorProps) {
         <h1 className="text-[26px] font-bold text-gray-900 mb-2">
           {welcomeMessage}
         </h1>
-        <p className="text-[17px] text-gray-500">어떻게 사용할 건가요?</p>
+        <p className="text-[17px] text-gray-500">먼저 어떤 역할로 시작할까요?</p>
       </div>
 
       {/* Role Cards */}
@@ -84,7 +84,7 @@ export function RoleSelector({ userName }: RoleSelectorProps) {
 
       {/* Footer Notice */}
       <p className="text-[13px] text-gray-400 text-center mt-8">
-        나중에 설정에서 언제든 바꿀 수 있어요
+        💡 언제든 메뉴에서 역할을 전환할 수 있어요
       </p>
 
       {/* Loading Overlay */}

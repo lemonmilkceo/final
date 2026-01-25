@@ -24,13 +24,8 @@ const GUEST_ALLOWED_ROUTES = [
   '/worker/career',
 ];
 
-/**
- * 역할별 접근 제한 경로
- */
-const ROLE_ROUTES: Record<string, string[]> = {
-  employer: ['/employer'],
-  worker: ['/worker'],
-};
+// 역할 전환 기능 도입으로 역할별 경로 제한 제거
+// 사용자는 employer/worker 경로 모두 접근 가능
 
 /**
  * 미들웨어에서 Supabase 세션을 업데이트하고 접근 제어를 수행합니다.
@@ -136,20 +131,13 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // 역할별 경로 접근 제한
-    if (userRole) {
-      // employer가 worker 경로 접근 시도
-      if (userRole === 'employer' && pathname.startsWith('/worker')) {
-        const url = request.nextUrl.clone();
-        url.pathname = '/employer';
-        return NextResponse.redirect(url);
-      }
-      // worker가 employer 경로 접근 시도
-      if (userRole === 'worker' && pathname.startsWith('/employer')) {
-        const url = request.nextUrl.clone();
-        url.pathname = '/worker';
-        return NextResponse.redirect(url);
-      }
+    // 역할 전환 기능 도입으로 경로 접근 제한 제거
+    // 사용자는 employer/worker 경로 모두 접근 가능
+    // 역할 선택 페이지에서 이미 역할이 있으면 현재 역할 대시보드로 이동
+    if (userRole && pathname === '/select-role') {
+      const url = request.nextUrl.clone();
+      url.pathname = `/${userRole}`;
+      return NextResponse.redirect(url);
     }
   }
 

@@ -58,9 +58,8 @@ export default async function EmployerLayout({
     redirect(ROUTES.SELECT_ROLE);
   }
 
-  if (profile.role !== 'employer') {
-    redirect(ROUTES.WORKER_DASHBOARD);
-  }
+  // 역할 전환 기능 도입으로 역할 강제 리다이렉트 제거
+  // 사용자는 employer/worker 경로 모두 접근 가능
 
   return <>{children}</>;
 }

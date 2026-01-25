@@ -469,6 +469,7 @@ export default function EmployerDashboard({
         userName={profile.name}
         userEmail={profile.email}
         userRole="employer"
+        isGuestMode={isGuestMode}
       />
 
       {/* Folder Modal */}

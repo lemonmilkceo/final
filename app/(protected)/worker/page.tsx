@@ -86,6 +86,7 @@ export default async function WorkerDashboardPage() {
           avatarUrl: null,
         }}
         contracts={GUEST_SAMPLE_CONTRACTS}
+        isGuestMode={true}
       />
     );
   }

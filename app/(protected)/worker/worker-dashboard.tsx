@@ -50,11 +50,13 @@ interface WorkerDashboardProps {
     avatarUrl?: string | null;
   };
   contracts: DashboardContract[];
+  isGuestMode?: boolean;
 }
 
 export default function WorkerDashboard({
   profile,
   contracts,
+  isGuestMode = false,
 }: WorkerDashboardProps) {
   const router = useRouter();
   
@@ -506,6 +508,7 @@ export default function WorkerDashboard({
         userName={profile.name}
         userEmail={profile.email}
         userRole="worker"
+        isGuestMode={isGuestMode}
       />
 
       {/* Toast */}

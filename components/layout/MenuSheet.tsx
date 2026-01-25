@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import { MENU_ROUTES } from '@/lib/constants/routes';
+import { switchRole } from '@/app/actions/role';
+import { useGuestStore } from '@/stores/guestStore';
 
 interface MenuSheetProps {
   isOpen: boolean;
@@ -12,6 +14,7 @@ interface MenuSheetProps {
   userName?: string | null;
   userEmail?: string | null;
   userRole: 'employer' | 'worker';
+  isGuestMode?: boolean;
 }
 
 interface MenuItem {
@@ -28,9 +31,12 @@ const MenuSheet: React.FC<MenuSheetProps> = ({
   userName,
   userEmail,
   userRole,
+  isGuestMode = false,
 }) => {
   const router = useRouter();
   const [isClosing, setIsClosing] = useState(false);
+  const [isSwitching, setIsSwitching] = useState(false);
+  const { setGuestMode } = useGuestStore();
 
   // 닫기 애니메이션 처리
   const handleClose = () => {
@@ -70,6 +76,33 @@ const MenuSheet: React.FC<MenuSheetProps> = ({
     handleClose();
     router.push(MENU_ROUTES.SIGNOUT);
   };
+
+  // 역할 전환 핸들러
+  const handleSwitchRole = async () => {
+    const newRole = userRole === 'employer' ? 'worker' : 'employer';
+    setIsSwitching(true);
+    
+    try {
+      if (isGuestMode) {
+        // 게스트 모드: 쿠키 기반으로 역할 전환
+        setGuestMode(newRole);
+        handleClose();
+        router.push(`/${newRole}`);
+      } else {
+        // 로그인 사용자: DB 업데이트
+        await switchRole(newRole);
+      }
+    } catch (error) {
+      console.error('역할 전환 실패:', error);
+      setIsSwitching(false);
+    }
+  };
+
+  const oppositeRole = userRole === 'employer' ? 'worker' : 'employer';
+  const oppositeRoleLabel = userRole === 'employer' ? '알바생' : '사장님';
+  const oppositeRoleDescription = userRole === 'employer' 
+    ? '다른 곳에서 일하고 있나요?' 
+    : '직접 계약서를 작성하세요';
 
   // 사업자용 메뉴
   const employerMenuItems: MenuItem[] = [
@@ -242,6 +275,36 @@ const MenuSheet: React.FC<MenuSheetProps> = ({
               )}
             </div>
           </div>
+
+          {/* 역할 전환 버튼 */}
+          <button
+            onClick={handleSwitchRole}
+            disabled={isSwitching}
+            className={clsx(
+              'mt-4 w-full flex items-center gap-3 px-4 py-3 rounded-xl',
+              'bg-white border border-gray-200 transition-all',
+              'hover:border-blue-300 hover:bg-blue-50/50',
+              'active:scale-[0.98]',
+              isSwitching && 'opacity-50 cursor-not-allowed'
+            )}
+          >
+            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+              <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-[15px] font-semibold text-gray-900">
+                {isSwitching ? '전환 중...' : `${oppositeRoleLabel}으로 전환`}
+              </p>
+              <p className="text-[13px] text-gray-500">
+                {oppositeRoleDescription}
+              </p>
+            </div>
+            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
 
         {/* Menu Items */}

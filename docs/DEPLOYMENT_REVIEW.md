@@ -275,6 +275,330 @@ folders: {
 
 ---
 
+## 🔴 [추가 이슈] 핵심 플로우 검토 (2026년 1월 25일)
+
+### 검토 영역
+1. 계약서 DB 저장
+2. PDF 생성
+3. 카카오톡 공유
+4. 근로자 휴대폰 인증
+5. 서명 링크 전송
+6. 계약서-근로자 매칭
+
+---
+
+### 이슈 1: 🔴 [Critical] 근로자 휴대폰 번호 입력 기능 없음
+
+**현재 상태**: ❌ 미구현
+
+**문제점**:
+- 계약서 작성 시 근로자 **이름만** 입력하고 **휴대폰 번호 입력 필드가 없음**
+- 근로자에게 서명 링크를 **직접 전송할 수 없음** (카카오톡 공유만 가능)
+- 근로자와 계약서를 **매칭할 식별자가 없음**
+
+**영향받는 파일**:
+- `stores/contractFormStore.ts` - `workerPhone` 필드 없음
+- `components/contract/ContractForm/Step2WorkerName.tsx` - 휴대폰 입력 UI 없음
+- `app/(protected)/employer/create/actions.ts` - 휴대폰 번호 저장 로직 없음
+
+**수정 필요 사항**:
+1. `contracts` 테이블에 `worker_phone` 컬럼 추가
+2. `contractFormStore`에 `workerPhone` 필드 추가
+3. Step2 또는 별도 Step에 휴대폰 번호 입력 UI 추가
+4. 유효성 검사 (한국 휴대폰 번호 형식)
+
+**마이그레이션 SQL**:
+```sql
+ALTER TABLE contracts ADD COLUMN worker_phone text;
+```
+
+**스키마 변경**:
+```typescript
+// contractFormStore.ts
+interface ContractFormData {
+  // ... 기존 필드
+  workerPhone: string;  // 추가
+}
+```
+
+---
+
+### 이슈 2: 🔴 [Critical] 서명 링크 SMS 전송 기능 없음
+
+**현재 상태**: ❌ 미구현 (링크 생성만 가능)
+
+**문제점**:
+- `sendContract()` 함수는 **공유 링크를 생성**만 하고 **실제 전송하지 않음**
+- 사장이 링크를 수동으로 복사해서 근로자에게 전달해야 함
+- 카카오톡 공유는 **SDK 기반**으로 사장의 카카오톡 앱에서만 전송 가능
+
+**현재 코드** (`app/(protected)/employer/preview/[id]/actions.ts`):
+```typescript
+export async function sendContract(contractId: string): Promise<ActionResult<{ shareUrl: string }>> {
+  // ... 인증 및 계약서 조회
+  
+  // 공유 URL만 반환 - SMS/알림톡 전송 없음!
+  const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/contract/sign/${shareToken}`;
+  return { success: true, data: { shareUrl } };
+}
+```
+
+**수정 필요 사항**:
+1. SMS 발송 API 연동 (알리고, 솔라피 등)
+2. 또는 카카오 알림톡 연동 (비즈니스 메시지)
+3. `sendContract()` 함수에 근로자 휴대폰 번호 파라미터 추가
+4. 전송 결과 로깅
+
+**권장 구현**:
+```typescript
+export async function sendContract(
+  contractId: string,
+  workerPhone: string  // 추가
+): Promise<ActionResult<{ shareUrl: string }>> {
+  // ... 기존 로직
+  
+  // SMS 발송
+  await sendSMS(workerPhone, `[싸인해주세요] 근로계약서가 도착했어요. ${shareUrl}`);
+  
+  return { success: true, data: { shareUrl } };
+}
+```
+
+---
+
+### 이슈 3: 🔴 [Critical] 비로그인 근로자 서명 불가
+
+**현재 상태**: ❌ 제한적 (로그인 필수)
+
+**문제점**:
+- `signatures` 테이블의 `user_id` 컬럼이 **NOT NULL**
+- 비로그인 근로자는 서명할 수 없음 (로그인 강제)
+- 알바생이 앱 설치/가입 없이 서명하는 **게스트 서명** 불가
+
+**현재 코드** (`app/contract/sign/[token]/actions.ts`):
+```typescript
+export async function signAsWorker(token: string, signatureImageData: string): Promise<ActionResult> {
+  // ...
+  
+  // user_id는 필수이므로 로그인하지 않은 경우 처리 필요
+  if (!user) {
+    return { success: false, error: '서명하려면 로그인이 필요해요' };
+  }
+  
+  // ...
+}
+```
+
+**수정 필요 사항**:
+1. `signatures.user_id`를 **nullable**로 변경
+2. 비로그인 서명 시 **휴대폰 본인인증** 추가
+3. 본인인증 결과를 `signatures` 테이블에 저장
+
+**마이그레이션 SQL**:
+```sql
+ALTER TABLE signatures ALTER COLUMN user_id DROP NOT NULL;
+```
+
+**대안**:
+- 휴대폰 번호로 **익명 사용자 생성** 후 서명
+- 또는 **게스트 세션** 생성 후 서명
+
+---
+
+### 이슈 4: 🟡 [Medium] 휴대폰 본인인증 미구현
+
+**현재 상태**: ❌ 미구현
+
+**문제점**:
+- 근로자 본인인증 기능이 전혀 없음
+- `worker_details.is_verified` 필드는 있으나 인증 로직 없음
+- 아무나 링크만 있으면 서명 가능 (보안 취약)
+
+**수정 필요 사항**:
+1. SMS 인증 (인증번호 발송 → 검증)
+2. 또는 PASS 인증 (통신사 본인확인)
+3. 인증 완료 후 서명 허용
+
+**권장 플로우**:
+```
+1. 근로자가 서명 링크 접속
+2. 휴대폰 번호 입력 (계약서에 저장된 번호와 일치 확인)
+3. SMS 인증번호 발송
+4. 인증번호 입력 및 검증
+5. 인증 성공 시 서명 페이지 표시
+```
+
+---
+
+### 이슈 5: 🟡 [Medium] PDF Storage 저장 미구현
+
+**현재 상태**: ⚠️ 부분 구현 (다운로드만 가능)
+
+**문제점**:
+- PDF가 생성되어 **클라이언트에 다운로드**만 됨
+- **Supabase Storage에 저장하지 않음**
+- `contracts.pdf_url` 컬럼이 항상 **NULL**
+
+**현재 코드** (`app/api/pdf/generate/route.ts`):
+```typescript
+// PDF 생성 후 Base64로만 반환 - Storage 저장 없음!
+const pdfBase64 = Buffer.from(pdfBuffer).toString('base64');
+return NextResponse.json({
+  success: true,
+  pdf: pdfBase64,
+  filename: `근로계약서_${contract.worker_name}_...`,
+});
+```
+
+**수정 필요 사항**:
+1. 서명 완료 시 PDF를 **자동으로 Storage에 저장**
+2. `contracts.pdf_url` 업데이트
+3. 이후 조회 시 저장된 PDF URL 제공
+
+**권장 구현**:
+```typescript
+// 계약서 완료 시 (양측 서명 후)
+const pdfPath = `contracts/${contractId}/${Date.now()}.pdf`;
+const { error: uploadError } = await supabase.storage
+  .from('contracts-pdf')
+  .upload(pdfPath, pdfBuffer, { contentType: 'application/pdf' });
+
+await supabase.from('contracts')
+  .update({ pdf_url: pdfPath })
+  .eq('id', contractId);
+```
+
+---
+
+### 이슈 6: 🟡 [Medium] 알림(Notification) 생성 로직 없음
+
+**현재 상태**: ❌ 미구현
+
+**문제점**:
+- `notifications` 테이블은 있으나 **알림 생성 로직이 없음**
+- 계약서 전송/서명 시 상대방에게 알림이 가지 않음
+- `notification_type` Enum은 정의되어 있음 (`contract_sent`, `contract_signed` 등)
+
+**수정 필요 사항**:
+1. `sendContract()` 시 `contract_sent` 알림 생성
+2. `signAsWorker()` 시 `contract_signed` 알림 생성 (사장에게)
+3. 만료 임박 시 `contract_expired_soon` 알림 생성 (pg_cron)
+
+**권장 구현**:
+```typescript
+// sendContract() 내부
+await supabase.from('notifications').insert({
+  user_id: contract.worker_id,
+  type: 'contract_sent',
+  title: '계약서가 도착했어요',
+  body: `${employerName}님이 근로계약서를 보냈어요`,
+  data: { contract_id: contractId },
+});
+```
+
+---
+
+### 이슈 7: 🟢 [Low] 카카오 SDK 로드 타이밍
+
+**현재 상태**: ⚠️ 개선 권장
+
+**문제점**:
+- 카카오 SDK가 `lazyOnload` 전략으로 로드됨
+- 사용자가 빠르게 공유 버튼 클릭 시 SDK 미로드 상태일 수 있음
+
+**현재 코드** (`app/layout.tsx`):
+```typescript
+<Script
+  src="https://t1.kakaocdn.net/kakao_js_sdk/2.6.0/kakao.min.js"
+  strategy="lazyOnload"  // 느리게 로드
+  ...
+/>
+```
+
+**권장 수정**:
+```typescript
+strategy="afterInteractive"  // DOM 로드 후 즉시
+```
+
+**또는 공유 버튼 클릭 시 SDK 로드 대기**:
+```typescript
+const handleKakaoShare = async () => {
+  // SDK 로드 대기
+  while (!window.Kakao) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  // ...
+};
+```
+
+---
+
+### 이슈 8: 🟢 [Low] 계약서-근로자 매칭 강화 필요
+
+**현재 상태**: ⚠️ 약한 매칭
+
+**문제점**:
+- 현재는 서명 시 로그인한 사용자의 `user_id`로 `worker_id` 설정
+- 휴대폰 번호 기반 매칭이 없어서 **잘못된 사람이 서명할 수 있음**
+
+**수정 필요 사항**:
+1. 계약서에 저장된 `worker_phone`과 서명자 휴대폰 번호 **일치 확인**
+2. 본인인증 후에만 서명 허용
+
+---
+
+## 📊 이슈 요약표
+
+| # | 영역 | 심각도 | 상태 | 설명 |
+|---|------|--------|------|------|
+| 1 | 계약서 작성 | 🔴 Critical | ❌ 미구현 | 근로자 휴대폰 번호 입력 없음 |
+| 2 | 서명 링크 전송 | 🔴 Critical | ❌ 미구현 | SMS/알림톡 전송 없음 |
+| 3 | 근로자 서명 | 🔴 Critical | ❌ 제한적 | 비로그인 서명 불가 |
+| 4 | 본인인증 | 🟡 Medium | ❌ 미구현 | 휴대폰 본인인증 없음 |
+| 5 | PDF 저장 | 🟡 Medium | ⚠️ 부분 | Storage 저장 안됨 |
+| 6 | 알림 | 🟡 Medium | ❌ 미구현 | 알림 생성 로직 없음 |
+| 7 | 카카오 공유 | 🟢 Low | ⚠️ 개선 | SDK 로드 타이밍 |
+| 8 | 계약서 매칭 | 🟢 Low | ⚠️ 개선 | 휴대폰 기반 매칭 필요 |
+
+---
+
+## 🔧 권장 수정 순서
+
+### Phase 1: 핵심 플로우 완성 (필수)
+1. **contracts 테이블에 worker_phone 컬럼 추가**
+2. **계약서 작성 폼에 휴대폰 번호 입력 추가**
+3. **SMS 인증 구현** (인증번호 발송/검증)
+4. **비로그인 서명 허용** (signatures.user_id nullable)
+
+### Phase 2: 전송 기능 (권장)
+5. **SMS 발송 API 연동** (솔라피, 알리고 등)
+6. **또는 카카오 알림톡 연동**
+
+### Phase 3: 부가 기능 (선택)
+7. **PDF Storage 저장**
+8. **알림 생성 로직 추가**
+9. **카카오 SDK 로드 최적화**
+
+---
+
+## 📝 참고: 현재 동작하는 기능
+
+| 기능 | 상태 | 설명 |
+|------|------|------|
+| 계약서 DB 저장 | ✅ 동작 | `createContract()` 정상 동작 |
+| PDF 생성 | ✅ 동작 | 클라이언트 다운로드 가능 |
+| 카카오톡 공유 | ✅ 동작 | SDK 기반 링크 공유 가능 |
+| 공유 링크 생성 | ✅ 동작 | `share_token` 기반 URL 생성 |
+| 로그인 사용자 서명 | ✅ 동작 | 카카오 로그인 후 서명 가능 |
+
+---
+
 > **검수 완료**  
 > 필수 조치 사항 모두 해결됨. 배포 준비 완료.  
+> 
+> **추가 검토 결과 (2026.01.25)**:  
+> 핵심 플로우에서 8개의 추가 이슈가 발견되었습니다.  
+> Critical 이슈 3개는 MVP 배포 전 반드시 해결이 필요합니다.  
+> 특히 **근로자 휴대폰 번호 입력/전송/인증** 기능이 없어 실제 서비스 운영이 어렵습니다.  
+> 
 > 추가 질문이나 상세 검토가 필요한 영역이 있으면 말씀해 주세요.
