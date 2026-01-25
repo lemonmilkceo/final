@@ -154,16 +154,25 @@ export default function ContractPreview({
     }
 
     if (isNew) {
-      // 새 계약서 저장
+      // 서명이 없으면 서명 먼저 요청
+      if (!signatureData) {
+        setIsSignatureSheetOpen(true);
+        return;
+      }
+
+      // 새 계약서 저장 (서명 데이터와 함께)
       setIsLoading(true);
       setError('');
 
       try {
-        const result = await createContract({
-          ...formData,
-          hourlyWage: formData.hourlyWage || 0,
-          businessSize: formData.businessSize || 'under_5',
-        });
+        const result = await createContract(
+          {
+            ...formData,
+            hourlyWage: formData.hourlyWage || 0,
+            businessSize: formData.businessSize || 'under_5',
+          },
+          signatureData
+        );
 
         if (result.success && result.data) {
           reset(); // 스토어 초기화
@@ -656,7 +665,7 @@ export default function ContractPreview({
           ) : isGuestMode ? (
             '체험 완료하기 🎉'
           ) : isNew ? (
-            '계약서 저장하기'
+            signatureData ? '저장하고 보내기 📤' : '서명하고 저장하기 ✍️'
           ) : employerSigned ? (
             '근로자에게 보내기 📤'
           ) : (

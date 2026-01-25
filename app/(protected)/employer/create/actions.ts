@@ -12,7 +12,8 @@ import { ROUTES } from '@/lib/constants/routes';
 import type { ActionResult } from '@/types';
 
 export async function createContract(
-  formData: ContractFormInput
+  formData: ContractFormInput,
+  signatureData?: string | null
 ): Promise<ActionResult<{ contractId: string }>> {
   const supabase = await createClient();
 
@@ -68,13 +69,17 @@ export async function createContract(
   // DB 스키마로 변환
   const contractData = transformFormToDbSchema(validation.data);
 
-  // 계약서 생성
+  // 계약서 생성 - 서명이 있으면 바로 pending 상태로
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7); // 7일 후 만료
+
   const { data: contract, error: insertError } = await supabase
     .from('contracts')
     .insert({
       employer_id: user.id,
       ...contractData,
-      status: 'draft',
+      status: signatureData ? 'pending' : 'draft',
+      expires_at: signatureData ? expiresAt.toISOString() : null,
     })
     .select('id')
     .single();
@@ -82,6 +87,22 @@ export async function createContract(
   if (insertError || !contract) {
     console.error('Contract insert error:', insertError);
     return { success: false, error: '계약서 저장에 실패했어요' };
+  }
+
+  // 서명 데이터가 있으면 서명도 함께 저장
+  if (signatureData) {
+    const { error: signatureError } = await supabase.from('signatures').insert({
+      contract_id: contract.id,
+      user_id: user.id,
+      signer_role: 'employer',
+      signature_data: signatureData,
+      signed_at: new Date().toISOString(),
+    });
+
+    if (signatureError) {
+      console.error('Signature insert error:', signatureError);
+      // 서명 저장 실패해도 계약서는 이미 저장됨 - 에러 반환하지 않고 경고만
+    }
   }
 
   // 캐시 무효화
