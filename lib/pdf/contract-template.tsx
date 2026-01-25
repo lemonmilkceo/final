@@ -8,31 +8,26 @@ import {
   Font,
 } from '@react-pdf/renderer';
 
-// 한글 폰트 등록 시도 - 실패해도 기본 폰트로 폴백
-let fontFamily = 'Helvetica'; // 기본 폰트
-
-try {
-  // Noto Sans KR - 한글 지원 폰트 (Google Fonts CDN)
-  Font.register({
-    family: 'NotoSansKR',
-    fonts: [
-      {
-        src: 'https://cdn.jsdelivr.net/fontsource/fonts/noto-sans-kr@latest/korean-400-normal.woff2',
-        fontWeight: 'normal',
-      },
-      {
-        src: 'https://cdn.jsdelivr.net/fontsource/fonts/noto-sans-kr@latest/korean-700-normal.woff2',
-        fontWeight: 'bold',
-      },
-    ],
-  });
-  fontFamily = 'NotoSansKR';
-} catch (error) {
-  console.error('Font registration failed, using fallback:', error);
-}
+// 한글 폰트 등록 (Noto Sans KR - TTF 형식)
+// @react-pdf/renderer는 TTF/OTF 형식만 안정적으로 지원
+Font.register({
+  family: 'NotoSansKR',
+  fonts: [
+    {
+      src: 'https://rawcdn.githack.com/nicePaul521/noto-sans-kr-webfont/b7e27afa8e7d4c1438c9ec3f7ab09f9a8e9f4aa4/fonts/NotoSansKR-Regular.otf',
+      fontWeight: 'normal',
+    },
+    {
+      src: 'https://rawcdn.githack.com/nicePaul521/noto-sans-kr-webfont/b7e27afa8e7d4c1438c9ec3f7ab09f9a8e9f4aa4/fonts/NotoSansKR-Bold.otf',
+      fontWeight: 'bold',
+    },
+  ],
+});
 
 // 하이픈 처리 비활성화 (한글 지원)
 Font.registerHyphenationCallback((word) => [word]);
+
+const fontFamily = 'NotoSansKR';
 
 const styles = StyleSheet.create({
   page: {
