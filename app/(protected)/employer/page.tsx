@@ -103,7 +103,10 @@ export default async function EmployerDashboardPage() {
           email: null,
           avatarUrl: null,
         }}
-        credits={3}
+        credits={{
+          contract: 3,
+          aiReview: 3,
+        }}
         contracts={GUEST_SAMPLE_CONTRACTS}
         folders={[]}
         isGuestMode={true}
@@ -129,11 +132,19 @@ export default async function EmployerDashboardPage() {
     .single();
 
   // 계약서 크레딧 조회
-  const { data: credit } = await supabase
+  const { data: contractCredit } = await supabase
     .from('credits')
     .select('amount')
     .eq('user_id', user.id)
     .eq('credit_type', 'contract')
+    .single();
+
+  // AI 노무사 크레딧 조회
+  const { data: aiCredit } = await supabase
+    .from('credits')
+    .select('amount')
+    .eq('user_id', user.id)
+    .eq('credit_type', 'ai_review')
     .single();
 
   // 계약서 목록 조회 (work_location 추가)
@@ -192,7 +203,10 @@ export default async function EmployerDashboardPage() {
         email: user.email,
         avatarUrl: profile?.avatar_url,
       }}
-      credits={credit?.amount || 0}
+      credits={{
+        contract: contractCredit?.amount || 0,
+        aiReview: aiCredit?.amount || 0,
+      }}
       contracts={contracts || []}
       folders={foldersWithCount}
       unfiledCount={unfiledCount}

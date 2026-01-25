@@ -59,7 +59,10 @@ interface EmployerDashboardProps {
     email?: string | null;
     avatarUrl?: string | null;
   };
-  credits: number;
+  credits: {
+    contract: number;
+    aiReview: number;
+  };
   contracts: DashboardContract[];
   folders?: Folder[];
   unfiledCount?: number;
@@ -393,11 +396,19 @@ export default function EmployerDashboard({
             </h1>
             
             {/* 크레딧 뱃지 */}
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 rounded-full mt-3">
-              <span className="text-amber-500">🎟️</span>
-              <span className="text-[14px] font-semibold text-amber-700">
-                {credits}건 남음
-              </span>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 rounded-full">
+                <span className="text-amber-500">🎟️</span>
+                <span className="text-[14px] font-semibold text-amber-700">
+                  계약서 {credits.contract}건
+                </span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 rounded-full">
+                <span className="text-purple-500">🤖</span>
+                <span className="text-[14px] font-semibold text-purple-700">
+                  AI노무사 {credits.aiReview}건
+                </span>
+              </div>
             </div>
           </div>
         )}
