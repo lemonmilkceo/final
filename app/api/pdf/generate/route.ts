@@ -66,37 +66,41 @@ export async function POST(request: NextRequest) {
       .eq('id', contract.employer_id)
       .single();
 
+    // PDF 데이터 준비
+    console.log('[PDF] 계약서 데이터 준비 중...');
+    const pdfData = {
+      contract: {
+        workerName: contract.worker_name || '이름 없음',
+        wageType: contract.wage_type,
+        hourlyWage: contract.hourly_wage,
+        monthlyWage: contract.monthly_wage,
+        includesWeeklyAllowance: contract.includes_weekly_allowance ?? false,
+        startDate: contract.start_date || new Date().toISOString(),
+        endDate: contract.end_date,
+        workDays: contract.work_days,
+        workDaysPerWeek: contract.work_days_per_week,
+        workStartTime: contract.work_start_time || '09:00',
+        workEndTime: contract.work_end_time || '18:00',
+        breakMinutes: contract.break_minutes ?? 60,
+        workLocation: contract.work_location || '',
+        jobDescription: contract.job_description || '',
+        payDay: contract.pay_day ?? 10,
+        paymentTiming: contract.payment_timing,
+        isLastDayPayment: contract.is_last_day_payment,
+        businessSize: contract.business_size || 'under_5',
+        createdAt: contract.created_at || new Date().toISOString(),
+      },
+      employer: {
+        name: employer?.name || '',
+        phone: employer?.phone || '',
+      },
+      signatures: contract.signatures || [],
+    };
+    console.log('[PDF] 데이터 준비 완료, PDF 렌더링 시작...');
+
     // PDF 생성
-    const pdfBuffer = await renderToBuffer(
-      ContractPDFDocument({
-        contract: {
-          workerName: contract.worker_name,
-          wageType: contract.wage_type,
-          hourlyWage: contract.hourly_wage,
-          monthlyWage: contract.monthly_wage,
-          includesWeeklyAllowance: contract.includes_weekly_allowance,
-          startDate: contract.start_date,
-          endDate: contract.end_date,
-          workDays: contract.work_days,
-          workDaysPerWeek: contract.work_days_per_week,
-          workStartTime: contract.work_start_time,
-          workEndTime: contract.work_end_time,
-          breakMinutes: contract.break_minutes,
-          workLocation: contract.work_location,
-          jobDescription: contract.job_description,
-          payDay: contract.pay_day,
-          paymentTiming: contract.payment_timing,
-          isLastDayPayment: contract.is_last_day_payment,
-          businessSize: contract.business_size,
-          createdAt: contract.created_at,
-        },
-        employer: {
-          name: employer?.name || '',
-          phone: employer?.phone || '',
-        },
-        signatures: contract.signatures || [],
-      })
-    );
+    const pdfBuffer = await renderToBuffer(ContractPDFDocument(pdfData));
+    console.log('[PDF] PDF 렌더링 완료, 버퍼 크기:', pdfBuffer.length);
 
     // Base64 인코딩하여 반환
     const pdfBase64 = Buffer.from(pdfBuffer).toString('base64');
@@ -107,11 +111,17 @@ export async function POST(request: NextRequest) {
       filename: `근로계약서_${contract.worker_name}_${new Date().toISOString().split('T')[0]}.pdf`,
     });
   } catch (error) {
-    console.error('PDF 생성 오류:', error);
+    console.error('[PDF] 생성 오류:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('PDF 생성 상세 오류:', errorMessage);
+    const errorStack = error instanceof Error ? error.stack : '';
+    console.error('[PDF] 상세 오류:', errorMessage);
+    console.error('[PDF] 스택:', errorStack);
     return NextResponse.json(
-      { error: 'PDF 생성에 실패했어요', details: errorMessage },
+      { 
+        error: 'PDF 생성에 실패했어요', 
+        details: errorMessage,
+        stack: process.env.NODE_ENV === 'development' ? errorStack : undefined
+      },
       { status: 500 }
     );
   }
