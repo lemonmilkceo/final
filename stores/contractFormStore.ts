@@ -10,6 +10,7 @@ export type BusinessType = 'restaurant' | 'cafe' | 'convenience_store' | 'retail
 export interface ContractFormData {
   businessSize: BusinessSize | null;
   workerName: string;
+  workerPhone: string;
   wageType: WageType;
   hourlyWage: number | null;
   monthlyWage: number | null;
@@ -46,6 +47,7 @@ const TOTAL_STEPS = 10;
 const initialData: ContractFormData = {
   businessSize: null,
   workerName: '',
+  workerPhone: '',
   wageType: 'hourly',
   hourlyWage: null,
   monthlyWage: null,

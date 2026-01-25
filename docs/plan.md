@@ -1837,4 +1837,102 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ---
 
+## 📝 Amendment 11: 휴대폰 번호 매칭 기능 (2026년 1월 25일)
+
+> **추가일**: 2026년 1월 25일  
+> **변경 사유**: 근로자 본인 확인을 위한 무료 휴대폰 번호 매칭  
+> **우선순위**: P0 (MVP 필수)  
+> **상태**: ✅ 완료
+
+---
+
+### Epic A11.1: DB 마이그레이션
+> 예상 시간: 10분 | **상태: ✅ 완료**
+
+- [x] **Task A11.1.1**: contracts 테이블에 worker_phone 컬럼 추가
+  - Supabase MCP로 마이그레이션 적용 완료
+  - 인덱스 추가: `idx_contracts_worker_phone`
+
+---
+
+### Epic A11.2: 계약서 작성 폼 수정
+> 예상 시간: 30분 | **상태: ✅ 완료**
+
+- [x] **Task A11.2.1**: `stores/contractFormStore.ts`에 workerPhone 필드 추가
+- [x] **Task A11.2.2**: `lib/utils/validation.ts`에 휴대폰 번호 유효성 검사 추가
+  - phoneRegex: 한국 휴대폰 번호 형식
+  - normalizePhone: 하이픈 제거
+  - formatPhone: 포맷팅 (010-0000-0000)
+- [x] **Task A11.2.3**: `Step2WorkerName.tsx` 수정
+  - 휴대폰 번호 입력 필드 추가
+  - 자동 하이픈 포맷팅
+  - 안내 메시지: "📱 이 번호로 계약서 서명 링크가 전송돼요"
+
+---
+
+### Epic A11.3: 서명 페이지 수정
+> 예상 시간: 1시간 | **상태: ✅ 완료**
+
+- [x] **Task A11.3.1**: `worker-sign.tsx`에 휴대폰 번호 확인 단계 추가
+  - 새로운 단계: `verify_phone`
+  - 마스킹된 힌트 표시 (010-****-5678)
+  - 번호 일치 확인 로직
+- [x] **Task A11.3.2**: 번호 일치 시 계약서 보기로 이동
+- [x] **Task A11.3.3**: 서명 완료 화면 개선
+  - 회원가입 혜택 안내
+  - "3초만에 가입하기" 버튼
+
+---
+
+### Epic A11.4: 타입 업데이트
+> 예상 시간: 10분 | **상태: ✅ 완료**
+
+- [x] **Task A11.4.1**: `types/database.ts` 업데이트
+  - contracts.Row에 worker_phone 추가
+  - contracts.Insert에 worker_phone 추가
+  - contracts.Update에 worker_phone 추가
+
+---
+
+## 📊 Amendment 11 완료 요약
+
+| Task | 상태 | 설명 |
+|------|------|------|
+| A11.1.1 | ✅ | DB 마이그레이션 (worker_phone) |
+| A11.2.1 | ✅ | contractFormStore 수정 |
+| A11.2.2 | ✅ | 휴대폰 번호 validation |
+| A11.2.3 | ✅ | Step2 UI 수정 |
+| A11.3.1 | ✅ | 본인 확인 단계 추가 |
+| A11.3.2 | ✅ | 번호 일치 시 이동 |
+| A11.3.3 | ✅ | 서명 완료 화면 개선 |
+| A11.4.1 | ✅ | TypeScript 타입 업데이트 |
+
+---
+
+### 📌 플로우 요약
+
+```
+1. 사장님: Step 2에서 이름 + 휴대폰 번호 입력
+         ↓
+2. 카카오톡으로 서명 링크 공유
+         ↓
+3. 근로자: 링크 클릭 → 본인 확인 화면
+   - 마스킹된 힌트 표시 (010-****-5678)
+   - 휴대폰 번호 입력
+         ↓
+4. 번호 일치 → 계약서 보기
+         ↓
+5. 서명하기 → 카카오 로그인 필요
+         ↓
+6. 로그인 → 서명 완료
+         ↓
+7. 🎉 축하 화면 + 회원가입 유도
+```
+
+---
+
+> **Amendment 11 끝**
+
+---
+
 > **문서 끝**

@@ -30,6 +30,7 @@ export default function WorkerOnboardingPage() {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showSsnInfo, setShowSsnInfo] = useState(false);
 
   // Step 1: 이름
   const [name, setName] = useState('');
@@ -54,6 +55,11 @@ export default function WorkerOnboardingPage() {
     }
   };
 
+  const handleSkip = () => {
+    // 건너뛰기 - 나중에 입력 가능
+    router.push('/worker');
+  };
+
   const handleSubmit = async () => {
     setIsLoading(true);
     setError('');
@@ -67,7 +73,7 @@ export default function WorkerOnboardingPage() {
       });
 
       if (result.success) {
-        router.push('/worker');
+        router.push('/worker?onboarding=complete');
       } else {
         setError(result.error || '저장에 실패했어요');
       }
@@ -96,11 +102,11 @@ export default function WorkerOnboardingPage() {
       case 1:
         return (
           <div className="animate-fade-in-up">
-            <h1 className="text-title text-gray-900 mb-2">
+            <h1 className="text-[22px] font-bold text-gray-900 mb-2">
               이름을 알려주세요
             </h1>
-            <p className="text-body text-gray-500 mb-8">
-              계약서에 사용될 이름이에요
+            <p className="text-[15px] text-gray-500 mb-8">
+              다음 계약서부터 자동으로 채워져요 ✨
             </p>
 
             <Input
@@ -113,28 +119,31 @@ export default function WorkerOnboardingPage() {
             />
 
             {name && !/^[가-힣]+$/.test(name) && (
-              <p className="text-error text-caption mt-2">
+              <p className="text-red-500 text-[13px] mt-2">
                 한글로만 입력해주세요
               </p>
             )}
+
+            {/* 안내 메시지 */}
+            <div className="mt-8 bg-blue-50 rounded-2xl p-4">
+              <p className="text-[14px] text-blue-700">
+                💡 지금 정보를 등록하면 다음 계약할 때 다시 입력하지 않아도 돼요!
+              </p>
+            </div>
           </div>
         );
 
       case 2:
         return (
           <div className="animate-fade-in-up">
-            <h1 className="text-title text-gray-900 mb-2">
+            <h1 className="text-[22px] font-bold text-gray-900 mb-2">
               주민등록번호를 입력해주세요
             </h1>
-            <p className="text-body text-gray-500 mb-8">
-              4대보험 신고를 위해 필요해요
-              <br />
-              <span className="text-caption">
-                암호화되어 안전하게 보관돼요 🔒
-              </span>
+            <p className="text-[15px] text-gray-500 mb-6">
+              한 번 입력하면 다음 계약엔 안 물어봐요 🎉
             </p>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 mb-6">
               <Input
                 variant="underline"
                 value={ssnFront}
@@ -162,23 +171,58 @@ export default function WorkerOnboardingPage() {
                 className="text-2xl font-bold text-center flex-1"
               />
             </div>
+
+            {/* 용도 안내 토글 */}
+            <button
+              onClick={() => setShowSsnInfo(!showSsnInfo)}
+              className="flex items-center gap-2 text-[14px] text-gray-500 mb-3"
+            >
+              <span>{showSsnInfo ? '▼' : '▶'}</span>
+              <span>이 정보는 어디에 쓰이나요?</span>
+            </button>
+
+            {showSsnInfo && (
+              <div className="bg-gray-50 rounded-2xl p-4 mb-4 animate-fade-in">
+                <ul className="space-y-2 text-[14px] text-gray-600">
+                  <li className="flex items-start gap-2">
+                    <span>📋</span>
+                    <span>근로계약서에 기재돼요</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span>🏥</span>
+                    <span>사장님이 4대보험 신고할 때 사용해요</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span>📊</span>
+                    <span>연말정산 자료로 활용돼요</span>
+                  </li>
+                </ul>
+              </div>
+            )}
+
+            {/* 안심 메시지 */}
+            <div className="bg-amber-50 rounded-2xl p-4">
+              <p className="text-[14px] text-amber-700">
+                🔒 계약 당사자(사장님, 본인)만 볼 수 있어요
+              </p>
+            </div>
           </div>
         );
 
       case 3:
         return (
           <div className="animate-fade-in-up">
-            <h1 className="text-title text-gray-900 mb-2">
-              급여 받을 계좌를 입력해주세요
+            <h1 className="text-[22px] font-bold text-gray-900 mb-2">
+              급여 받을 계좌를 등록해주세요
             </h1>
-            <p className="text-body text-gray-500 mb-8">
-              본인 명의 계좌만 등록할 수 있어요
+            <p className="text-[15px] text-gray-500 mb-6">
+              다음 알바도 이 계좌로 바로 받아요 💰
             </p>
 
             <div className="space-y-6">
               {/* 은행 선택 */}
               <div>
-                <p className="text-caption text-gray-500 mb-3">은행 선택</p>
+                <p className="text-[13px] text-gray-500 mb-3">은행 선택</p>
                 <div className="grid grid-cols-4 gap-2">
                   {BANKS.map((bank) => (
                     <button
@@ -188,7 +232,7 @@ export default function WorkerOnboardingPage() {
                         'py-3 px-2 rounded-xl text-[13px] font-medium transition-colors',
                         bankCode === bank.code
                           ? 'bg-blue-500 text-white'
-                          : 'bg-gray-100 text-gray-700'
+                          : 'bg-gray-100 text-gray-700 active:bg-gray-200'
                       )}
                     >
                       {bank.name}
@@ -209,6 +253,13 @@ export default function WorkerOnboardingPage() {
                 inputMode="numeric"
               />
             </div>
+
+            {/* 안내 메시지 */}
+            <div className="mt-6 bg-gray-50 rounded-2xl p-4">
+              <p className="text-[14px] text-gray-600">
+                💡 본인 명의 계좌만 등록할 수 있어요
+              </p>
+            </div>
           </div>
         );
 
@@ -224,6 +275,14 @@ export default function WorkerOnboardingPage() {
         title={`정보 입력 ${step}/${TOTAL_STEPS}`}
         showBack={step > 1}
         onBack={handlePrev}
+        rightElement={
+          <button
+            onClick={handleSkip}
+            className="text-[15px] text-gray-400"
+          >
+            건너뛰기
+          </button>
+        }
       />
 
       {/* Progress */}
@@ -245,7 +304,7 @@ export default function WorkerOnboardingPage() {
       )}
 
       {/* Bottom CTA */}
-      <div className="px-6 pb-4 safe-bottom">
+      <div className="px-6 pb-4 safe-bottom space-y-3">
         <Button
           fullWidth
           disabled={!isStepValid() || isLoading}
@@ -254,6 +313,15 @@ export default function WorkerOnboardingPage() {
         >
           {step === TOTAL_STEPS ? '완료' : '다음'}
         </Button>
+        
+        {step > 1 && (
+          <button
+            onClick={handleSkip}
+            className="w-full py-2 text-[14px] text-gray-400"
+          >
+            나중에 입력할게요
+          </button>
+        )}
       </div>
     </div>
   );

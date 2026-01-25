@@ -51,12 +51,16 @@ interface WorkerDashboardProps {
   };
   contracts: DashboardContract[];
   isGuestMode?: boolean;
+  showOnboardingComplete?: boolean;
+  isOnboardingComplete?: boolean;
 }
 
 export default function WorkerDashboard({
   profile,
   contracts,
   isGuestMode = false,
+  showOnboardingComplete = false,
+  isOnboardingComplete = true,
 }: WorkerDashboardProps) {
   const router = useRouter();
   
@@ -77,6 +81,9 @@ export default function WorkerDashboard({
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastVariant, setToastVariant] = useState<'success' | 'error'>('success');
+  
+  // 온보딩 완료 축하 모달
+  const [showOnboardingModal, setShowOnboardingModal] = useState(showOnboardingComplete);
 
   const showToastMessage = (message: string, variant: 'success' | 'error') => {
     setToastMessage(message);
@@ -518,6 +525,67 @@ export default function WorkerDashboard({
         isVisible={showToast}
         onClose={() => setShowToast(false)}
       />
+
+      {/* 온보딩 완료 축하 모달 */}
+      {showOnboardingModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50">
+          <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center animate-fade-in-up">
+            <span className="text-6xl block mb-4">🎉</span>
+            <h2 className="text-[22px] font-bold text-gray-900 mb-2">
+              정보 등록 완료!
+            </h2>
+            <p className="text-[15px] text-gray-500 mb-6">
+              이제 다음 계약할 때<br />
+              이 정보들이 자동으로 채워져요
+            </p>
+            
+            <div className="bg-gray-50 rounded-2xl p-4 mb-6 text-left">
+              <div className="flex items-center gap-3 mb-2">
+                <span className="text-green-500">✓</span>
+                <span className="text-[14px] text-gray-700">이름</span>
+              </div>
+              <div className="flex items-center gap-3 mb-2">
+                <span className="text-green-500">✓</span>
+                <span className="text-[14px] text-gray-700">주민등록번호</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-green-500">✓</span>
+                <span className="text-[14px] text-gray-700">급여 계좌</span>
+              </div>
+            </div>
+            
+            <button
+              onClick={() => {
+                setShowOnboardingModal(false);
+                // URL에서 쿼리 파라미터 제거
+                router.replace('/worker');
+              }}
+              className="w-full py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg"
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 온보딩 미완료 시 안내 배너 */}
+      {!isOnboardingComplete && !isGuestMode && !isEditMode && (
+        <div className="fixed bottom-20 left-4 right-4 z-30">
+          <button
+            onClick={() => router.push('/worker/onboarding')}
+            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl p-4 shadow-lg flex items-center gap-3"
+          >
+            <span className="text-2xl">💡</span>
+            <div className="flex-1 text-left">
+              <p className="text-[15px] font-semibold">정보를 미리 등록해두세요</p>
+              <p className="text-[13px] text-blue-100">다음 계약할 때 다시 입력 안 해도 돼요</p>
+            </div>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

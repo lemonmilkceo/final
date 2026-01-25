@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { useContractFormStore } from '@/stores/contractFormStore';
+import { phoneRegex, formatPhone } from '@/lib/utils/validation';
 import clsx from 'clsx';
 
 export default function Step2WorkerName() {
   const { data, updateData, nextStep, prevStep } = useContractFormStore();
-  const [error, setError] = useState('');
+  const [nameError, setNameError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
 
   const validateName = (name: string) => {
     if (name.length < 2) {
@@ -21,50 +23,121 @@ export default function Step2WorkerName() {
     return '';
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const validatePhone = (phone: string) => {
+    if (!phone || phone.length < 10) {
+      return '휴대폰 번호를 입력해주세요';
+    }
+    if (!phoneRegex.test(phone)) {
+      return '올바른 휴대폰 번호를 입력해주세요';
+    }
+    return '';
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     updateData({ workerName: value });
-    if (error) setError('');
+    if (nameError) setNameError('');
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // 숫자와 하이픈만 허용
+    let value = e.target.value.replace(/[^0-9-]/g, '');
+    
+    // 숫자만 남기고 포맷팅
+    const numbersOnly = value.replace(/-/g, '');
+    if (numbersOnly.length <= 11) {
+      // 자동 하이픈 추가
+      if (numbersOnly.length > 7) {
+        value = `${numbersOnly.slice(0, 3)}-${numbersOnly.slice(3, 7)}-${numbersOnly.slice(7)}`;
+      } else if (numbersOnly.length > 3) {
+        value = `${numbersOnly.slice(0, 3)}-${numbersOnly.slice(3)}`;
+      } else {
+        value = numbersOnly;
+      }
+    }
+    
+    updateData({ workerPhone: value });
+    if (phoneError) setPhoneError('');
   };
 
   const handleNext = () => {
-    const validationError = validateName(data.workerName);
-    if (validationError) {
-      setError(validationError);
+    const nameValidationError = validateName(data.workerName);
+    const phoneValidationError = validatePhone(data.workerPhone);
+    
+    if (nameValidationError) {
+      setNameError(nameValidationError);
+      return;
+    }
+    if (phoneValidationError) {
+      setPhoneError(phoneValidationError);
       return;
     }
     nextStep();
   };
 
-  const isValid = data.workerName.length >= 2 && /^[가-힣]+$/.test(data.workerName);
+  const isNameValid = data.workerName.length >= 2 && /^[가-힣]+$/.test(data.workerName);
+  const isPhoneValid = phoneRegex.test(data.workerPhone);
+  const isValid = isNameValid && isPhoneValid;
 
   return (
     <>
       <div className="flex-1 px-6 pt-8">
         <h1 className="text-[26px] font-bold text-gray-900 leading-tight mb-8">
-          근로자 이름이
+          근로자 정보를
           <br />
-          어떻게 되나요?
+          입력해주세요
         </h1>
 
-        <input
-          type="text"
-          value={data.workerName}
-          onChange={handleChange}
-          placeholder="이름을 입력하세요"
-          autoFocus
-          className={clsx(
-            'w-full border-0 border-b-2 bg-transparent text-[28px] font-bold text-gray-900 placeholder-gray-300 focus:outline-none py-2 transition-colors',
-            error ? 'border-red-500' : 'border-gray-200 focus:border-blue-500'
+        {/* 이름 입력 */}
+        <div className="mb-8">
+          <label className="text-[14px] text-gray-500 mb-2 block">이름</label>
+          <input
+            type="text"
+            value={data.workerName}
+            onChange={handleNameChange}
+            placeholder="이름을 입력하세요"
+            autoFocus
+            className={clsx(
+              'w-full border-0 border-b-2 bg-transparent text-[24px] font-bold text-gray-900 placeholder-gray-300 focus:outline-none py-2 transition-colors',
+              nameError ? 'border-red-500' : 'border-gray-200 focus:border-blue-500'
+            )}
+          />
+          {nameError && (
+            <p className="text-[13px] text-red-500 mt-2 flex items-center gap-1">
+              <span>⚠️</span>
+              {nameError}
+            </p>
           )}
-        />
+        </div>
 
-        {error && (
-          <p className="text-[13px] text-red-500 mt-2 flex items-center gap-1">
-            <span>⚠️</span>
-            {error}
+        {/* 휴대폰 번호 입력 */}
+        <div className="mb-6">
+          <label className="text-[14px] text-gray-500 mb-2 block">휴대폰 번호</label>
+          <input
+            type="tel"
+            value={data.workerPhone}
+            onChange={handlePhoneChange}
+            placeholder="010-0000-0000"
+            inputMode="tel"
+            className={clsx(
+              'w-full border-0 border-b-2 bg-transparent text-[24px] font-bold text-gray-900 placeholder-gray-300 focus:outline-none py-2 transition-colors',
+              phoneError ? 'border-red-500' : 'border-gray-200 focus:border-blue-500'
+            )}
+          />
+          {phoneError && (
+            <p className="text-[13px] text-red-500 mt-2 flex items-center gap-1">
+              <span>⚠️</span>
+              {phoneError}
+            </p>
+          )}
+        </div>
+
+        {/* 안내 메시지 */}
+        <div className="bg-blue-50 rounded-2xl p-4">
+          <p className="text-[14px] text-blue-700">
+            📱 이 번호로 계약서 서명 링크가 전송돼요
           </p>
-        )}
+        </div>
       </div>
 
       <div className="px-6 pb-4 safe-bottom flex gap-3">

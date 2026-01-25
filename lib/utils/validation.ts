@@ -22,6 +22,26 @@ export const businessTypeSchema = z.enum([
   'office',
 ]).nullable();
 
+// 휴대폰 번호 정규식 (010-1234-5678 또는 01012345678)
+export const phoneRegex = /^01[016789]-?\d{3,4}-?\d{4}$/;
+
+// 휴대폰 번호 정규화 (하이픈 제거)
+export function normalizePhone(phone: string): string {
+  return phone.replace(/-/g, '');
+}
+
+// 휴대폰 번호 포맷팅 (010-1234-5678)
+export function formatPhone(phone: string): string {
+  const normalized = normalizePhone(phone);
+  if (normalized.length === 11) {
+    return `${normalized.slice(0, 3)}-${normalized.slice(3, 7)}-${normalized.slice(7)}`;
+  }
+  if (normalized.length === 10) {
+    return `${normalized.slice(0, 3)}-${normalized.slice(3, 6)}-${normalized.slice(6)}`;
+  }
+  return phone;
+}
+
 // 계약서 폼 스키마
 export const contractFormSchema = z.object({
   businessSize: businessSizeSchema,
@@ -30,6 +50,10 @@ export const contractFormSchema = z.object({
     .min(2, '이름은 2자 이상 입력해주세요')
     .max(10, '이름은 10자 이하로 입력해주세요')
     .regex(/^[가-힣]+$/, '한글로만 입력해주세요'),
+  workerPhone: z
+    .string()
+    .min(10, '휴대폰 번호를 입력해주세요')
+    .regex(phoneRegex, '올바른 휴대폰 번호를 입력해주세요'),
   wageType: wageTypeSchema,
   hourlyWage: z.number().nullable(),
   monthlyWage: z.number().nullable(),
@@ -69,6 +93,7 @@ export const createContractSchema = z.object({
     .min(2)
     .max(10)
     .regex(/^[가-힣]+$/),
+  worker_phone: z.string().min(10).regex(phoneRegex),
   wage_type: wageTypeSchema,
   hourly_wage: z.number().nullable(),
   monthly_wage: z.number().nullable(),
@@ -95,6 +120,7 @@ export type CreateContractInput = z.infer<typeof createContractSchema>;
 export function transformFormToDbSchema(formData: ContractFormInput): CreateContractInput {
   return {
     worker_name: formData.workerName,
+    worker_phone: normalizePhone(formData.workerPhone),
     wage_type: formData.wageType,
     hourly_wage: formData.wageType === 'hourly' ? formData.hourlyWage : null,
     monthly_wage: formData.wageType === 'monthly' ? formData.monthlyWage : null,

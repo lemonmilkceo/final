@@ -4,6 +4,10 @@ import { createClient } from '@/lib/supabase/server';
 import { ROUTES } from '@/lib/constants/routes';
 import WorkerDashboard from './worker-dashboard';
 
+interface PageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
 // 게스트 모드 체크 함수
 async function isGuestMode(): Promise<boolean> {
   const cookieStore = await cookies();
@@ -28,6 +32,8 @@ const GUEST_SAMPLE_CONTRACTS = [
     id: 'sample-1',
     worker_name: '게스트',
     hourly_wage: 10360,
+    wage_type: 'hourly',
+    monthly_wage: null,
     status: 'pending' as const,
     expires_at: new Date(Date.now() + 86400000 * 3).toISOString(), // 3일 후
     created_at: new Date().toISOString(),
@@ -38,6 +44,8 @@ const GUEST_SAMPLE_CONTRACTS = [
     id: 'sample-2',
     worker_name: '게스트',
     hourly_wage: 11000,
+    wage_type: 'hourly',
+    monthly_wage: null,
     status: 'pending' as const,
     expires_at: new Date(Date.now() + 86400000 * 7).toISOString(), // 7일 후
     created_at: new Date(Date.now() - 86400000).toISOString(),
@@ -48,6 +56,8 @@ const GUEST_SAMPLE_CONTRACTS = [
     id: 'sample-3',
     worker_name: '게스트',
     hourly_wage: 12000,
+    wage_type: 'hourly',
+    monthly_wage: null,
     status: 'completed' as const,
     expires_at: null,
     created_at: new Date(Date.now() - 86400000 * 30).toISOString(),
@@ -61,6 +71,8 @@ const GUEST_SAMPLE_CONTRACTS = [
     id: 'sample-4',
     worker_name: '게스트',
     hourly_wage: 10500,
+    wage_type: 'hourly',
+    monthly_wage: null,
     status: 'completed' as const,
     expires_at: null,
     created_at: new Date(Date.now() - 86400000 * 60).toISOString(),
@@ -72,7 +84,10 @@ const GUEST_SAMPLE_CONTRACTS = [
   },
 ];
 
-export default async function WorkerDashboardPage() {
+export default async function WorkerDashboardPage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const showOnboardingComplete = params.onboarding === 'complete';
+  
   // 게스트 모드 체크
   const isGuest = await isGuestMode();
   
@@ -115,10 +130,9 @@ export default async function WorkerDashboardPage() {
     .eq('user_id', user.id)
     .single();
 
-  // 온보딩 미완료 시 온보딩 페이지로 이동
-  if (!workerDetails) {
-    redirect('/worker/onboarding');
-  }
+  // 온보딩 미완료 시 - 첫 방문이면 온보딩으로, 아니면 대시보드 유지
+  // (건너뛰기를 허용하기 위해 강제 리다이렉트 제거)
+  const isOnboardingComplete = !!workerDetails;
 
   // 계약서 목록 조회 (worker_id로 또는 초대된 계약서)
   const { data: contracts } = await supabase
@@ -127,7 +141,9 @@ export default async function WorkerDashboardPage() {
       `
       id,
       worker_name,
+      wage_type,
       hourly_wage,
+      monthly_wage,
       status,
       expires_at,
       created_at,
@@ -152,6 +168,8 @@ export default async function WorkerDashboardPage() {
         avatarUrl: profile?.avatar_url,
       }}
       contracts={contracts || []}
+      showOnboardingComplete={showOnboardingComplete}
+      isOnboardingComplete={isOnboardingComplete}
     />
   );
 }

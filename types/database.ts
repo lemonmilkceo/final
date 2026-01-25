@@ -133,6 +133,7 @@ export type Database = {
           work_start_time: string
           worker_id: string | null
           worker_name: string
+          worker_phone: string | null
         }
         Insert: {
           break_minutes: number
@@ -165,6 +166,7 @@ export type Database = {
           work_start_time: string
           worker_id?: string | null
           worker_name: string
+          worker_phone?: string | null
         }
         Update: {
           break_minutes?: number
@@ -197,6 +199,7 @@ export type Database = {
           work_start_time?: string
           worker_id?: string | null
           worker_name?: string
+          worker_phone?: string | null
         }
         Relationships: [
           {

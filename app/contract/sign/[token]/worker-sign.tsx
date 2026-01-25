@@ -8,11 +8,16 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Toast from '@/components/ui/Toast';
 import { signAsWorker } from './actions';
 import { formatCurrency } from '@/lib/utils/format';
+import { normalizePhone, formatPhone } from '@/lib/utils/validation';
 import clsx from 'clsx';
+
+// 서명 플로우 단계
+type SignStep = 'verify_phone' | 'view_contract' | 'sign' | 'completed';
 
 // 근로자 서명 페이지에서 사용하는 타입
 interface WorkerSignContract {
   worker_name: string;
+  worker_phone?: string | null;
   wage_type?: string;
   hourly_wage: number | null;
   monthly_wage?: number | null;
@@ -52,6 +57,16 @@ export default function WorkerSignPage({
   token,
 }: WorkerSignPageProps) {
   const router = useRouter();
+  
+  // 휴대폰 번호가 없으면 바로 계약서 보기로
+  const initialStep: SignStep = contract.worker_phone ? 'verify_phone' : 'view_contract';
+  const [currentStep, setCurrentStep] = useState<SignStep>(initialStep);
+  
+  // 휴대폰 인증 상태
+  const [inputPhone, setInputPhone] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+  const [phoneVerified, setPhoneVerified] = useState(!contract.worker_phone);
+  
   const [isSignatureSheetOpen, setIsSignatureSheetOpen] = useState(false);
   const [signatureData, setSignatureData] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -64,6 +79,55 @@ export default function WorkerSignPage({
   const workerSigned = contract.signatures?.some(
     (s) => s.signer_role === 'worker' && s.signed_at
   );
+  
+  // 휴대폰 번호 입력 처리
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/[^0-9-]/g, '');
+    const numbersOnly = value.replace(/-/g, '');
+    
+    if (numbersOnly.length <= 11) {
+      if (numbersOnly.length > 7) {
+        value = `${numbersOnly.slice(0, 3)}-${numbersOnly.slice(3, 7)}-${numbersOnly.slice(7)}`;
+      } else if (numbersOnly.length > 3) {
+        value = `${numbersOnly.slice(0, 3)}-${numbersOnly.slice(3)}`;
+      } else {
+        value = numbersOnly;
+      }
+    }
+    
+    setInputPhone(value);
+    if (phoneError) setPhoneError('');
+  };
+  
+  // 휴대폰 번호 확인
+  const handleVerifyPhone = () => {
+    const inputNormalized = normalizePhone(inputPhone);
+    const contractNormalized = normalizePhone(contract.worker_phone || '');
+    
+    if (inputNormalized.length < 10) {
+      setPhoneError('휴대폰 번호를 입력해주세요');
+      return;
+    }
+    
+    if (inputNormalized !== contractNormalized) {
+      setPhoneError('계약서에 등록된 번호와 일치하지 않아요');
+      return;
+    }
+    
+    // 번호 일치 - 계약서 보기로 이동
+    setPhoneVerified(true);
+    setCurrentStep('view_contract');
+  };
+  
+  // 마스킹된 휴대폰 번호 (010-****-5678)
+  const getMaskedPhone = () => {
+    const phone = contract.worker_phone || '';
+    const normalized = normalizePhone(phone);
+    if (normalized.length >= 11) {
+      return `${normalized.slice(0, 3)}-****-${normalized.slice(7)}`;
+    }
+    return '***-****-****';
+  };
 
   const formatWorkDays = () => {
     if (contract.work_days_per_week) {
@@ -149,16 +213,103 @@ export default function WorkerSignPage({
         <h1 className="text-[22px] font-bold text-gray-900 mb-2">
           계약이 완료됐어요!
         </h1>
-        <p className="text-[15px] text-gray-500 mb-8">
-          서명한 계약서는 앱에서 확인할 수 있어요
+        <p className="text-[15px] text-gray-500 mb-4">
+          이 계약서가 첫 경력으로 저장돼요
         </p>
+        
+        {/* 혜택 안내 */}
+        <div className="bg-blue-50 rounded-2xl p-4 mb-8 w-full max-w-xs text-left">
+          <p className="text-[14px] text-blue-700 font-medium mb-2">
+            ✨ 회원가입하면 이런 혜택이 있어요
+          </p>
+          <ul className="text-[13px] text-blue-600 space-y-1">
+            <li>• 내 경력 자동 관리</li>
+            <li>• 계약서 PDF 다운로드</li>
+            <li>• 다음 계약 정보 자동 입력</li>
+          </ul>
+        </div>
 
         <a
-          href="/login"
-          className="w-full max-w-xs py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg text-center"
+          href="/signup"
+          className="w-full max-w-xs py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg text-center block mb-3"
         >
-          앱으로 이동하기
+          3초만에 가입하기
         </a>
+        <button
+          onClick={() => router.push('/')}
+          className="text-[14px] text-gray-400"
+        >
+          나중에 할게요
+        </button>
+      </div>
+    );
+  }
+  
+  // 휴대폰 번호 확인 화면
+  if (currentStep === 'verify_phone') {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        {/* Header */}
+        <header className="px-5 py-4 safe-top">
+          <p className="text-[13px] text-gray-500 text-center">
+            {contract.employer?.name || '사장님'}이 보낸 계약서
+          </p>
+        </header>
+        
+        {/* Content */}
+        <div className="flex-1 flex flex-col items-center justify-center px-6">
+          <span className="text-5xl mb-6">📱</span>
+          <h1 className="text-[22px] font-bold text-gray-900 mb-2 text-center">
+            본인 확인이 필요해요
+          </h1>
+          <p className="text-[15px] text-gray-500 mb-8 text-center">
+            계약서에 등록된 휴대폰 번호를 입력해주세요
+          </p>
+          
+          {/* 마스킹된 번호 힌트 */}
+          <div className="bg-gray-100 rounded-2xl px-6 py-3 mb-6">
+            <p className="text-[14px] text-gray-500">
+              등록된 번호: <span className="font-mono">{getMaskedPhone()}</span>
+            </p>
+          </div>
+          
+          {/* 휴대폰 번호 입력 */}
+          <input
+            type="tel"
+            value={inputPhone}
+            onChange={handlePhoneChange}
+            placeholder="010-0000-0000"
+            inputMode="tel"
+            autoFocus
+            className={clsx(
+              'w-full max-w-xs text-center text-[24px] font-bold border-b-2 bg-transparent py-3 focus:outline-none transition-colors',
+              phoneError ? 'border-red-500 text-red-500' : 'border-gray-200 focus:border-blue-500 text-gray-900'
+            )}
+          />
+          
+          {phoneError && (
+            <p className="text-[13px] text-red-500 mt-3 flex items-center gap-1">
+              <span>⚠️</span>
+              {phoneError}
+            </p>
+          )}
+        </div>
+        
+        {/* Bottom CTA */}
+        <div className="px-6 pb-4 safe-bottom">
+          <button
+            onClick={handleVerifyPhone}
+            disabled={inputPhone.length < 10}
+            className={clsx(
+              'w-full py-4 rounded-2xl font-semibold text-lg transition-colors',
+              inputPhone.length >= 10
+                ? 'bg-blue-500 text-white active:bg-blue-600'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            )}
+          >
+            확인
+          </button>
+        </div>
       </div>
     );
   }
