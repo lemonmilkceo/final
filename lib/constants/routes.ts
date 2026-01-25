@@ -68,6 +68,7 @@ export const MENU_ROUTES = {
   PAYMENT_HISTORY: '/payment-history',
   TERMS: '/terms',
   PRIVACY: '/privacy',
+  REFUND: '/refund',
   SUPPORT: '/support',
   SIGNOUT: '/auth/signout',
 } as const;

@@ -397,15 +397,15 @@ export default function EmployerDashboard({
             
             {/* 크레딧 뱃지 */}
             <div className="flex flex-wrap gap-2 mt-3">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 rounded-full">
-                <span className="text-amber-500">🎟️</span>
-                <span className="text-[14px] font-semibold text-amber-700">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-full border border-cyan-200/50">
+                <span className="text-lg">💎</span>
+                <span className="text-[14px] font-semibold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
                   계약서 {credits.contract}건
                 </span>
               </div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 rounded-full">
-                <span className="text-purple-500">🤖</span>
-                <span className="text-[14px] font-semibold text-purple-700">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-full border border-amber-200/50">
+                <span className="text-lg">⚡️</span>
+                <span className="text-[14px] font-semibold bg-gradient-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent">
                   AI노무사 {credits.aiReview}건
                 </span>
               </div>
