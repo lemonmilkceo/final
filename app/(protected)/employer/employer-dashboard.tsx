@@ -10,9 +10,11 @@ import NotificationSheet from '@/components/notification/NotificationSheet';
 import FolderModal from '@/components/folder/FolderModal';
 import MoveFolderSheet from '@/components/folder/MoveFolderSheet';
 import Toast from '@/components/ui/Toast';
+import BottomSheet from '@/components/ui/BottomSheet';
 import { ROUTES } from '@/lib/constants/routes';
 import { getNotifications, getUnreadNotificationCount } from '@/app/actions/notifications';
 import { createFolder, updateFolder, deleteFolder, moveContractToFolder } from './folders/actions';
+import { useContractFormStore } from '@/stores/contractFormStore';
 import type { ContractStatus } from '@/types';
 
 // 정렬 타입
@@ -94,6 +96,15 @@ export default function EmployerDashboard({
   const [toastMessage, setToastMessage] = useState('');
   const [toastVariant, setToastVariant] = useState<'success' | 'error'>('success');
 
+  // 임시저장 복귀 모달
+  const [isDraftSheetOpen, setIsDraftSheetOpen] = useState(false);
+  
+  // 임시저장된 계약서 데이터 확인
+  const { data: draftData, step: draftStep, reset: resetDraft } = useContractFormStore();
+  
+  // 임시저장 데이터가 있는지 확인 (step이 1보다 크거나 workerName이 있으면 진행 중인 것)
+  const hasDraft = draftStep > 1 || draftData.workerName.trim() !== '';
+
   const showToastMessage = (message: string, variant: 'success' | 'error') => {
     setToastMessage(message);
     setToastVariant(variant);
@@ -155,6 +166,24 @@ export default function EmployerDashboard({
 
   // 계약서 작성
   const handleCreateContract = () => {
+    if (hasDraft) {
+      // 임시저장 데이터가 있으면 확인 모달 표시
+      setIsDraftSheetOpen(true);
+    } else {
+      router.push(ROUTES.EMPLOYER_CREATE_CONTRACT);
+    }
+  };
+
+  // 이어서 작성
+  const handleContinueDraft = () => {
+    setIsDraftSheetOpen(false);
+    router.push(ROUTES.EMPLOYER_CREATE_CONTRACT);
+  };
+
+  // 처음부터 작성
+  const handleStartNew = () => {
+    resetDraft();
+    setIsDraftSheetOpen(false);
     router.push(ROUTES.EMPLOYER_CREATE_CONTRACT);
   };
 
@@ -493,6 +522,46 @@ export default function EmployerDashboard({
         onMoveToFolder={handleMoveToFolder}
         onCreateFolder={handleCreateFolder}
       />
+
+      {/* Draft Resume Sheet */}
+      <BottomSheet
+        isOpen={isDraftSheetOpen}
+        onClose={() => setIsDraftSheetOpen(false)}
+        title="작성 중인 계약서가 있어요"
+      >
+        <div className="space-y-6">
+          {/* 임시저장 정보 */}
+          <div className="bg-amber-50 rounded-2xl p-4">
+            <div className="flex gap-3">
+              <span className="text-2xl">📝</span>
+              <div>
+                <p className="text-[15px] font-medium text-amber-800 mb-1">
+                  {draftData.workerName ? `${draftData.workerName}님 계약서` : '임시저장된 계약서'}
+                </p>
+                <p className="text-[14px] text-amber-700">
+                  {draftStep}단계까지 작성했어요
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* 버튼 */}
+          <div className="flex gap-3">
+            <button
+              onClick={handleStartNew}
+              className="flex-1 py-4 rounded-2xl font-semibold text-lg bg-gray-100 text-gray-700"
+            >
+              처음부터
+            </button>
+            <button
+              onClick={handleContinueDraft}
+              className="flex-1 py-4 rounded-2xl font-semibold text-lg bg-blue-500 text-white"
+            >
+              이어서 작성
+            </button>
+          </div>
+        </div>
+      </BottomSheet>
 
       {/* Toast */}
       <Toast
