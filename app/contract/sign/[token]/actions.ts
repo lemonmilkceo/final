@@ -2,7 +2,38 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import type { ActionResult } from '@/types';
+
+/**
+ * 근로자 서명을 위한 카카오 로그인
+ * 로그인 후 원래 서명 페이지로 리다이렉트
+ */
+export async function signInForWorkerSign(token: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'kakao',
+    options: {
+      // 로그인 후 원래 서명 페이지로 돌아오기 (단축 URL 사용)
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/s/${token}`,
+      queryParams: {
+        scope: 'profile_nickname profile_image',
+      },
+    },
+  });
+
+  if (error) {
+    console.error('Kakao OAuth Error:', error.message);
+    return { success: false, error: '로그인에 실패했어요' };
+  }
+
+  if (data.url) {
+    redirect(data.url);
+  }
+
+  return { success: false, error: '로그인 URL을 생성하지 못했어요' };
+}
 
 export async function signAsWorker(
   token: string,

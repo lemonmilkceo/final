@@ -6,13 +6,14 @@ import SignatureCanvas from '@/components/contract/SignatureCanvas';
 import BottomSheet from '@/components/ui/BottomSheet';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Toast from '@/components/ui/Toast';
-import { signAsWorker } from './actions';
+import { signAsWorker, signInForWorkerSign } from './actions';
 import { formatCurrency } from '@/lib/utils/format';
-import { normalizePhone, formatPhone } from '@/lib/utils/validation';
+import { normalizePhone } from '@/lib/utils/validation';
 import clsx from 'clsx';
 
 // 서명 플로우 단계
-type SignStep = 'verify_phone' | 'view_contract' | 'sign' | 'completed';
+// verify_phone → view_contract → login → sign → completed
+type SignStep = 'verify_phone' | 'view_contract' | 'login' | 'sign' | 'completed';
 
 // 근로자 서명 페이지에서 사용하는 타입
 interface WorkerSignContract {
@@ -50,22 +51,38 @@ interface WorkerSignContract {
 interface WorkerSignPageProps {
   contract: WorkerSignContract;
   token: string;
+  isLoggedIn: boolean;
 }
 
 export default function WorkerSignPage({
   contract,
   token,
+  isLoggedIn,
 }: WorkerSignPageProps) {
   const router = useRouter();
   
-  // 휴대폰 번호가 없으면 바로 계약서 보기로
-  const initialStep: SignStep = contract.worker_phone ? 'verify_phone' : 'view_contract';
-  const [currentStep, setCurrentStep] = useState<SignStep>(initialStep);
+  // 초기 단계 결정
+  // 1. 휴대폰 번호가 있으면 번호 인증부터
+  // 2. 없으면 계약서 보기
+  // 3. 로그인된 상태에서 접근하면 바로 서명
+  const getInitialStep = (): SignStep => {
+    if (isLoggedIn) {
+      // 로그인된 상태면 바로 서명 단계로
+      return 'sign';
+    }
+    if (contract.worker_phone) {
+      return 'verify_phone';
+    }
+    return 'view_contract';
+  };
+  
+  const [currentStep, setCurrentStep] = useState<SignStep>(getInitialStep());
   
   // 휴대폰 인증 상태
   const [inputPhone, setInputPhone] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [phoneVerified, setPhoneVerified] = useState(!contract.worker_phone);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   
   const [isSignatureSheetOpen, setIsSignatureSheetOpen] = useState(false);
   const [signatureData, setSignatureData] = useState<string | null>(null);
@@ -117,6 +134,17 @@ export default function WorkerSignPage({
     // 번호 일치 - 계약서 보기로 이동
     setPhoneVerified(true);
     setCurrentStep('view_contract');
+  };
+
+  // 카카오 로그인 처리
+  const handleKakaoLogin = async () => {
+    setIsLoggingIn(true);
+    try {
+      await signInForWorkerSign(token);
+    } catch {
+      setError('로그인 중 오류가 발생했어요');
+      setIsLoggingIn(false);
+    }
   };
   
   // 마스킹된 휴대폰 번호 (010-****-5678)
@@ -366,15 +394,21 @@ export default function WorkerSignPage({
               )}
             </div>
 
-            {/* Worker Signature */}
+            {/* Worker Signature - 로그인된 경우에만 서명 가능 */}
             <div>
               <p className="text-[14px] text-gray-500 mb-3">근로자 서명</p>
-              <button
-                onClick={() => setIsSignatureSheetOpen(true)}
-                className="w-full h-20 border-2 border-dashed border-blue-400 rounded-xl flex items-center justify-center text-blue-500 bg-blue-50 hover:bg-blue-100 transition-colors"
-              >
-                터치하여 서명하기 ✍️
-              </button>
+              {currentStep === 'sign' ? (
+                <button
+                  onClick={() => setIsSignatureSheetOpen(true)}
+                  className="w-full h-20 border-2 border-dashed border-blue-400 rounded-xl flex items-center justify-center text-blue-500 bg-blue-50 hover:bg-blue-100 transition-colors"
+                >
+                  터치하여 서명하기 ✍️
+                </button>
+              ) : (
+                <div className="w-full h-20 border-2 border-gray-200 rounded-xl flex items-center justify-center bg-gray-50">
+                  <span className="text-gray-400">카카오 로그인 후 서명 가능</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -388,14 +422,46 @@ export default function WorkerSignPage({
         )}
       </div>
 
-      {/* Bottom CTA */}
+      {/* Bottom CTA - 로그인 상태에 따라 다른 버튼 */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-5 pt-3 pb-4 safe-bottom">
-        <button
-          onClick={() => setIsSignatureSheetOpen(true)}
-          className="w-full py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg"
-        >
-          서명하고 계약하기 ✍️
-        </button>
+        {currentStep === 'sign' ? (
+          <button
+            onClick={() => setIsSignatureSheetOpen(true)}
+            className="w-full py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg"
+          >
+            서명하고 계약하기 ✍️
+          </button>
+        ) : (
+          <div className="space-y-3">
+            <button
+              onClick={handleKakaoLogin}
+              disabled={isLoggingIn}
+              className="w-full py-4 rounded-2xl bg-[#FEE500] text-[#191919] font-semibold text-lg flex items-center justify-center gap-2"
+            >
+              {isLoggingIn ? (
+                <>
+                  <LoadingSpinner variant="button" />
+                  로그인 중...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      clipRule="evenodd"
+                      d="M10 2C5.02944 2 1 5.25562 1 9.28571C1 11.8571 2.67188 14.1143 5.19531 15.4286L4.35156 18.5714C4.28516 18.8286 4.57422 19.0286 4.80078 18.8857L8.5 16.4571C9 16.5143 9.5 16.5714 10 16.5714C14.9706 16.5714 19 13.3158 19 9.28571C19 5.25562 14.9706 2 10 2Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  카카오로 3초 만에 로그인하고 서명하기
+                </>
+              )}
+            </button>
+            <p className="text-[12px] text-gray-400 text-center">
+              계약서 저장을 위해 로그인이 필요해요
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Signature Sheet */}

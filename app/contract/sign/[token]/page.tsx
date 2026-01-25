@@ -10,6 +10,12 @@ export default async function SignPage({ params }: SignPageProps) {
   const { token } = await params;
   const supabase = await createClient();
 
+  // 로그인 상태 확인
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isLoggedIn = !!user;
+
   // 계약서 조회 (share_token으로)
   const { data: contract, error } = await supabase
     .from('contracts')
@@ -70,5 +76,5 @@ export default async function SignPage({ params }: SignPageProps) {
     );
   }
 
-  return <WorkerSignPage contract={contract} token={token} />;
+  return <WorkerSignPage contract={contract} token={token} isLoggedIn={isLoggedIn} />;
 }
