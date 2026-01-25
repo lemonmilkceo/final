@@ -162,7 +162,7 @@ export default function ContractPreview({
         return;
       }
 
-      // 새 계약서 저장 (서명 데이터와 함께)
+      // 새 계약서 저장 (서명 데이터와 함께) → 바로 공유 시트 열기
       setIsLoading(true);
       setError('');
 
@@ -178,7 +178,17 @@ export default function ContractPreview({
 
         if (result.success && result.data) {
           reset(); // 스토어 초기화
-          router.push(`/employer/preview/${result.data.contractId}`);
+          
+          // 공유 URL이 있으면 바로 공유 시트 열기
+          if (result.data.shareUrl) {
+            setShareUrl(result.data.shareUrl);
+            setIsShareSheetOpen(true);
+            setToastMessage('계약서가 저장됐어요! 📝');
+            setShowToast(true);
+          } else {
+            // 공유 URL 없으면 계약서 페이지로 이동
+            router.push(`/employer/preview/${result.data.contractId}`);
+          }
         } else {
           setError(result.error || '계약서 저장에 실패했어요');
         }
@@ -300,24 +310,19 @@ export default function ContractPreview({
 
   // AI 검토 요청
   const handleAIReview = async () => {
-    if (isNew) {
-      setError('계약서를 먼저 저장해주세요');
-      return;
-    }
-
-    if (!contractId) {
-      setError('계약서 ID가 없어요');
-      return;
-    }
-
     setIsAIReviewLoading(true);
     setError('');
 
     try {
+      // 새 계약서면 formData로, 저장된 계약서면 contractId로 요청
+      const requestBody = isNew
+        ? { contractData: formData }
+        : { contractId };
+
       const response = await fetch('/api/ai-review', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contractId }),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
@@ -426,10 +431,10 @@ export default function ContractPreview({
         {/* AI Review Button */}
         <button
           onClick={handleAIReview}
-          disabled={isAIReviewLoading || isNew}
+          disabled={isAIReviewLoading}
           className={clsx(
             'w-full mt-4 bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm',
-            isAIReviewLoading || isNew
+            isAIReviewLoading
               ? 'opacity-50 cursor-not-allowed'
               : 'active:bg-gray-50'
           )}
@@ -443,9 +448,7 @@ export default function ContractPreview({
                 {isAIReviewLoading ? 'AI가 검토 중이에요...' : 'AI 노무사 검토 받기'}
               </p>
               <p className="text-[13px] text-gray-500">
-                {isNew
-                  ? '계약서를 먼저 저장해주세요'
-                  : '법적 문제가 없는지 확인해요'}
+                서명 전에 법적 문제가 없는지 확인해요
               </p>
             </div>
           </div>
@@ -579,7 +582,7 @@ export default function ContractPreview({
           ) : isGuestMode ? (
             '체험 완료하기 🎉'
           ) : isNew ? (
-            signatureData ? '저장하고 보내기 📤' : '서명하고 저장하기 ✍️'
+            signatureData ? '저장하고 공유하기 📤' : '서명하고 저장하기 ✍️'
           ) : employerSigned ? (
             '근로자에게 보내기 📤'
           ) : (

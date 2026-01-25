@@ -62,50 +62,76 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { contractId } = body;
+    const { contractId, contractData } = body;
 
-    if (!contractId) {
+    // contractId 또는 contractData 중 하나는 필수
+    if (!contractId && !contractData) {
       return NextResponse.json(
-        { error: '계약서 ID가 필요해요' },
+        { error: '계약서 정보가 필요해요' },
         { status: 400 }
       );
     }
 
-    // 계약서 조회
-    const { data: contract, error: contractError } = await supabase
-      .from('contracts')
-      .select('*')
-      .eq('id', contractId)
-      .eq('employer_id', user.id)
-      .single();
+    let contract: ContractData;
+    let isNewContract = false;
 
-    if (contractError || !contract) {
-      return NextResponse.json(
-        { error: '계약서를 찾을 수 없어요' },
-        { status: 404 }
-      );
-    }
+    if (contractId) {
+      // 기존 계약서 조회
+      const { data: dbContract, error: contractError } = await supabase
+        .from('contracts')
+        .select('*')
+        .eq('id', contractId)
+        .eq('employer_id', user.id)
+        .single();
 
-    // 기존 AI 리뷰 확인
-    const { data: existingReview } = await supabase
-      .from('ai_reviews')
-      .select('*')
-      .eq('contract_id', contractId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+      if (contractError || !dbContract) {
+        return NextResponse.json(
+          { error: '계약서를 찾을 수 없어요' },
+          { status: 404 }
+        );
+      }
 
-    if (existingReview) {
-      // 이미 리뷰가 있으면 기존 결과 반환
-      const cachedResult = existingReview.result as unknown as ReviewResult;
-      return NextResponse.json({
-        success: true,
-        review: {
-          overall_status: cachedResult.overall_status,
-          review_items: cachedResult.items,
-        },
-        cached: true,
-      });
+      contract = dbContract as ContractData;
+
+      // 기존 AI 리뷰 확인
+      const { data: existingReview } = await supabase
+        .from('ai_reviews')
+        .select('*')
+        .eq('contract_id', contractId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (existingReview) {
+        // 이미 리뷰가 있으면 기존 결과 반환 (크레딧 소모 안함)
+        const cachedResult = existingReview.result as unknown as ReviewResult;
+        return NextResponse.json({
+          success: true,
+          review: {
+            overall_status: cachedResult.overall_status,
+            review_items: cachedResult.items,
+          },
+          cached: true,
+        });
+      }
+    } else {
+      // 새 계약서 (formData에서 직접 받음)
+      isNewContract = true;
+      contract = {
+        hourly_wage: contractData.hourlyWage || 0,
+        includes_weekly_allowance: contractData.includesWeeklyAllowance || false,
+        work_days_per_week: contractData.workDaysPerWeek || null,
+        work_days: contractData.workDays || null,
+        work_start_time: contractData.workStartTime || '09:00',
+        work_end_time: contractData.workEndTime || '18:00',
+        break_minutes: contractData.breakMinutes || 0,
+        work_location: contractData.workLocation || '',
+        job_description: contractData.jobDescription || '',
+        pay_day: contractData.payDay || 10,
+        start_date: contractData.startDate || '',
+        end_date: contractData.endDate || null,
+        business_size: contractData.businessSize || 'under_5',
+      };
     }
 
     // AI 크레딧 확인 및 차감
@@ -116,7 +142,7 @@ export async function POST(request: NextRequest) {
         p_credit_type: 'ai_review',
         p_amount: 1,
         p_description: 'AI 노무사 검토',
-        p_reference_id: contractId,
+        p_reference_id: contractId || 'new_contract',
       }
     );
 
@@ -128,21 +154,21 @@ export async function POST(request: NextRequest) {
     }
 
     // 기본 검토 로직 (규칙 기반)
-    const basicReview = performBasicReview(contract as ContractData);
+    const basicReview = performBasicReview(contract);
 
     // OpenAI API 호출 (선택적)
     let aiSuggestions: string | null = null;
     const openaiClient = getOpenAIClient();
     if (openaiClient) {
       try {
-        aiSuggestions = await getAISuggestions(openaiClient, contract as ContractData);
+        aiSuggestions = await getAISuggestions(openaiClient, contract);
       } catch (aiError) {
         console.error('OpenAI API error:', aiError);
         // AI 호출 실패해도 기본 검토 결과는 반환
       }
     }
 
-    // 결과 저장
+    // 결과 생성
     const reviewResult: ReviewResult = {
       overall_status: basicReview.overall_status,
       items: basicReview.items.map((item) => ({
@@ -151,16 +177,19 @@ export async function POST(request: NextRequest) {
       })),
     };
 
-    const { error: saveError } = await supabase
-      .from('ai_reviews')
-      .insert({
-        contract_id: contractId,
-        requested_by: user.id,
-        result: JSON.parse(JSON.stringify(reviewResult)),
-      });
+    // 기존 계약서인 경우에만 결과 저장
+    if (contractId && !isNewContract) {
+      const { error: saveError } = await supabase
+        .from('ai_reviews')
+        .insert({
+          contract_id: contractId,
+          requested_by: user.id,
+          result: JSON.parse(JSON.stringify(reviewResult)),
+        });
 
-    if (saveError) {
-      console.error('Review save error:', saveError);
+      if (saveError) {
+        console.error('Review save error:', saveError);
+      }
     }
 
     return NextResponse.json({
@@ -170,6 +199,7 @@ export async function POST(request: NextRequest) {
         review_items: reviewResult.items,
       },
       cached: false,
+      isNewContract,
     });
   } catch (error) {
     console.error('AI Review error:', error);

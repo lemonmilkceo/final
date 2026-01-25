@@ -14,7 +14,7 @@ import type { ActionResult } from '@/types';
 export async function createContract(
   formData: ContractFormInput,
   signatureData?: string | null
-): Promise<ActionResult<{ contractId: string }>> {
+): Promise<ActionResult<{ contractId: string; shareUrl?: string }>> {
   const supabase = await createClient();
 
   // 인증 확인
@@ -89,7 +89,9 @@ export async function createContract(
     return { success: false, error: '계약서 저장에 실패했어요' };
   }
 
-  // 서명 데이터가 있으면 서명도 함께 저장
+  // 서명 데이터가 있으면 서명도 함께 저장하고 공유 토큰 생성
+  let shareUrl: string | undefined;
+  
   if (signatureData) {
     const { error: signatureError } = await supabase.from('signatures').insert({
       contract_id: contract.id,
@@ -103,12 +105,24 @@ export async function createContract(
       console.error('Signature insert error:', signatureError);
       // 서명 저장 실패해도 계약서는 이미 저장됨 - 에러 반환하지 않고 경고만
     }
+
+    // 서명이 있으면 바로 공유 토큰 생성
+    const shareToken = crypto.randomUUID().replace(/-/g, '').slice(0, 16);
+    
+    const { error: tokenError } = await supabase
+      .from('contracts')
+      .update({ share_token: shareToken })
+      .eq('id', contract.id);
+
+    if (!tokenError) {
+      shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/contract/sign/${shareToken}`;
+    }
   }
 
   // 캐시 무효화
   revalidatePath('/employer');
 
-  return { success: true, data: { contractId: contract.id } };
+  return { success: true, data: { contractId: contract.id, shareUrl } };
 }
 
 export async function saveContractDraft(
