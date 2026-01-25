@@ -115,7 +115,8 @@ export async function createContract(
       .eq('id', contract.id);
 
     if (!tokenError) {
-      shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/contract/sign/${shareToken}`;
+      // 단축 URL 사용 - 카카오톡에서 하이퍼링크 인식 문제 해결
+      shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/s/${shareToken}`;
     }
   }
 

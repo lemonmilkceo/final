@@ -3,12 +3,13 @@
  */
 
 /**
- * 계약서 공유 링크 복사
+ * 계약서 공유 링크 복사 (단축 URL 사용)
  * @param shareToken 계약서 공유 토큰
  * @returns 성공 여부
  */
 export async function copyContractLink(shareToken: string): Promise<boolean> {
-  const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/contract/sign/${shareToken}`;
+  // 단축 URL 사용 - 카카오톡에서 하이퍼링크 인식 문제 해결
+  const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/s/${shareToken}`;
 
   try {
     if (navigator.clipboard && window.isSecureContext) {
@@ -37,12 +38,13 @@ export async function copyContractLink(shareToken: string): Promise<boolean> {
 }
 
 /**
- * 공유 URL 생성
+ * 공유 URL 생성 (단축 URL 사용)
  * @param shareToken 계약서 공유 토큰
  * @returns 공유 URL
  */
 export function getContractShareUrl(shareToken: string): string {
-  return `${process.env.NEXT_PUBLIC_APP_URL}/contract/sign/${shareToken}`;
+  // 단축 URL 사용 - 카카오톡에서 하이퍼링크 인식 문제 해결
+  return `${process.env.NEXT_PUBLIC_APP_URL}/s/${shareToken}`;
 }
 
 /**

@@ -120,9 +120,9 @@ export async function sendContract(
     return { success: false, error: '먼저 서명을 완료해주세요' };
   }
 
-  // 이미 공유 토큰이 있으면 반환
+  // 이미 공유 토큰이 있으면 반환 (단축 URL 사용)
   if (contract.share_token) {
-    const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/contract/sign/${contract.share_token}`;
+    const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/s/${contract.share_token}`;
     return { success: true, data: { shareUrl } };
   }
 
@@ -142,7 +142,8 @@ export async function sendContract(
     return { success: false, error: '공유 링크 생성에 실패했어요' };
   }
 
-  const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/contract/sign/${shareToken}`;
+  // 단축 URL 사용 - 카카오톡에서 하이퍼링크 인식 문제 해결
+  const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/s/${shareToken}`;
 
   // 캐시 무효화
   revalidatePath(`/employer/preview/${contractId}`);

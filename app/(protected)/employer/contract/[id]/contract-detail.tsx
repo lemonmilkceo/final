@@ -5,12 +5,11 @@ import { useRouter } from 'next/navigation';
 import PageHeader from '@/components/layout/PageHeader';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import BottomSheet from '@/components/ui/BottomSheet';
 import ConfirmSheet from '@/components/ui/ConfirmSheet';
 import Toast from '@/components/ui/Toast';
 import { formatCurrency, formatDate, formatDday } from '@/lib/utils/format';
-import { copyContractLink } from '@/lib/utils/share';
-import { shareContractViaKakao, initKakao } from '@/lib/kakao';
-import { deleteContract, resendContract } from './actions';
+import { deleteContract } from './actions';
 import clsx from 'clsx';
 
 interface Signature {
@@ -68,11 +67,16 @@ export default function ContractDetail({
 }: ContractDetailProps) {
   const router = useRouter();
   const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
+  const [isShareSheetOpen, setIsShareSheetOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isResending, setIsResending] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastVariant, setToastVariant] = useState<'success' | 'error'>('success');
+  
+  // 단축 URL 생성
+  const shareUrl = contract.shareToken 
+    ? `${process.env.NEXT_PUBLIC_APP_URL}/s/${contract.shareToken}`
+    : null;
 
   const employerSigned = contract.signatures.find(
     (s) => s.signer_role === 'employer' && s.signed_at
@@ -137,64 +141,40 @@ export default function ContractDetail({
     }
   };
 
-  const handleResend = async () => {
+  // 공유 시트 열기
+  const handleOpenShareSheet = () => {
     if (isGuestMode) {
-      setToastMessage('게스트 모드에서는 재전송할 수 없어요');
+      setToastMessage('게스트 모드에서는 공유할 수 없어요');
       setToastVariant('error');
       setShowToast(true);
       return;
     }
 
-    if (!contract.shareToken) {
+    if (!shareUrl) {
       setToastMessage('공유 링크가 없어요');
       setToastVariant('error');
       setShowToast(true);
       return;
     }
 
-    setIsResending(true);
-    try {
-      initKakao();
-      const success = shareContractViaKakao({
-        workerName: contract.workerName,
-        shareUrl: `${process.env.NEXT_PUBLIC_APP_URL}/contract/sign/${contract.shareToken}`,
-        employerName,
-      });
-
-      if (success) {
-        // 재전송 로그 기록
-        await resendContract(contract.id);
-        setToastMessage('카카오톡으로 다시 보냈어요 📤');
-        setToastVariant('success');
-        setShowToast(true);
-      } else {
-        setToastMessage('카카오톡 공유에 실패했어요');
-        setToastVariant('error');
-        setShowToast(true);
-      }
-    } catch {
-      setToastMessage('재전송 중 오류가 발생했어요');
-      setToastVariant('error');
-      setShowToast(true);
-    } finally {
-      setIsResending(false);
-    }
+    setIsShareSheetOpen(true);
   };
 
+  // 링크 복사
   const handleCopyLink = async () => {
-    if (!contract.shareToken) {
+    if (!shareUrl) {
       setToastMessage('공유 링크가 없어요');
       setToastVariant('error');
       setShowToast(true);
       return;
     }
 
-    const success = await copyContractLink(contract.shareToken);
-    if (success) {
-      setToastMessage('링크가 복사됐어요 📋');
+    try {
+      await navigator.clipboard.writeText(shareUrl.trim());
+      setToastMessage('링크가 복사됐어요! 카카오톡에 붙여넣기 하세요 📋');
       setToastVariant('success');
       setShowToast(true);
-    } else {
+    } catch {
       setToastMessage('링크 복사에 실패했어요');
       setToastVariant('error');
       setShowToast(true);
@@ -414,11 +394,11 @@ export default function ContractDetail({
             <span className="text-[11px] text-gray-500">PDF</span>
           </button>
           <button
-            onClick={handleCopyLink}
-            disabled={!contract.shareToken}
+            onClick={handleOpenShareSheet}
+            disabled={!shareUrl}
             className={clsx(
               'flex flex-col items-center gap-1',
-              !contract.shareToken && 'opacity-50'
+              !shareUrl && 'opacity-50'
             )}
           >
             <span className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-lg">
@@ -427,11 +407,11 @@ export default function ContractDetail({
             <span className="text-[11px] text-gray-500">링크</span>
           </button>
           <button
-            onClick={handleResend}
-            disabled={!contract.shareToken || contract.status === 'completed' || isResending}
+            onClick={handleOpenShareSheet}
+            disabled={!shareUrl || contract.status === 'completed'}
             className={clsx(
               'flex flex-col items-center gap-1',
-              (!contract.shareToken || contract.status === 'completed') && 'opacity-50'
+              (!shareUrl || contract.status === 'completed') && 'opacity-50'
             )}
           >
             <span className="w-10 h-10 bg-[#FEE500] rounded-full flex items-center justify-center text-lg">
@@ -456,7 +436,7 @@ export default function ContractDetail({
 
         {/* 메인 버튼 */}
         {contract.status === 'pending' && !workerSigned && (
-          <Button onClick={handleResend} loading={isResending}>
+          <Button onClick={handleOpenShareSheet} disabled={!shareUrl}>
             근로자에게 다시 보내기 📤
           </Button>
         )}
@@ -479,6 +459,61 @@ export default function ContractDetail({
         confirmVariant="error"
         isConfirmLoading={isDeleting}
       />
+
+      {/* 공유 링크 시트 */}
+      <BottomSheet
+        isOpen={isShareSheetOpen}
+        onClose={() => setIsShareSheetOpen(false)}
+        title="근로자에게 계약서 보내기"
+      >
+        <div className="space-y-6">
+          {/* 중요 안내 - 가장 위에 배치 */}
+          <div className="bg-blue-50 rounded-2xl p-4 border-2 border-blue-200">
+            <div className="flex gap-3">
+              <span className="text-2xl">📱</span>
+              <div>
+                <p className="text-[15px] font-bold text-blue-900 mb-1">
+                  아래 링크를 복사해서 근로자에게
+                  <br />
+                  <span className="text-blue-600">직접 카카오톡으로 보내주세요!</span>
+                </p>
+                <p className="text-[13px] text-blue-700 mt-2">
+                  * 카카오톡 자동 공유 기능은 준비 중이에요
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* 링크 표시 영역 */}
+          <div className="bg-gray-50 rounded-2xl p-4">
+            <p className="text-[13px] text-gray-500 mb-2">서명 링크</p>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 bg-white rounded-xl px-4 py-3 border border-gray-200 overflow-hidden">
+                <p className="text-[14px] text-gray-700 break-all">
+                  {shareUrl || '링크 생성 중...'}
+                </p>
+              </div>
+              <button
+                onClick={handleCopyLink}
+                className="px-4 py-3 bg-blue-500 text-white rounded-xl font-medium text-[14px] whitespace-nowrap"
+              >
+                복사
+              </button>
+            </div>
+            <p className="text-[12px] text-gray-400 mt-2">
+              💡 링크만 단독으로 보내야 클릭이 잘 돼요
+            </p>
+          </div>
+
+          {/* 닫기 버튼 */}
+          <button
+            onClick={() => setIsShareSheetOpen(false)}
+            className="w-full py-4 rounded-2xl font-semibold text-lg bg-gray-100 text-gray-700"
+          >
+            닫기
+          </button>
+        </div>
+      </BottomSheet>
 
       {/* 토스트 */}
       <Toast
