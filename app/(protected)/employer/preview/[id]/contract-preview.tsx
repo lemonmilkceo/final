@@ -13,8 +13,9 @@ import { useContractFormStore } from '@/stores/contractFormStore';
 import { createContract } from '@/app/(protected)/employer/create/actions';
 import { signContract, sendContract } from './actions';
 import { formatCurrency } from '@/lib/utils/format';
-import { copyContractLink } from '@/lib/utils/share';
-import { shareContractViaKakao, initKakao } from '@/lib/kakao';
+// 준비 중 기능 - 추후 활성화
+// import { copyContractLink } from '@/lib/utils/share';
+// import { shareContractViaKakao, initKakao } from '@/lib/kakao';
 import clsx from 'clsx';
 import type { ContractStatus } from '@/types';
 
@@ -86,13 +87,14 @@ export default function ContractPreview({
     items: ReviewItem[];
   } | null>(null);
   
-  // PDF 상태
-  const [isPDFLoading, setIsPDFLoading] = useState(false);
-  // Share token (from shareUrl)
-  const shareToken = shareUrl?.split('/').pop() || '';
+  // Share token (from shareUrl) - 준비 중 기능에서 사용 예정
+  // const shareToken = shareUrl?.split('/').pop() || '';
   
   // 회원가입 안내 팝업
   const [isSignupPromptOpen, setIsSignupPromptOpen] = useState(false);
+  
+  // 공유 링크 시트
+  const [isShareSheetOpen, setIsShareSheetOpen] = useState(false);
 
   // 사업자가 이미 서명했는지 확인
   const employerSigned = contract?.signatures?.some(
@@ -257,8 +259,8 @@ export default function ContractPreview({
 
       if (result.success && result.data) {
         setShareUrl(result.data.shareUrl);
-        setToastMessage('공유 링크가 생성됐어요! 🔗');
-        setShowToast(true);
+        // 공유 링크 시트 열기
+        setIsShareSheetOpen(true);
       } else {
         setError(result.error || '공유 링크 생성에 실패했어요');
       }
@@ -266,18 +268,6 @@ export default function ContractPreview({
       setError('알 수 없는 오류가 발생했어요');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleCopyLink = async () => {
-    if (!shareUrl) return;
-
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setToastMessage('링크가 복사됐어요! 📋');
-      setShowToast(true);
-    } catch {
-      setError('링크 복사에 실패했어요');
     }
   };
 
@@ -353,89 +343,25 @@ export default function ContractPreview({
     }
   };
 
-  // PDF 다운로드
-  const handleDownloadPDF = async () => {
-    if (!contractId) {
-      setError('계약서를 먼저 저장해주세요');
-      return;
-    }
-
-    setIsPDFLoading(true);
-    setError('');
-
-    try {
-      const response = await fetch('/api/pdf/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contractId }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || 'PDF 생성에 실패했어요');
-        return;
-      }
-
-      // Base64를 Blob으로 변환하여 다운로드
-      const byteCharacters = atob(data.pdf);
-      const byteNumbers = new Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-      const byteArray = new Uint8Array(byteNumbers);
-      const blob = new Blob([byteArray], { type: 'application/pdf' });
-
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = data.filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      setToastMessage('PDF가 다운로드됐어요! 📄');
-      setShowToast(true);
-    } catch {
-      setError('PDF 다운로드 중 오류가 발생했어요');
-    } finally {
-      setIsPDFLoading(false);
-    }
+  // PDF 다운로드 (준비 중)
+  const handleDownloadPDF = () => {
+    setToastMessage('📄 PDF 다운로드 기능을 준비하고 있어요! 조금만 기다려 주세요 🙏');
+    setShowToast(true);
   };
 
-  // 링크 복사
-  const handleCopyShareLink = async () => {
-    if (!shareToken) {
-      setError('먼저 근로자에게 보내기를 해주세요');
-      return;
-    }
-
-    const success = await copyContractLink(shareToken);
-    if (success) {
-      setToastMessage('링크가 복사됐어요! 📋');
-      setShowToast(true);
-    } else {
-      setError('링크 복사에 실패했어요');
-    }
-  };
-
-  // 카카오톡 공유
-  const handleKakaoShare = () => {
+  // 링크 복사 - shareUrl이 있으면 공유 시트 열기
+  const handleCopyShareLink = () => {
     if (!shareUrl) {
       setError('먼저 근로자에게 보내기를 해주세요');
       return;
     }
+    setIsShareSheetOpen(true);
+  };
 
-    initKakao();
-    const success = shareContractViaKakao({
-      workerName: displayData.workerName,
-      shareUrl,
-    });
-
-    if (!success) {
-      setError('카카오톡 공유에 실패했어요');
-    }
+  // 카카오톡 공유 (준비 중)
+  const handleKakaoShare = () => {
+    setToastMessage('💬 카카오톡 공유 기능을 준비하고 있어요! 조금만 기다려 주세요 🙏');
+    setShowToast(true);
   };
 
   return (
@@ -557,30 +483,22 @@ export default function ContractPreview({
         <div className="flex justify-center gap-6 mb-4">
           <button
             onClick={handleDownloadPDF}
-            disabled={isPDFLoading || isNew}
-            className={clsx(
-              'flex flex-col items-center gap-1',
-              (isPDFLoading || isNew) && 'opacity-50'
-            )}
+            className="flex flex-col items-center gap-1"
           >
-            <span className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-              {isPDFLoading ? (
-                <LoadingSpinner variant="inline" className="w-5 h-5" />
-              ) : (
-                <svg
-                  className="w-6 h-6 text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-              )}
+            <span className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center relative">
+              <svg
+                className="w-6 h-6 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
             </span>
             <span className="text-[12px] text-gray-500">PDF</span>
           </button>
@@ -611,11 +529,7 @@ export default function ContractPreview({
           </button>
           <button
             onClick={handleKakaoShare}
-            disabled={!shareUrl}
-            className={clsx(
-              'flex flex-col items-center gap-1',
-              !shareUrl && 'opacity-50'
-            )}
+            className="flex flex-col items-center gap-1"
           >
             <span className="w-12 h-12 bg-[#FEE500] rounded-full flex items-center justify-center">
               <svg className="w-6 h-6 text-[#191919]" viewBox="0 0 20 20">
@@ -633,17 +547,17 @@ export default function ContractPreview({
 
         {/* Share URL Display */}
         {shareUrl && (
-          <div className="mb-4 bg-blue-50 rounded-xl p-3 flex items-center gap-2">
-            <span className="flex-1 text-[13px] text-blue-700 truncate">
+          <button 
+            onClick={() => setIsShareSheetOpen(true)}
+            className="mb-4 w-full bg-blue-50 rounded-xl p-3 flex items-center gap-2"
+          >
+            <span className="flex-1 text-[13px] text-blue-700 truncate text-left">
               {shareUrl}
             </span>
-            <button
-              onClick={handleCopyLink}
-              className="text-[13px] text-blue-500 font-medium whitespace-nowrap"
-            >
+            <span className="text-[13px] text-blue-500 font-medium whitespace-nowrap">
               복사
-            </button>
-          </div>
+            </span>
+          </button>
         )}
 
         {/* Main CTA */}
@@ -731,6 +645,62 @@ export default function ContractPreview({
         isOpen={isSignupPromptOpen}
         onClose={() => setIsSignupPromptOpen(false)}
       />
+
+      {/* 공유 링크 시트 */}
+      <BottomSheet
+        isOpen={isShareSheetOpen}
+        onClose={() => setIsShareSheetOpen(false)}
+        title="근로자에게 계약서 보내기"
+      >
+        <div className="space-y-6">
+          {/* 링크 표시 영역 */}
+          <div className="bg-gray-50 rounded-2xl p-4">
+            <p className="text-[13px] text-gray-500 mb-2">서명 링크</p>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 bg-white rounded-xl px-4 py-3 border border-gray-200 overflow-hidden">
+                <p className="text-[14px] text-gray-700 truncate">
+                  {shareUrl || '링크 생성 중...'}
+                </p>
+              </div>
+              <button
+                onClick={async () => {
+                  if (shareUrl) {
+                    await navigator.clipboard.writeText(shareUrl);
+                    setToastMessage('링크가 복사됐어요! 📋');
+                    setShowToast(true);
+                  }
+                }}
+                className="px-4 py-3 bg-blue-500 text-white rounded-xl font-medium text-[14px] whitespace-nowrap"
+              >
+                복사
+              </button>
+            </div>
+          </div>
+
+          {/* 안내 메시지 */}
+          <div className="bg-yellow-50 rounded-2xl p-4">
+            <div className="flex gap-3">
+              <span className="text-2xl">💬</span>
+              <div>
+                <p className="text-[15px] font-medium text-yellow-800 mb-1">
+                  카카오톡 공유 기능을 준비 중이에요
+                </p>
+                <p className="text-[14px] text-yellow-700">
+                  링크를 복사해서 문자 또는 카카오톡으로 근로자에게 보내주세요!
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* 닫기 버튼 */}
+          <button
+            onClick={() => setIsShareSheetOpen(false)}
+            className="w-full py-4 rounded-2xl font-semibold text-lg bg-gray-100 text-gray-700"
+          >
+            닫기
+          </button>
+        </div>
+      </BottomSheet>
     </div>
   );
 }
