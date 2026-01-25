@@ -1,7 +1,7 @@
 # 📊 Database Schema Specification
 ## 싸인해주세요 (SignPlease)
 
-> **버전**: 1.12  
+> **버전**: 1.13  
 > **최종 수정일**: 2026년 1월 25일  
 > **작성자**: Technical PO
 
@@ -1494,3 +1494,87 @@ CREATE POLICY "Workers can unhide contracts"
 ---
 
 > **Amendment 12 끝**
+
+---
+
+## 📝 Amendment 13: 공개 링크 접근 RLS 정책 (2026년 1월 25일)
+
+> **버전**: 1.13  
+> **변경 사유**: 비로그인 사용자의 공유 링크 접근 지원
+
+### 13.1 문제점
+
+기존 RLS 정책은 `authenticated` 사용자만 계약서를 조회할 수 있어서,
+공유 링크로 접근한 비로그인 사용자가 404 에러를 받는 문제 발생.
+
+### 13.2 추가된 RLS 정책
+
+#### contracts 테이블
+
+```sql
+-- 공유 토큰으로 계약서 조회 (anon + authenticated)
+CREATE POLICY "contracts_select_by_token" ON contracts
+  FOR SELECT
+  TO anon, authenticated
+  USING (
+    status IN ('pending', 'completed')
+  );
+```
+
+#### profiles 테이블
+
+```sql
+-- 계약서 조회 시 사업자 정보 조회 (공유 링크용)
+CREATE POLICY "profiles_select_for_contract" ON profiles
+  FOR SELECT
+  TO anon, authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM contracts c
+      WHERE c.employer_id = id
+      AND c.status IN ('pending', 'completed')
+    )
+  );
+```
+
+#### signatures 테이블
+
+```sql
+-- 공유 링크에서 서명 정보 조회
+CREATE POLICY "signatures_select_by_token" ON signatures
+  FOR SELECT
+  TO anon, authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM contracts c
+      WHERE c.id = contract_id
+      AND c.status IN ('pending', 'completed')
+    )
+  );
+
+-- 근로자 서명 추가 (authenticated만)
+CREATE POLICY "signatures_insert_by_token" ON signatures
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM contracts c
+      WHERE c.id = contract_id
+      AND c.status = 'pending'
+    )
+    AND auth.uid() = user_id
+  );
+```
+
+### 13.3 보안 고려사항
+
+| 항목 | 설명 |
+|------|------|
+| 토큰 복잡성 | UUID 형식으로 충분히 복잡 (무차별 대입 어려움) |
+| 상태 제한 | `pending`, `completed` 상태만 공개 |
+| 서명 권한 | INSERT는 authenticated 사용자만 |
+| 수정 권한 | UPDATE는 기존 정책 유지 |
+
+---
+
+> **Amendment 13 끝**

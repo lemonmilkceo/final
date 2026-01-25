@@ -11,12 +11,18 @@ import type { ActionResult } from '@/types';
  */
 export async function signInForWorkerSign(token: string) {
   const supabase = await createClient();
+  
+  // next 파라미터를 URL 인코딩하여 손실 방지
+  const nextPath = `/s/${token}`;
+  const redirectUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=${encodeURIComponent(nextPath)}`;
+  
+  console.log('[Worker Sign] Redirect URL:', redirectUrl);
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'kakao',
     options: {
       // 로그인 후 원래 서명 페이지로 돌아오기 (단축 URL 사용)
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/s/${token}`,
+      redirectTo: redirectUrl,
       queryParams: {
         scope: 'profile_nickname profile_image',
       },
