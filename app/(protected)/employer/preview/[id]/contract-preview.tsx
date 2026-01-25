@@ -190,8 +190,29 @@ export default function ContractPreview({
   };
 
   const handleSignatureComplete = async () => {
-    if (!signatureData || !contractId) {
+    if (!signatureData) {
       setError('서명을 해주세요');
+      return;
+    }
+
+    // 새 계약서이거나 게스트 모드인 경우: 서명 데이터만 저장하고 시트 닫기
+    if (isNew || isGuestMode) {
+      setIsSignatureSheetOpen(false);
+      setToastMessage('서명이 저장됐어요! ✍️');
+      setShowToast(true);
+      
+      // 게스트 모드에서는 회원가입 안내 팝업 표시
+      if (isGuestMode) {
+        setTimeout(() => {
+          setIsSignupPromptOpen(true);
+        }, 1000);
+      }
+      return;
+    }
+
+    // 기존 계약서: DB에 서명 저장
+    if (!contractId) {
+      setError('계약서 정보를 찾을 수 없어요');
       return;
     }
 
@@ -439,10 +460,22 @@ export default function ContractPreview({
           {/* Employer Signature Area */}
           <div className="mt-8">
             <p className="text-[14px] text-gray-500 mb-3">사업자 서명</p>
+            {/* 이미 서명된 경우 (DB에서 가져온 기존 계약서) */}
             {contract?.signatures?.find((s) => s.signer_role === 'employer')
               ?.signed_at ? (
               <div className="w-full h-24 border-2 border-green-500 rounded-xl flex items-center justify-center bg-green-50">
                 <span className="text-green-600 font-medium">✅ 서명 완료</span>
+              </div>
+            ) : signatureData ? (
+              /* 새 계약서에서 서명한 경우 (아직 저장 안됨) */
+              <div className="w-full h-24 border-2 border-blue-500 rounded-xl flex flex-col items-center justify-center bg-blue-50">
+                <span className="text-blue-600 font-medium">✍️ 서명 완료</span>
+                <button 
+                  onClick={() => setIsSignatureSheetOpen(true)}
+                  className="text-[12px] text-blue-400 mt-1"
+                >
+                  다시 서명하기
+                </button>
               </div>
             ) : (
               <button
