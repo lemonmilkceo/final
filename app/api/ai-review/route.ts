@@ -141,8 +141,8 @@ export async function POST(request: NextRequest) {
         p_user_id: user.id,
         p_credit_type: 'ai_review',
         p_amount: 1,
-        p_description: 'AI 노무사 검토',
-        p_reference_id: contractId || 'new_contract',
+        p_description: contractId ? 'AI 노무사 검토' : 'AI 노무사 검토 (미리보기)',
+        p_reference_id: contractId || null,
       }
     );
 
