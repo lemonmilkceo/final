@@ -153,6 +153,9 @@ export default async function ContractDetailPage({ params }: PageProps) {
         completedAt: contract.completed_at,
         shareToken: contract.share_token,
         signatures: contract.signatures || [],
+        // 민감정보 존재 여부
+        hasSensitiveInfo: !!(contract.worker_ssn_encrypted || contract.worker_account_encrypted),
+        workerBankName: contract.worker_bank_name,
       }}
       aiReview={
         aiReview

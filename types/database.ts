@@ -134,6 +134,9 @@ export type Database = {
           worker_id: string | null
           worker_name: string
           worker_phone: string | null
+          worker_ssn_encrypted: string | null
+          worker_bank_name: string | null
+          worker_account_encrypted: string | null
         }
         Insert: {
           break_minutes: number
@@ -167,6 +170,9 @@ export type Database = {
           worker_id?: string | null
           worker_name: string
           worker_phone?: string | null
+          worker_ssn_encrypted?: string | null
+          worker_bank_name?: string | null
+          worker_account_encrypted?: string | null
         }
         Update: {
           break_minutes?: number
@@ -200,6 +206,9 @@ export type Database = {
           worker_id?: string | null
           worker_name?: string
           worker_phone?: string | null
+          worker_ssn_encrypted?: string | null
+          worker_bank_name?: string | null
+          worker_account_encrypted?: string | null
         }
         Relationships: [
           {

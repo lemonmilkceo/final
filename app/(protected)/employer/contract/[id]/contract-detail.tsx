@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import PageHeader from '@/components/layout/PageHeader';
 import Badge from '@/components/ui/Badge';
@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button';
 import BottomSheet from '@/components/ui/BottomSheet';
 import ConfirmSheet from '@/components/ui/ConfirmSheet';
 import Toast from '@/components/ui/Toast';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { formatCurrency, formatDate, formatDday } from '@/lib/utils/format';
 import { deleteContract } from './actions';
 import clsx from 'clsx';
@@ -45,6 +46,9 @@ interface ContractData {
   completedAt: string | null;
   shareToken: string | null;
   signatures: Signature[];
+  // 민감정보 존재 여부 (마스킹 표시용)
+  hasSensitiveInfo?: boolean;
+  workerBankName?: string | null;
 }
 
 interface AIReviewData {
@@ -72,6 +76,78 @@ export default function ContractDetail({
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastVariant, setToastVariant] = useState<'success' | 'error'>('success');
+  
+  // 민감정보 표시 상태
+  const [sensitiveInfo, setSensitiveInfo] = useState<{
+    ssn?: string;
+    bankName?: string;
+    accountNumber?: string;
+  } | null>(null);
+  const [isSensitiveInfoVisible, setIsSensitiveInfoVisible] = useState(false);
+  const [isSensitiveInfoLoading, setIsSensitiveInfoLoading] = useState(false);
+  const [sensitiveInfoTimer, setSensitiveInfoTimer] = useState<number>(0);
+  
+  // 10초 카운트다운 후 자동 마스킹
+  const hideSensitiveInfo = useCallback(() => {
+    setIsSensitiveInfoVisible(false);
+    setSensitiveInfo(null);
+    setSensitiveInfoTimer(0);
+  }, []);
+  
+  useEffect(() => {
+    if (isSensitiveInfoVisible && sensitiveInfoTimer > 0) {
+      const timer = setTimeout(() => {
+        setSensitiveInfoTimer(prev => prev - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (isSensitiveInfoVisible && sensitiveInfoTimer === 0) {
+      hideSensitiveInfo();
+    }
+  }, [isSensitiveInfoVisible, sensitiveInfoTimer, hideSensitiveInfo]);
+  
+  // 민감정보 조회 (API 호출)
+  const handleShowSensitiveInfo = async () => {
+    if (isSensitiveInfoLoading) return;
+    
+    setIsSensitiveInfoLoading(true);
+    try {
+      const response = await fetch('/api/contract/sensitive-info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contractId: contract.id, infoType: 'both' }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success && data.data) {
+        setSensitiveInfo(data.data);
+        setIsSensitiveInfoVisible(true);
+        setSensitiveInfoTimer(10); // 10초 카운트다운 시작
+      } else {
+        setToastMessage(data.error || '정보를 불러올 수 없어요');
+        setToastVariant('error');
+        setShowToast(true);
+      }
+    } catch {
+      setToastMessage('정보 조회에 실패했어요');
+      setToastVariant('error');
+      setShowToast(true);
+    } finally {
+      setIsSensitiveInfoLoading(false);
+    }
+  };
+  
+  // 주민번호 마스킹
+  const maskSSN = (ssn: string) => {
+    if (ssn.length !== 13) return ssn;
+    return `${ssn.substring(0, 6)}-${ssn.substring(6, 7)}******`;
+  };
+  
+  // 계좌번호 마스킹
+  const maskAccount = (account: string) => {
+    if (account.length < 7) return account;
+    return `${account.substring(0, 3)}****${account.substring(account.length - 4)}`;
+  };
   
   // 단축 URL 생성
   const shareUrl = contract.shareToken 
@@ -378,6 +454,82 @@ export default function ContractDetail({
             ))}
           </div>
         </div>
+
+        {/* 근로자 민감정보 (완료된 계약서에만 표시) */}
+        {contract.status === 'completed' && contract.hasSensitiveInfo && (
+          <div className="bg-white rounded-2xl p-5 mt-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-[16px] font-semibold text-gray-900">
+                근로자 정보 (4대보험용)
+              </h3>
+              {isSensitiveInfoVisible && (
+                <span className="text-[12px] text-amber-600 font-medium">
+                  🔒 {sensitiveInfoTimer}초 후 자동 숨김
+                </span>
+              )}
+            </div>
+            
+            {/* 보안 안내 */}
+            <div className="bg-amber-50 rounded-xl p-3 mb-4">
+              <p className="text-[12px] text-amber-700">
+                ⚠️ 열람 기록이 저장됩니다. 4대보험 신고 목적으로만 사용하세요.
+              </p>
+            </div>
+            
+            <div className="space-y-3">
+              {/* 주민등록번호 */}
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-[14px] text-gray-500">주민등록번호</span>
+                <span className="text-[14px] font-medium text-gray-900">
+                  {isSensitiveInfoVisible && sensitiveInfo?.ssn
+                    ? `${sensitiveInfo.ssn.substring(0, 6)}-${sensitiveInfo.ssn.substring(6)}`
+                    : '******-*******'}
+                </span>
+              </div>
+              
+              {/* 급여 계좌 */}
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-[14px] text-gray-500">급여 계좌</span>
+                <span className="text-[14px] font-medium text-gray-900">
+                  {isSensitiveInfoVisible && sensitiveInfo?.accountNumber
+                    ? `${sensitiveInfo.bankName || contract.workerBankName} ${sensitiveInfo.accountNumber}`
+                    : contract.workerBankName 
+                      ? `${contract.workerBankName} ****-****-****`
+                      : '미등록'}
+                </span>
+              </div>
+            </div>
+            
+            {/* 보기/숨기기 버튼 */}
+            <div className="mt-4">
+              {isSensitiveInfoVisible ? (
+                <button
+                  onClick={hideSensitiveInfo}
+                  className="w-full py-3 rounded-xl bg-gray-100 text-gray-700 font-medium text-[14px]"
+                >
+                  숨기기
+                </button>
+              ) : (
+                <button
+                  onClick={handleShowSensitiveInfo}
+                  disabled={isSensitiveInfoLoading}
+                  className="w-full py-3 rounded-xl bg-blue-500 text-white font-medium text-[14px] flex items-center justify-center gap-2"
+                >
+                  {isSensitiveInfoLoading ? (
+                    <>
+                      <LoadingSpinner variant="button" />
+                      조회 중...
+                    </>
+                  ) : (
+                    <>
+                      🔓 정보 보기 (10초간)
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 하단 액션 버튼 */}
