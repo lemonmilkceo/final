@@ -29,6 +29,7 @@ interface ContractCardProps {
   isSelected?: boolean;
   onSelect?: (id: string) => void;
   onEdit?: (id: string) => void;
+  isDeleted?: boolean;
 }
 
 // 상태별 아이콘 색상
@@ -97,16 +98,21 @@ const ContractCard: React.FC<ContractCardProps> = ({
   isSelected = false,
   onSelect,
   onEdit,
+  isDeleted = false,
 }) => {
   const router = useRouter();
-  const statusIcon = getStatusIcon(contract.status);
-  const statusBadge = getStatusBadge(contract.status);
-  const canEdit = contract.status === 'draft' || contract.status === 'pending';
+  const statusIcon = isDeleted 
+    ? { bgColor: 'bg-red-100', iconColor: 'text-red-400' }
+    : getStatusIcon(contract.status);
+  const statusBadge = isDeleted
+    ? { label: '삭제됨', className: 'bg-red-50 text-red-500 border border-red-200' }
+    : getStatusBadge(contract.status);
+  const canEdit = !isDeleted && (contract.status === 'draft' || contract.status === 'pending');
 
   const handleClick = () => {
     if (isEditMode) {
       onSelect?.(contract.id);
-    } else {
+    } else if (!isDeleted) {
       router.push(`${basePath}/${contract.id}`);
     }
   };
@@ -122,7 +128,8 @@ const ContractCard: React.FC<ContractCardProps> = ({
       className={clsx(
         'w-full bg-white rounded-2xl p-4 text-left transition-all',
         isEditMode ? 'active:bg-gray-50' : 'active:bg-gray-50',
-        isSelected && 'ring-2 ring-blue-500'
+        isSelected && 'ring-2 ring-blue-500',
+        isDeleted && 'opacity-75'
       )}
     >
       <div className="flex items-center gap-3">

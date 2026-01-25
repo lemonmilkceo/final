@@ -147,7 +147,7 @@ export default async function EmployerDashboardPage() {
     .eq('credit_type', 'ai_review')
     .single();
 
-  // 계약서 목록 조회 (work_location 추가)
+  // 활성 계약서 목록 조회 (삭제되지 않은 것만)
   const { data: contracts } = await supabase
     .from('contracts')
     .select(
@@ -166,13 +166,36 @@ export default async function EmployerDashboardPage() {
     `
     )
     .eq('employer_id', user.id)
+    .neq('status', 'deleted')
     .order('created_at', { ascending: false });
 
-  // 폴더 목록 조회
-  // 주의: color 컬럼이 DB에 없는 경우 기본값 사용
+  // 삭제된 계약서 조회 (휴지통용)
+  const { data: deletedContracts } = await supabase
+    .from('contracts')
+    .select(
+      `
+      id,
+      worker_name,
+      work_location,
+      hourly_wage,
+      status,
+      created_at,
+      deleted_at,
+      folder_id,
+      signatures (
+        signer_role,
+        signed_at
+      )
+    `
+    )
+    .eq('employer_id', user.id)
+    .eq('status', 'deleted')
+    .order('deleted_at', { ascending: false });
+
+  // 폴더 목록 조회 (color 컬럼 포함)
   const { data: folders } = await supabase
     .from('folders')
-    .select('id, name')
+    .select('id, name, color')
     .eq('user_id', user.id)
     .order('created_at', { ascending: true });
 
@@ -182,19 +205,22 @@ export default async function EmployerDashboardPage() {
     '#EF4444', '#A855F7', '#EC4899', '#6B7280',
   ];
 
-  // 폴더별 계약서 수 계산
+  // 폴더별 계약서 수 계산 (활성 계약서만)
   const foldersWithCount = (folders || []).map((folder, index) => {
     const count = (contracts || []).filter((c) => c.folder_id === folder.id).length;
     return {
       id: folder.id,
       name: folder.name,
-      color: colorPalette[index % colorPalette.length], // 인덱스 기반 색상
+      color: folder.color || colorPalette[index % colorPalette.length],
       contractCount: count,
     };
   });
 
-  // 미분류 계약서 수
+  // 미분류 계약서 수 (활성 계약서 중)
   const unfiledCount = (contracts || []).filter((c) => c.folder_id === null).length;
+
+  // 휴지통 계약서 수
+  const deletedCount = deletedContracts?.length || 0;
 
   return (
     <EmployerDashboard
@@ -208,8 +234,10 @@ export default async function EmployerDashboardPage() {
         aiReview: aiCredit?.amount || 0,
       }}
       contracts={contracts || []}
+      deletedContracts={deletedContracts || []}
       folders={foldersWithCount}
       unfiledCount={unfiledCount}
+      deletedCount={deletedCount}
     />
   );
 }

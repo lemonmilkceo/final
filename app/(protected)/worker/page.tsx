@@ -134,8 +134,17 @@ export default async function WorkerDashboardPage({ searchParams }: PageProps) {
   // (건너뛰기를 허용하기 위해 강제 리다이렉트 제거)
   const isOnboardingComplete = !!workerDetails;
 
-  // 계약서 목록 조회 (worker_id로 또는 초대된 계약서)
-  const { data: contracts } = await supabase
+  // 숨긴 계약서 ID 목록 조회
+  const { data: hiddenContracts } = await supabase
+    .from('worker_hidden_contracts')
+    .select('contract_id, hidden_at')
+    .eq('worker_id', user.id);
+
+  const hiddenContractIds = new Set((hiddenContracts || []).map((h) => h.contract_id));
+  const hiddenAtMap = new Map((hiddenContracts || []).map((h) => [h.contract_id, h.hidden_at]));
+
+  // 전체 계약서 목록 조회 (worker_id로)
+  const { data: allContracts } = await supabase
     .from('contracts')
     .select(
       `
@@ -160,6 +169,17 @@ export default async function WorkerDashboardPage({ searchParams }: PageProps) {
     .neq('status', 'deleted')
     .order('created_at', { ascending: false });
 
+  // 활성 계약서 (숨기지 않은 것)
+  const activeContracts = (allContracts || []).filter((c) => !hiddenContractIds.has(c.id));
+
+  // 숨긴 계약서 (hidden_at 추가)
+  const hiddenContractsList = (allContracts || [])
+    .filter((c) => hiddenContractIds.has(c.id))
+    .map((c) => ({
+      ...c,
+      hidden_at: hiddenAtMap.get(c.id) || null,
+    }));
+
   return (
     <WorkerDashboard
       profile={{
@@ -167,7 +187,9 @@ export default async function WorkerDashboardPage({ searchParams }: PageProps) {
         email: user.email,
         avatarUrl: profile?.avatar_url,
       }}
-      contracts={contracts || []}
+      contracts={activeContracts}
+      hiddenContracts={hiddenContractsList}
+      hiddenCount={hiddenContractsList.length}
       showOnboardingComplete={showOnboardingComplete}
       isOnboardingComplete={isOnboardingComplete}
     />

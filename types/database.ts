@@ -552,6 +552,42 @@ export type Database = {
           },
         ]
       }
+      worker_hidden_contracts: {
+        Row: {
+          contract_id: string
+          hidden_at: string
+          id: string
+          worker_id: string
+        }
+        Insert: {
+          contract_id: string
+          hidden_at?: string
+          id?: string
+          worker_id: string
+        }
+        Update: {
+          contract_id?: string
+          hidden_at?: string
+          id?: string
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "worker_hidden_contracts_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "worker_hidden_contracts_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

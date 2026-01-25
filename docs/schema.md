@@ -1,8 +1,8 @@
 # 📊 Database Schema Specification
 ## 싸인해주세요 (SignPlease)
 
-> **버전**: 1.0  
-> **최종 수정일**: 2026년 1월 24일  
+> **버전**: 1.12  
+> **최종 수정일**: 2026년 1월 25일  
 > **작성자**: Technical PO
 
 ---
@@ -1365,3 +1365,132 @@ COMMENT ON COLUMN contracts.worker_phone IS '근로자 휴대폰 번호 (본인 
 ---
 
 > **Amendment 10 끝**
+
+---
+
+## 📝 Amendment 11: 스키마 변경 없음 - 기능 개선 (2026년 1월 25일)
+
+> **버전**: 1.11  
+> **변경 사유**: UX 개선 및 프리미엄 UI 적용
+> **스키마 영향**: 없음
+
+### A11.1 스키마 영향 분석
+
+이번 변경 사항은 데이터베이스 스키마 변경을 필요로 하지 않습니다.
+
+| 변경 사항 | 스키마 영향 |
+|----------|------------|
+| 휴게시간 없음 옵션 | ❌ 없음 (기존 break_minutes = 0으로 저장) |
+| 업종 선택 자동 모달 | ❌ 없음 (UI 전용) |
+| 홈 버튼 + 임시저장 | ❌ 없음 (sessionStorage 사용) |
+| AI 리뷰어 크레딧 표시 | ❌ 없음 (기존 credits 테이블 사용) |
+| 법적 페이지 | ❌ 없음 (정적 페이지) |
+| AI 버튼 프리미엄 디자인 | ❌ 없음 (UI 전용) |
+| Coming Soon 메시지 | ❌ 없음 (UI 전용) |
+| 공유 바텀시트 | ❌ 없음 (기존 share_token 사용) |
+| AI 리뷰 흐름 개선 | ❌ 없음 (API 로직 변경) |
+
+### A11.2 쿼리 변경 사항
+
+#### 크레딧 조회 (변경)
+
+**기존 (단일 크레딧 조회):**
+```sql
+SELECT amount FROM credits 
+WHERE user_id = $1 AND credit_type = 'contract';
+```
+
+**변경 (양쪽 크레딧 조회):**
+```sql
+-- 계약서 크레딧
+SELECT amount FROM credits 
+WHERE user_id = $1 AND credit_type = 'contract';
+
+-- AI 리뷰 크레딧
+SELECT amount FROM credits 
+WHERE user_id = $1 AND credit_type = 'ai_review';
+```
+
+---
+
+> **Amendment 11 끝**
+
+---
+
+## 📝 Amendment 12: worker_hidden_contracts 테이블 추가 (2026년 1월 25일)
+
+> **버전**: 1.12  
+> **변경 사유**: 근로자 대시보드 숨기기 기능 지원
+
+### 12.1 신규 테이블: worker_hidden_contracts
+
+```sql
+CREATE TABLE worker_hidden_contracts (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  worker_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  contract_id uuid NOT NULL REFERENCES contracts(id) ON DELETE CASCADE,
+  hidden_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(worker_id, contract_id)
+);
+```
+
+#### 컬럼 설명
+| 컬럼 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| id | uuid | ✅ | PK |
+| worker_id | uuid | ✅ | 근로자 ID (profiles FK) |
+| contract_id | uuid | ✅ | 계약서 ID (contracts FK) |
+| hidden_at | timestamptz | ✅ | 숨긴 시각 |
+
+#### 인덱스
+```sql
+CREATE INDEX idx_worker_hidden_contracts_worker_id ON worker_hidden_contracts(worker_id);
+CREATE INDEX idx_worker_hidden_contracts_contract_id ON worker_hidden_contracts(contract_id);
+```
+
+### 12.2 RLS 정책
+
+```sql
+-- 조회: 본인만
+CREATE POLICY "Workers can view own hidden contracts"
+  ON worker_hidden_contracts FOR SELECT
+  USING (auth.uid() = worker_id);
+
+-- 추가: 본인만
+CREATE POLICY "Workers can hide contracts"
+  ON worker_hidden_contracts FOR INSERT
+  WITH CHECK (auth.uid() = worker_id);
+
+-- 삭제: 본인만
+CREATE POLICY "Workers can unhide contracts"
+  ON worker_hidden_contracts FOR DELETE
+  USING (auth.uid() = worker_id);
+```
+
+### 12.3 ERD 업데이트
+
+```
+┌─────────────────────────┐
+│        profiles         │
+│  (id, name, role, ...)  │
+└─────────────────────────┘
+            │
+            │ 1:N
+            ▼
+┌───────────────────────────────┐
+│   worker_hidden_contracts     │
+│  (id, worker_id, contract_id, │
+│   hidden_at)                  │
+└───────────────────────────────┘
+            │
+            │ N:1
+            ▼
+┌─────────────────────────┐
+│        contracts        │
+│  (id, status, ...)      │
+└─────────────────────────┘
+```
+
+---
+
+> **Amendment 12 끝**

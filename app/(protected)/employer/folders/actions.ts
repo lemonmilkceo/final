@@ -55,15 +55,14 @@ export async function createFolder(name: string, color?: string) {
     return { success: false, error: '같은 이름의 폴더가 있어요' };
   }
 
-  // 참고: 현재 DB에 color 컬럼이 없음 - 추후 마이그레이션 필요
-  // const folderColor = color || '#3B82F6';
+  const folderColor = color || '#3B82F6';
 
   const { data, error } = await supabase
     .from('folders')
     .insert({
       user_id: user.id,
       name: name.trim(),
-      // color: folderColor, // DB에 컬럼 추가 후 활성화
+      color: folderColor,
     })
     .select()
     .single();
@@ -101,15 +100,14 @@ export async function updateFolder(folderId: string, name: string, color?: strin
     return { success: false, error: '수정 권한이 없어요' };
   }
 
-  // 참고: 현재 DB에 color 컬럼이 없음 - 추후 마이그레이션 필요
-  const updateData: { name: string; updated_at: string } = {
+  const updateData: { name: string; color?: string; updated_at: string } = {
     name: name.trim(),
     updated_at: new Date().toISOString(),
   };
 
-  // if (color) {
-  //   updateData.color = color; // DB에 컬럼 추가 후 활성화
-  // }
+  if (color) {
+    updateData.color = color;
+  }
 
   const { error } = await supabase
     .from('folders')
@@ -168,6 +166,155 @@ export async function deleteFolder(folderId: string) {
 
   revalidatePath('/employer');
   revalidatePath('/employer/folders');
+
+  return { success: true };
+}
+
+export async function deleteContracts(contractIds: string[]) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: '로그인이 필요해요' };
+  }
+
+  // 계약서 소유권 확인
+  const { data: contracts } = await supabase
+    .from('contracts')
+    .select('id, employer_id')
+    .in('id', contractIds);
+
+  if (!contracts || contracts.length === 0) {
+    return { success: false, error: '계약서를 찾을 수 없어요' };
+  }
+
+  // 권한 확인
+  const unauthorized = contracts.find((c) => c.employer_id !== user.id);
+  if (unauthorized) {
+    return { success: false, error: '삭제 권한이 없는 계약서가 포함되어 있어요' };
+  }
+
+  // Soft delete (status를 deleted로 변경)
+  const { error } = await supabase
+    .from('contracts')
+    .update({
+      status: 'deleted',
+      deleted_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .in('id', contractIds);
+
+  if (error) {
+    console.error('Contracts delete error:', error);
+    return { success: false, error: '삭제에 실패했어요' };
+  }
+
+  revalidatePath('/employer');
+
+  return { success: true };
+}
+
+export async function restoreContracts(contractIds: string[]) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: '로그인이 필요해요' };
+  }
+
+  // 계약서 소유권 확인
+  const { data: contracts } = await supabase
+    .from('contracts')
+    .select('id, employer_id, status')
+    .in('id', contractIds);
+
+  if (!contracts || contracts.length === 0) {
+    return { success: false, error: '계약서를 찾을 수 없어요' };
+  }
+
+  // 권한 확인
+  const unauthorized = contracts.find((c) => c.employer_id !== user.id);
+  if (unauthorized) {
+    return { success: false, error: '복구 권한이 없는 계약서가 포함되어 있어요' };
+  }
+
+  // 삭제된 계약서만 복구 가능
+  const notDeleted = contracts.find((c) => c.status !== 'deleted');
+  if (notDeleted) {
+    return { success: false, error: '삭제되지 않은 계약서가 포함되어 있어요' };
+  }
+
+  // 복구 (status를 draft로 변경, deleted_at을 null로)
+  const { error } = await supabase
+    .from('contracts')
+    .update({
+      status: 'draft',
+      deleted_at: null,
+      updated_at: new Date().toISOString(),
+    })
+    .in('id', contractIds);
+
+  if (error) {
+    console.error('Contracts restore error:', error);
+    return { success: false, error: '복구에 실패했어요' };
+  }
+
+  revalidatePath('/employer');
+
+  return { success: true };
+}
+
+export async function permanentDeleteContracts(contractIds: string[]) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: '로그인이 필요해요' };
+  }
+
+  // 계약서 소유권 확인
+  const { data: contracts } = await supabase
+    .from('contracts')
+    .select('id, employer_id, status')
+    .in('id', contractIds);
+
+  if (!contracts || contracts.length === 0) {
+    return { success: false, error: '계약서를 찾을 수 없어요' };
+  }
+
+  // 권한 확인
+  const unauthorized = contracts.find((c) => c.employer_id !== user.id);
+  if (unauthorized) {
+    return { success: false, error: '삭제 권한이 없는 계약서가 포함되어 있어요' };
+  }
+
+  // 휴지통에 있는 계약서만 영구 삭제 가능
+  const notInTrash = contracts.find((c) => c.status !== 'deleted');
+  if (notInTrash) {
+    return { success: false, error: '휴지통에 없는 계약서가 포함되어 있어요' };
+  }
+
+  // 영구 삭제 (실제 삭제)
+  const { error } = await supabase
+    .from('contracts')
+    .delete()
+    .in('id', contractIds);
+
+  if (error) {
+    console.error('Contracts permanent delete error:', error);
+    return { success: false, error: '영구 삭제에 실패했어요' };
+  }
+
+  revalidatePath('/employer');
 
   return { success: true };
 }

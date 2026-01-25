@@ -8,10 +8,15 @@ import NotificationSheet from '@/components/notification/NotificationSheet';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
 import Toast from '@/components/ui/Toast';
+import ConfirmSheet from '@/components/ui/ConfirmSheet';
 import { formatCurrency, formatDday } from '@/lib/utils/format';
 import { getNotifications, getUnreadNotificationCount } from '@/app/actions/notifications';
+import { hideContracts, unhideContracts } from './actions';
 import clsx from 'clsx';
 import type { ContractStatus } from '@/types';
+
+// 탭 타입
+type TabType = 'all' | 'hidden';
 
 // 정렬 타입
 type SortType = 'latest' | 'employer';
@@ -25,6 +30,7 @@ interface DashboardContract {
   status: ContractStatus;
   expires_at: string | null;
   created_at: string;
+  hidden_at?: string | null;
   employer?: {
     name: string | null;
   } | null;
@@ -50,6 +56,8 @@ interface WorkerDashboardProps {
     avatarUrl?: string | null;
   };
   contracts: DashboardContract[];
+  hiddenContracts?: DashboardContract[];
+  hiddenCount?: number;
   isGuestMode?: boolean;
   showOnboardingComplete?: boolean;
   isOnboardingComplete?: boolean;
@@ -58,11 +66,16 @@ interface WorkerDashboardProps {
 export default function WorkerDashboard({
   profile,
   contracts,
+  hiddenContracts = [],
+  hiddenCount = 0,
   isGuestMode = false,
   showOnboardingComplete = false,
   isOnboardingComplete = true,
 }: WorkerDashboardProps) {
   const router = useRouter();
+  
+  // 탭 상태
+  const [selectedTab, setSelectedTab] = useState<TabType>('all');
   
   // UI 상태
   const [isMenuSheetOpen, setIsMenuSheetOpen] = useState(false);
@@ -72,6 +85,12 @@ export default function WorkerDashboard({
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sortType, setSortType] = useState<SortType>('latest');
+  
+  // 확인 다이얼로그
+  const [isHideConfirmOpen, setIsHideConfirmOpen] = useState(false);
+  
+  // 로딩 상태
+  const [isLoading, setIsLoading] = useState(false);
   
   // 알림
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -91,15 +110,27 @@ export default function WorkerDashboard({
     setShowToast(true);
   };
 
-  // 대기중인 계약서 (서명 필요)
-  const pendingContracts = contracts.filter(
-    (c) =>
-      c.status === 'pending' &&
-      !c.signatures.some((s) => s.signer_role === 'worker' && s.signed_at)
-  );
+  // 탭 표시 조건: 숨긴 계약서가 있을 때만
+  const showTabs = hiddenCount > 0;
+
+  // 숨김 탭인지
+  const isHiddenTab = selectedTab === 'hidden';
+
+  // 대기중인 계약서 (서명 필요) - 전체 탭에서만 표시
+  const pendingContracts = useMemo(() => {
+    if (isHiddenTab) return [];
+    return contracts.filter(
+      (c) =>
+        c.status === 'pending' &&
+        !c.signatures.some((s) => s.signer_role === 'worker' && s.signed_at)
+    );
+  }, [contracts, isHiddenTab]);
 
   // 완료된 계약서
-  const completedContracts = contracts.filter((c) => c.status === 'completed');
+  const completedContracts = useMemo(() => {
+    if (isHiddenTab) return [];
+    return contracts.filter((c) => c.status === 'completed');
+  }, [contracts, isHiddenTab]);
 
   // 정렬된 완료 계약서
   const sortedCompleted = useMemo(() => {
@@ -111,6 +142,14 @@ export default function WorkerDashboard({
     }
     return sorted;
   }, [completedContracts, sortType]);
+
+  // 정렬된 숨긴 계약서
+  const sortedHidden = useMemo(() => {
+    return [...hiddenContracts].sort((a, b) => 
+      new Date(b.hidden_at || b.created_at).getTime() - 
+      new Date(a.hidden_at || a.created_at).getTime()
+    );
+  }, [hiddenContracts]);
 
   // 알림 데이터 로드
   useEffect(() => {
@@ -126,6 +165,12 @@ export default function WorkerDashboard({
     };
     loadNotifications();
   }, []);
+
+  // 탭 변경 시 편집 모드 해제
+  useEffect(() => {
+    setIsEditMode(false);
+    setSelectedIds(new Set());
+  }, [selectedTab]);
 
   const handleNotificationsUpdate = async () => {
     const count = await getUnreadNotificationCount();
@@ -151,16 +196,62 @@ export default function WorkerDashboard({
 
   // 전체 선택
   const selectAll = () => {
-    const allIds = completedContracts.map((c) => c.id);
-    setSelectedIds(new Set(allIds));
+    if (isHiddenTab) {
+      const allIds = hiddenContracts.map((c) => c.id);
+      setSelectedIds(new Set(allIds));
+    } else {
+      const allIds = completedContracts.map((c) => c.id);
+      setSelectedIds(new Set(allIds));
+    }
   };
 
-  // 삭제 (숨기기)
-  const handleDelete = async () => {
-    // TODO: 삭제 API 호출
-    showToastMessage(`${selectedIds.size}개 계약서가 숨김 처리되었어요`, 'success');
-    setSelectedIds(new Set());
-    setIsEditMode(false);
+  // 숨기기
+  const handleHide = async () => {
+    if (isGuestMode) {
+      showToastMessage('게스트 모드에서는 숨길 수 없어요', 'error');
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const result = await hideContracts(Array.from(selectedIds));
+      if (result.success) {
+        showToastMessage(`${selectedIds.size}개 계약서가 숨겨졌어요`, 'success');
+        setSelectedIds(new Set());
+        setIsEditMode(false);
+      } else {
+        showToastMessage(result.error || '숨기기에 실패했어요', 'error');
+      }
+    } catch {
+      showToastMessage('숨기기 중 오류가 발생했어요', 'error');
+    } finally {
+      setIsLoading(false);
+      setIsHideConfirmOpen(false);
+    }
+  };
+
+  // 숨기기 해제 (다시 보기)
+  const handleUnhide = async () => {
+    if (isGuestMode) {
+      showToastMessage('게스트 모드에서는 복구할 수 없어요', 'error');
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const result = await unhideContracts(Array.from(selectedIds));
+      if (result.success) {
+        showToastMessage(`${selectedIds.size}개 계약서가 복구됐어요`, 'success');
+        setSelectedIds(new Set());
+        setIsEditMode(false);
+      } else {
+        showToastMessage(result.error || '복구에 실패했어요', 'error');
+      }
+    } catch {
+      showToastMessage('복구 중 오류가 발생했어요', 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const getDdayBadge = (expiresAt: string | null) => {
@@ -184,6 +275,20 @@ export default function WorkerDashboard({
         {dday}
       </span>
     );
+  };
+
+  // 숨긴 날짜 포맷
+  const formatHiddenDate = (hiddenAt: string | null) => {
+    if (!hiddenAt) return '';
+    const date = new Date(hiddenAt);
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return '오늘 숨김';
+    if (diffDays === 1) return '어제 숨김';
+    if (diffDays < 7) return `${diffDays}일 전 숨김`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)}주 전 숨김`;
+    return `${Math.floor(diffDays / 30)}개월 전 숨김`;
   };
 
   return (
@@ -212,34 +317,57 @@ export default function WorkerDashboard({
           
           {/* 액션 바 */}
           <div className="flex gap-2">
-            <button
-              onClick={() => setSortType(sortType === 'latest' ? 'employer' : 'latest')}
-              className={clsx(
-                'flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-medium border',
-                'bg-blue-500 text-white border-blue-500'
-              )}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-              </svg>
-              {sortType === 'latest' ? '최신순' : '사업장별'}
-            </button>
-            
-            <button
-              onClick={handleDelete}
-              disabled={selectedIds.size === 0}
-              className={clsx(
-                'flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-medium border',
-                selectedIds.size > 0
-                  ? 'border-red-200 text-red-500'
-                  : 'border-gray-200 text-gray-400'
-              )}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-              숨기기
-            </button>
+            {isHiddenTab ? (
+              // 숨김 탭: 다시 보기 버튼
+              <button
+                onClick={handleUnhide}
+                disabled={selectedIds.size === 0 || isLoading}
+                className={clsx(
+                  'flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-medium border',
+                  selectedIds.size > 0
+                    ? 'bg-blue-500 text-white border-blue-500'
+                    : 'border-gray-200 text-gray-400'
+                )}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                다시 보기
+              </button>
+            ) : (
+              // 전체 탭: 정렬 + 숨기기 버튼
+              <>
+                <button
+                  onClick={() => setSortType(sortType === 'latest' ? 'employer' : 'latest')}
+                  className={clsx(
+                    'flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-medium border',
+                    'bg-blue-500 text-white border-blue-500'
+                  )}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                  </svg>
+                  {sortType === 'latest' ? '최신순' : '사업장별'}
+                </button>
+                
+                <button
+                  onClick={() => selectedIds.size > 0 && setIsHideConfirmOpen(true)}
+                  disabled={selectedIds.size === 0 || isLoading}
+                  className={clsx(
+                    'flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-medium border',
+                    selectedIds.size > 0
+                      ? 'border-gray-300 text-gray-700'
+                      : 'border-gray-200 text-gray-400'
+                  )}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                  </svg>
+                  숨기기
+                </button>
+              </>
+            )}
           </div>
         </header>
       ) : (
@@ -253,10 +381,43 @@ export default function WorkerDashboard({
         />
       )}
 
+      {/* 탭 (숨긴 계약서가 있을 때만) */}
+      {showTabs && !isEditMode && (
+        <div className="bg-white border-b border-gray-100">
+          <div className="flex items-center gap-2 px-5 py-3">
+            <button
+              onClick={() => setSelectedTab('all')}
+              className={clsx(
+                'px-4 py-2 rounded-full text-[14px] font-medium transition-colors',
+                selectedTab === 'all'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 text-gray-600'
+              )}
+            >
+              전체 ({contracts.length})
+            </button>
+            <button
+              onClick={() => setSelectedTab('hidden')}
+              className={clsx(
+                'flex items-center gap-1.5 px-4 py-2 rounded-full text-[14px] font-medium transition-colors',
+                selectedTab === 'hidden'
+                  ? 'bg-gray-700 text-white'
+                  : 'bg-gray-100 text-gray-600'
+              )}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+              </svg>
+              숨김 ({hiddenCount})
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Content */}
       <div className="px-5 pt-4 pb-24">
-        {/* Welcome Message (편집 모드 아닐 때만) */}
-        {!isEditMode && (
+        {/* Welcome Message (편집 모드/숨김탭 아닐 때만) */}
+        {!isEditMode && !isHiddenTab && (
           <div className="mb-6">
             <p className="text-[15px] text-gray-500">안녕하세요,</p>
             <h1 className="text-[26px] font-bold text-gray-900">
@@ -265,17 +426,53 @@ export default function WorkerDashboard({
           </div>
         )}
 
-        {/* 내 경력 카드 */}
-        <Card
-          variant="elevated"
-          interactive
-          onClick={() => router.push('/worker/career')}
-          className="mb-6 bg-gradient-to-r from-blue-50 to-blue-100/50"
-        >
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center">
+        {/* 숨김 탭 안내 */}
+        {isHiddenTab && !isEditMode && (
+          <div className="mb-4 mt-2 bg-gray-100 rounded-2xl p-4">
+            <div className="flex gap-3">
+              <span className="text-xl">👁️</span>
+              <div>
+                <p className="text-[15px] font-medium text-gray-800 mb-1">
+                  숨긴 계약서
+                </p>
+                <p className="text-[13px] text-gray-500">
+                  숨긴 계약서는 여기서만 볼 수 있어요
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 내 경력 카드 (전체 탭, 편집 모드 아닐 때만) */}
+        {!isHiddenTab && !isEditMode && (
+          <Card
+            variant="elevated"
+            interactive
+            onClick={() => router.push('/worker/career')}
+            className="mb-6 bg-gradient-to-r from-blue-50 to-blue-100/50"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center">
+                <svg
+                  className="w-7 h-7 text-blue-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <p className="text-[16px] font-semibold text-gray-900">내 경력</p>
+                <p className="text-[14px] text-gray-500">근무 이력 및 평가 확인</p>
+              </div>
               <svg
-                className="w-7 h-7 text-blue-500"
+                className="w-5 h-5 text-gray-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -284,219 +481,288 @@ export default function WorkerDashboard({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  d="M9 5l7 7-7 7"
                 />
               </svg>
             </div>
-            <div className="flex-1">
-              <p className="text-[16px] font-semibold text-gray-900">내 경력</p>
-              <p className="text-[14px] text-gray-500">근무 이력 및 평가 확인</p>
-            </div>
-            <svg
-              className="w-5 h-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </div>
-        </Card>
-
-        {/* Pending Contracts */}
-        {pendingContracts.length > 0 && (
-          <section className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-[16px] font-semibold text-gray-900">
-                서명 대기중
-              </h2>
-              <span className="text-[13px] text-blue-500 font-medium">
-                {pendingContracts.length}건
-              </span>
-            </div>
-            <div className="space-y-3">
-              {pendingContracts.map((contract) => (
-                <Card
-                  key={contract.id}
-                  variant="elevated"
-                  interactive
-                  onClick={() => router.push(`/worker/contract/${contract.id}`)}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[16px] font-semibold text-gray-900">
-                          {contract.employer?.name || '사장님'}
-                        </span>
-                        {getDdayBadge(contract.expires_at)}
-                      </div>
-                      <p className="text-[14px] text-gray-500">
-                        {contract.wage_type === 'monthly' && contract.monthly_wage
-                          ? `월 ${formatCurrency(contract.monthly_wage)}`
-                          : contract.hourly_wage
-                            ? `시급 ${formatCurrency(contract.hourly_wage)}`
-                            : '-'}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1 text-blue-500">
-                      <span className="text-[14px] font-medium">서명하기</span>
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </section>
+          </Card>
         )}
 
-        {/* Completed Contracts */}
-        {completedContracts.length > 0 && !isEditMode && (
-          <section className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
+        {/* 숨김 탭 컨텐츠 */}
+        {isHiddenTab ? (
+          hiddenContracts.length > 0 ? (
+            <section>
+              <div className="flex items-center justify-between mb-3">
                 <h2 className="text-[16px] font-semibold text-gray-900">
-                  체결된 계약서
+                  숨긴 계약서
                 </h2>
-                <span className="text-[13px] text-gray-400">
-                  ({completedContracts.length}건)
-                </span>
+                <button 
+                  onClick={toggleEditMode}
+                  className="text-[14px] text-blue-500 font-medium"
+                >
+                  {isEditMode ? '취소' : '편집'}
+                </button>
               </div>
-              <button 
-                onClick={toggleEditMode}
-                className="text-[14px] text-blue-500 font-medium"
-              >
-                편집
-              </button>
-            </div>
-            <div className="space-y-3">
-              {sortedCompleted.map((contract) => (
-                <Card
-                  key={contract.id}
-                  variant="default"
-                  interactive
-                  onClick={() => router.push(`/worker/contract/${contract.id}`)}
-                  className="border border-gray-100"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-[15px] font-medium text-gray-900">
-                        {contract.employer?.name || '사장님'}
-                      </p>
-                      <p className="text-[13px] text-gray-500">
-                        {contract.wage_type === 'monthly' && contract.monthly_wage
-                          ? `월 ${formatCurrency(contract.monthly_wage)}`
-                          : contract.hourly_wage
-                            ? formatCurrency(contract.hourly_wage)
-                            : '-'}
-                      </p>
+              <div className="space-y-3">
+                {sortedHidden.map((contract) => (
+                  <button
+                    key={contract.id}
+                    onClick={() => isEditMode ? toggleSelect(contract.id) : null}
+                    className={clsx(
+                      'w-full bg-white rounded-2xl p-4 text-left transition-all',
+                      isEditMode && selectedIds.has(contract.id)
+                        ? 'ring-2 ring-blue-500 bg-blue-50/50'
+                        : 'border border-gray-100',
+                      !isEditMode && 'opacity-75'
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      {isEditMode && (
+                        <div
+                          className={clsx(
+                            'w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors',
+                            selectedIds.has(contract.id)
+                              ? 'bg-blue-500 border-blue-500'
+                              : 'border-gray-300'
+                          )}
+                        >
+                          {selectedIds.has(contract.id) && (
+                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                      )}
+                      
+                      <div className="flex-1">
+                        <p className="text-[15px] font-medium text-gray-900">
+                          {contract.employer?.name || '사장님'}
+                        </p>
+                        <p className="text-[13px] text-gray-500">
+                          {contract.wage_type === 'monthly' && contract.monthly_wage
+                            ? `월 ${formatCurrency(contract.monthly_wage)}`
+                            : contract.hourly_wage
+                              ? formatCurrency(contract.hourly_wage)
+                              : '-'}
+                        </p>
+                        <p className="text-[12px] text-gray-400 mt-1">
+                          {formatHiddenDate(contract.hidden_at || null)}
+                        </p>
+                      </div>
+                      
+                      <Badge variant="expired">숨김</Badge>
                     </div>
-                    <Badge variant="completed">완료</Badge>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* 편집 모드 계약서 목록 */}
-        {isEditMode && completedContracts.length > 0 && (
-          <section className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-[16px] font-semibold text-gray-900">
-                체결된 계약서
-              </h2>
-              <span className="text-[13px] text-gray-400">
-                {completedContracts.length}건
-              </span>
-            </div>
-            <div className="space-y-3">
-              {sortedCompleted.map((contract) => (
-                <button
-                  key={contract.id}
-                  onClick={() => toggleSelect(contract.id)}
-                  className={clsx(
-                    'w-full bg-white rounded-2xl p-4 text-left transition-all',
-                    selectedIds.has(contract.id)
-                      ? 'ring-2 ring-blue-500 bg-blue-50/50'
-                      : 'border border-gray-100'
-                  )}
+                  </button>
+                ))}
+              </div>
+            </section>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16">
+              <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mb-4">
+                <svg
+                  className="w-10 h-10 text-gray-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <div className="flex items-center gap-3">
-                    {/* 체크박스 */}
-                    <div
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                </svg>
+              </div>
+              <p className="text-[16px] text-gray-400">숨긴 계약서가 없어요</p>
+            </div>
+          )
+        ) : (
+          // 전체 탭 컨텐츠
+          <>
+            {/* Pending Contracts */}
+            {pendingContracts.length > 0 && (
+              <section className="mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-[16px] font-semibold text-gray-900">
+                    서명 대기중
+                  </h2>
+                  <span className="text-[13px] text-blue-500 font-medium">
+                    {pendingContracts.length}건
+                  </span>
+                </div>
+                <div className="space-y-3">
+                  {pendingContracts.map((contract) => (
+                    <Card
+                      key={contract.id}
+                      variant="elevated"
+                      interactive
+                      onClick={() => router.push(`/worker/contract/${contract.id}`)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[16px] font-semibold text-gray-900">
+                              {contract.employer?.name || '사장님'}
+                            </span>
+                            {getDdayBadge(contract.expires_at)}
+                          </div>
+                          <p className="text-[14px] text-gray-500">
+                            {contract.wage_type === 'monthly' && contract.monthly_wage
+                              ? `월 ${formatCurrency(contract.monthly_wage)}`
+                              : contract.hourly_wage
+                                ? `시급 ${formatCurrency(contract.hourly_wage)}`
+                                : '-'}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1 text-blue-500">
+                          <span className="text-[14px] font-medium">서명하기</span>
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5l7 7-7 7"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Completed Contracts */}
+            {completedContracts.length > 0 && !isEditMode && (
+              <section className="mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-[16px] font-semibold text-gray-900">
+                      체결된 계약서
+                    </h2>
+                    <span className="text-[13px] text-gray-400">
+                      ({completedContracts.length}건)
+                    </span>
+                  </div>
+                  <button 
+                    onClick={toggleEditMode}
+                    className="text-[14px] text-blue-500 font-medium"
+                  >
+                    편집
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {sortedCompleted.map((contract) => (
+                    <Card
+                      key={contract.id}
+                      variant="default"
+                      interactive
+                      onClick={() => router.push(`/worker/contract/${contract.id}`)}
+                      className="border border-gray-100"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-[15px] font-medium text-gray-900">
+                            {contract.employer?.name || '사장님'}
+                          </p>
+                          <p className="text-[13px] text-gray-500">
+                            {contract.wage_type === 'monthly' && contract.monthly_wage
+                              ? `월 ${formatCurrency(contract.monthly_wage)}`
+                              : contract.hourly_wage
+                                ? formatCurrency(contract.hourly_wage)
+                                : '-'}
+                          </p>
+                        </div>
+                        <Badge variant="completed">완료</Badge>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* 편집 모드 계약서 목록 */}
+            {isEditMode && completedContracts.length > 0 && (
+              <section className="mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-[16px] font-semibold text-gray-900">
+                    체결된 계약서
+                  </h2>
+                  <span className="text-[13px] text-gray-400">
+                    {completedContracts.length}건
+                  </span>
+                </div>
+                <div className="space-y-3">
+                  {sortedCompleted.map((contract) => (
+                    <button
+                      key={contract.id}
+                      onClick={() => toggleSelect(contract.id)}
                       className={clsx(
-                        'w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors',
+                        'w-full bg-white rounded-2xl p-4 text-left transition-all',
                         selectedIds.has(contract.id)
-                          ? 'bg-blue-500 border-blue-500'
-                          : 'border-gray-300'
+                          ? 'ring-2 ring-blue-500 bg-blue-50/50'
+                          : 'border border-gray-100'
                       )}
                     >
-                      {selectedIds.has(contract.id) && (
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </div>
-                    
-                    {/* 계약서 정보 */}
-                    <div className="flex-1">
-                      <p className="text-[15px] font-medium text-gray-900">
-                        {contract.employer?.name || '사장님'}
-                      </p>
-                      <p className="text-[13px] text-gray-500">
-                        {contract.wage_type === 'monthly' && contract.monthly_wage
-                          ? `월 ${formatCurrency(contract.monthly_wage)}`
-                          : contract.hourly_wage
-                            ? formatCurrency(contract.hourly_wage)
-                            : '-'}
-                      </p>
-                    </div>
-                    
-                    <Badge variant="completed">완료</Badge>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={clsx(
+                            'w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors',
+                            selectedIds.has(contract.id)
+                              ? 'bg-blue-500 border-blue-500'
+                              : 'border-gray-300'
+                          )}
+                        >
+                          {selectedIds.has(contract.id) && (
+                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        
+                        <div className="flex-1">
+                          <p className="text-[15px] font-medium text-gray-900">
+                            {contract.employer?.name || '사장님'}
+                          </p>
+                          <p className="text-[13px] text-gray-500">
+                            {contract.wage_type === 'monthly' && contract.monthly_wage
+                              ? `월 ${formatCurrency(contract.monthly_wage)}`
+                              : contract.hourly_wage
+                                ? formatCurrency(contract.hourly_wage)
+                                : '-'}
+                          </p>
+                        </div>
+                        
+                        <Badge variant="completed">완료</Badge>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
 
-        {/* Empty State */}
-        {contracts.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-16">
-            <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mb-4">
-              <svg
-                className="w-10 h-10 text-gray-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-            </div>
-            <p className="text-[16px] text-gray-400">아직 받은 계약서가 없어요</p>
-          </div>
+            {/* Empty State */}
+            {contracts.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16">
+                <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mb-4">
+                  <svg
+                    className="w-10 h-10 text-gray-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                </div>
+                <p className="text-[16px] text-gray-400">아직 받은 계약서가 없어요</p>
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -516,6 +782,16 @@ export default function WorkerDashboard({
         userEmail={profile.email}
         userRole="worker"
         isGuestMode={isGuestMode}
+      />
+
+      {/* Hide Confirm Sheet */}
+      <ConfirmSheet
+        isOpen={isHideConfirmOpen}
+        onClose={() => setIsHideConfirmOpen(false)}
+        title="계약서를 숨길까요?"
+        description={`${selectedIds.size}개 계약서가 숨김 목록으로 이동해요.\n언제든 다시 볼 수 있어요.`}
+        confirmLabel="숨기기"
+        onConfirm={handleHide}
       />
 
       {/* Toast */}
@@ -557,7 +833,6 @@ export default function WorkerDashboard({
             <button
               onClick={() => {
                 setShowOnboardingModal(false);
-                // URL에서 쿼리 파라미터 제거
                 router.replace('/worker');
               }}
               className="w-full py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg"
@@ -569,7 +844,7 @@ export default function WorkerDashboard({
       )}
 
       {/* 온보딩 미완료 시 안내 배너 */}
-      {!isOnboardingComplete && !isGuestMode && !isEditMode && (
+      {!isOnboardingComplete && !isGuestMode && !isEditMode && !isHiddenTab && (
         <div className="fixed bottom-20 left-4 right-4 z-30">
           <button
             onClick={() => router.push('/worker/onboarding')}
