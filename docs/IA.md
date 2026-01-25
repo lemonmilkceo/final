@@ -1,7 +1,7 @@
 # 📐 IA (Information Architecture)
 ## 싸인해주세요 (SignPlease)
 
-> **버전**: 1.6  
+> **버전**: 1.7  
 > **최종 수정일**: 2026년 1월 25일  
 > **작성자**: PM
 
@@ -1177,3 +1177,78 @@ Next.js redirect()
 ---
 
 > **Amendment 6 끝**
+
+---
+
+## 📝 Amendment 7: 민감정보 복호화 API (2026년 1월 25일)
+
+> **버전**: 1.7  
+> **변경 사유**: 사업자의 4대보험 신고용 민감정보 열람 API 추가
+
+### 7.1 신규 API 라우트
+
+```
+싸인해주세요 (SignPlease)
+│
+├── 🔌 API (Internal) - 추가
+│   │
+│   └── /api/contract/sensitive-info ──── 민감정보 복호화 API (신규)
+│       ├── Method: POST
+│       ├── Body: { contractId, infoType }
+│       └── Response: { ssn, bankName, accountNumber }
+```
+
+### 7.2 API 명세
+
+| 항목 | 내용 |
+|------|------|
+| 경로 | `/api/contract/sensitive-info` |
+| 메서드 | POST |
+| 인증 | 필수 (로그인 사용자) |
+| 권한 | 계약서 작성자 (employer_id)만 |
+
+#### 요청 파라미터
+```typescript
+{
+  contractId: string;  // 계약서 ID
+  infoType: 'ssn' | 'account' | 'both';  // 조회할 정보 유형
+}
+```
+
+#### 응답 형식
+```typescript
+// 성공
+{
+  success: true;
+  data: {
+    ssn?: string;          // 주민등록번호 (복호화)
+    bankName?: string;     // 은행명
+    accountNumber?: string; // 계좌번호 (복호화)
+  }
+}
+
+// 실패
+{
+  error: string;
+}
+```
+
+### 7.3 접근 권한
+
+| 조건 | 결과 |
+|------|------|
+| 비로그인 | 401 Unauthorized |
+| employer_id ≠ 로그인 사용자 | 403 Forbidden |
+| 계약서 없음 | 404 Not Found |
+| 정상 요청 | 200 OK + 복호화 데이터 |
+
+### 7.4 부작용 (Side Effects)
+
+| 동작 | 설명 |
+|------|------|
+| 열람 로그 기록 | `sensitive_info_logs` 테이블에 자동 INSERT |
+| 기록 정보 | user_id, contract_id, info_type, accessed_at, ip_address, user_agent |
+
+---
+
+> **Amendment 7 끝**
