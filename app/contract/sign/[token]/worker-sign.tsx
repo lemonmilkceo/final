@@ -6,14 +6,29 @@ import SignatureCanvas from '@/components/contract/SignatureCanvas';
 import BottomSheet from '@/components/ui/BottomSheet';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Toast from '@/components/ui/Toast';
+import Input from '@/components/ui/Input';
 import { signAsWorker, signInForWorkerSign } from './actions';
 import { formatCurrency } from '@/lib/utils/format';
 import { normalizePhone } from '@/lib/utils/validation';
 import clsx from 'clsx';
 
 // 서명 플로우 단계
-// verify_phone → view_contract → login → sign → completed
-type SignStep = 'verify_phone' | 'view_contract' | 'login' | 'sign' | 'completed';
+// verify_phone → view_contract → login → input_details → sign → completed
+type SignStep = 'verify_phone' | 'view_contract' | 'login' | 'input_details' | 'sign' | 'completed';
+
+// 은행 목록
+const BANKS = [
+  { code: 'kb', name: 'KB국민' },
+  { code: 'shinhan', name: '신한' },
+  { code: 'woori', name: '우리' },
+  { code: 'hana', name: '하나' },
+  { code: 'nh', name: 'NH농협' },
+  { code: 'ibk', name: 'IBK기업' },
+  { code: 'kakao', name: '카카오뱅크' },
+  { code: 'toss', name: '토스뱅크' },
+  { code: 'sc', name: 'SC제일' },
+  { code: 'citi', name: '씨티' },
+];
 
 // 근로자 서명 페이지에서 사용하는 타입
 interface WorkerSignContract {
@@ -48,27 +63,46 @@ interface WorkerSignContract {
   } | null;
 }
 
+// 근로자 상세정보 타입
+interface WorkerDetails {
+  ssn: string; // 주민등록번호 (앞6 + 뒤7)
+  bankCode: string;
+  accountNumber: string;
+}
+
 interface WorkerSignPageProps {
   contract: WorkerSignContract;
   token: string;
   isLoggedIn: boolean;
+  existingWorkerDetails?: {
+    hasSsn: boolean;
+    bankName: string | null;
+    hasAccount: boolean;
+  } | null;
 }
 
 export default function WorkerSignPage({
   contract,
   token,
   isLoggedIn,
+  existingWorkerDetails,
 }: WorkerSignPageProps) {
   const router = useRouter();
+  
+  // 기존 정보가 있는지 확인
+  const hasExistingDetails = existingWorkerDetails?.hasSsn && existingWorkerDetails?.hasAccount;
   
   // 초기 단계 결정
   // 1. 휴대폰 번호가 있으면 번호 인증부터
   // 2. 없으면 계약서 보기
-  // 3. 로그인된 상태에서 접근하면 바로 서명
+  // 3. 로그인된 상태에서 접근하면 정보 입력 또는 서명
   const getInitialStep = (): SignStep => {
     if (isLoggedIn) {
-      // 로그인된 상태면 바로 서명 단계로
-      return 'sign';
+      // 로그인된 상태면 기존 정보 여부에 따라 분기
+      if (hasExistingDetails) {
+        return 'sign'; // 이미 정보가 있으면 바로 서명
+      }
+      return 'input_details'; // 정보 입력 필요
     }
     if (contract.worker_phone) {
       return 'verify_phone';
@@ -83,6 +117,17 @@ export default function WorkerSignPage({
   const [phoneError, setPhoneError] = useState('');
   const [phoneVerified, setPhoneVerified] = useState(!contract.worker_phone);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  
+  // 근로자 정보 입력 상태
+  const [workerDetails, setWorkerDetails] = useState<WorkerDetails>({
+    ssn: '',
+    bankCode: existingWorkerDetails?.bankName ? 
+      BANKS.find(b => b.name === existingWorkerDetails.bankName)?.code || '' : '',
+    accountNumber: '',
+  });
+  const [ssnFront, setSsnFront] = useState('');
+  const [ssnBack, setSsnBack] = useState('');
+  const [detailsError, setDetailsError] = useState('');
   
   const [isSignatureSheetOpen, setIsSignatureSheetOpen] = useState(false);
   const [signatureData, setSignatureData] = useState<string | null>(null);
@@ -167,6 +212,29 @@ export default function WorkerSignPage({
     return '-';
   };
 
+  // 정보 입력 유효성 검사
+  const isDetailsValid = () => {
+    const fullSsn = ssnFront + ssnBack;
+    return (
+      fullSsn.length === 13 &&
+      workerDetails.bankCode &&
+      workerDetails.accountNumber.length >= 10
+    );
+  };
+
+  // 정보 입력 후 서명 단계로 이동
+  const handleDetailsSubmit = () => {
+    if (!isDetailsValid()) {
+      setDetailsError('모든 정보를 입력해주세요');
+      return;
+    }
+    setWorkerDetails(prev => ({
+      ...prev,
+      ssn: ssnFront + ssnBack,
+    }));
+    setCurrentStep('sign');
+  };
+
   const handleSignatureComplete = async () => {
     if (!signatureData) {
       setError('서명을 해주세요');
@@ -177,7 +245,15 @@ export default function WorkerSignPage({
     setError('');
 
     try {
-      const result = await signAsWorker(token, signatureData);
+      // 기존 정보가 있으면 빈 값으로, 없으면 입력한 값 전달
+      const detailsToSave = hasExistingDetails ? undefined : {
+        ssn: ssnFront + ssnBack,
+        bankCode: workerDetails.bankCode,
+        bankName: BANKS.find(b => b.code === workerDetails.bankCode)?.name || workerDetails.bankCode,
+        accountNumber: workerDetails.accountNumber,
+      };
+      
+      const result = await signAsWorker(token, signatureData, detailsToSave);
 
       if (result.success) {
         setIsSignatureSheetOpen(false);
@@ -336,6 +412,139 @@ export default function WorkerSignPage({
             )}
           >
             확인
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 정보 입력 화면 (로그인 후)
+  if (currentStep === 'input_details') {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        {/* Header */}
+        <header className="px-5 py-4 border-b border-gray-100 safe-top">
+          <h1 className="text-[18px] font-bold text-gray-900 text-center">
+            정보 입력
+          </h1>
+          <p className="text-[13px] text-gray-500 text-center mt-1">
+            계약서에 기재될 정보예요
+          </p>
+        </header>
+
+        {/* Content */}
+        <div className="flex-1 px-6 py-6 pb-32 overflow-y-auto">
+          {/* 주민등록번호 */}
+          <div className="mb-8">
+            <h2 className="text-[16px] font-bold text-gray-900 mb-2">
+              주민등록번호
+            </h2>
+            <p className="text-[13px] text-gray-500 mb-4">
+              4대보험 신고 및 계약서 기재용이에요
+            </p>
+            <div className="flex items-center gap-3">
+              <input
+                type="text"
+                value={ssnFront}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  if (value.length <= 6) setSsnFront(value);
+                }}
+                placeholder="앞 6자리"
+                maxLength={6}
+                inputMode="numeric"
+                className="flex-1 text-center text-[18px] font-bold py-3 border-b-2 border-gray-200 focus:border-blue-500 focus:outline-none transition-colors"
+              />
+              <span className="text-2xl text-gray-300">-</span>
+              <input
+                type="password"
+                value={ssnBack}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  if (value.length <= 7) setSsnBack(value);
+                }}
+                placeholder="뒤 7자리"
+                maxLength={7}
+                inputMode="numeric"
+                className="flex-1 text-center text-[18px] font-bold py-3 border-b-2 border-gray-200 focus:border-blue-500 focus:outline-none transition-colors"
+              />
+            </div>
+          </div>
+
+          {/* 계좌 정보 */}
+          <div className="mb-8">
+            <h2 className="text-[16px] font-bold text-gray-900 mb-2">
+              급여 계좌
+            </h2>
+            <p className="text-[13px] text-gray-500 mb-4">
+              급여를 받을 계좌 정보예요
+            </p>
+            
+            {/* 은행 선택 */}
+            <div className="mb-4">
+              <p className="text-[13px] text-gray-500 mb-2">은행 선택</p>
+              <div className="grid grid-cols-4 gap-2">
+                {BANKS.map((bank) => (
+                  <button
+                    key={bank.code}
+                    type="button"
+                    onClick={() => setWorkerDetails(prev => ({ ...prev, bankCode: bank.code }))}
+                    className={clsx(
+                      'py-2.5 px-2 rounded-xl text-[12px] font-medium transition-colors',
+                      workerDetails.bankCode === bank.code
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-100 text-gray-700 active:bg-gray-200'
+                    )}
+                  >
+                    {bank.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 계좌번호 */}
+            <Input
+              variant="box"
+              label="계좌번호"
+              value={workerDetails.accountNumber}
+              onChange={(e) => setWorkerDetails(prev => ({ 
+                ...prev, 
+                accountNumber: e.target.value.replace(/[^0-9]/g, '') 
+              }))}
+              placeholder="'-' 없이 숫자만 입력"
+              inputMode="numeric"
+            />
+          </div>
+
+          {/* 안내 메시지 */}
+          <div className="bg-amber-50 rounded-2xl p-4">
+            <p className="text-[14px] text-amber-700">
+              🔒 입력하신 정보는 암호화되어 안전하게 보관되며, 계약 당사자만 열람할 수 있어요
+            </p>
+          </div>
+
+          {/* 에러 메시지 */}
+          {detailsError && (
+            <div className="mt-4 bg-red-50 rounded-xl p-4 flex items-center gap-2">
+              <span>⚠️</span>
+              <span className="text-[14px] text-red-600">{detailsError}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom CTA */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-5 pt-3 pb-4 safe-bottom">
+          <button
+            onClick={handleDetailsSubmit}
+            disabled={!isDetailsValid()}
+            className={clsx(
+              'w-full py-4 rounded-2xl font-semibold text-lg transition-colors',
+              isDetailsValid()
+                ? 'bg-blue-500 text-white active:bg-blue-600'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            )}
+          >
+            다음으로
           </button>
         </div>
       </div>

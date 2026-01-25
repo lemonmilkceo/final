@@ -3,7 +3,16 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { encryptData, hashSSN } from '@/lib/utils/encryption';
 import type { ActionResult } from '@/types';
+
+// 근로자 상세정보 타입
+interface WorkerDetailsInput {
+  ssn: string;
+  bankCode: string;
+  bankName: string;
+  accountNumber: string;
+}
 
 /**
  * 근로자 서명을 위한 카카오 로그인
@@ -43,7 +52,8 @@ export async function signInForWorkerSign(token: string) {
 
 export async function signAsWorker(
   token: string,
-  signatureImageData: string
+  signatureImageData: string,
+  workerDetails?: WorkerDetailsInput
 ): Promise<ActionResult> {
   const supabase = await createClient();
 
@@ -94,38 +104,79 @@ export async function signAsWorker(
     return { success: false, error: '서명하려면 로그인이 필요해요' };
   }
 
-  // 서명 레코드 생성 (Base64 Data URL 직접 저장)
-  const { error: signatureError } = await supabase.from('signatures').insert({
-    contract_id: contract.id,
-    user_id: user.id,
-    signer_role: 'worker',
-    signature_data: signatureImageData,
-    signed_at: new Date().toISOString(),
-  });
+  try {
+    // 근로자 정보 암호화 (새로 입력한 경우에만)
+    let encryptedSsn: string | undefined;
+    let encryptedAccount: string | undefined;
+    let workerBankName: string | undefined;
+    
+    if (workerDetails) {
+      encryptedSsn = encryptData(workerDetails.ssn);
+      encryptedAccount = encryptData(workerDetails.accountNumber);
+      workerBankName = workerDetails.bankName;
+      
+      // worker_details 테이블에도 저장 (프로필용)
+      const ssnHash = hashSSN(workerDetails.ssn);
+      await supabase
+        .from('worker_details')
+        .upsert(
+          {
+            user_id: user.id,
+            ssn_hash: ssnHash,
+            ssn_encrypted: encryptedSsn,
+            bank_name: workerDetails.bankName,
+            account_number_encrypted: encryptedAccount,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id' }
+        );
+    }
 
-  if (signatureError) {
-    console.error('Signature insert error:', signatureError);
-    return { success: false, error: '서명 저장에 실패했어요' };
-  }
+    // 서명 레코드 생성 (Base64 Data URL 직접 저장)
+    const { error: signatureError } = await supabase.from('signatures').insert({
+      contract_id: contract.id,
+      user_id: user.id,
+      signer_role: 'worker',
+      signature_data: signatureImageData,
+      signed_at: new Date().toISOString(),
+    });
 
-  // 계약서 상태 업데이트 (pending → completed)
-  const { error: updateError } = await supabase
-    .from('contracts')
-    .update({
+    if (signatureError) {
+      console.error('Signature insert error:', signatureError);
+      return { success: false, error: '서명 저장에 실패했어요' };
+    }
+
+    // 계약서 상태 업데이트 (pending → completed) + 근로자 정보 저장
+    const updateData: Record<string, unknown> = {
       status: 'completed',
+      completed_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      // 로그인한 사용자가 있으면 worker_id 설정
-      ...(user?.id ? { worker_id: user.id } : {}),
-    })
-    .eq('id', contract.id);
+      worker_id: user.id,
+    };
+    
+    // 근로자 정보가 있으면 계약서에도 저장
+    if (workerDetails) {
+      updateData.worker_ssn_encrypted = encryptedSsn;
+      updateData.worker_bank_name = workerBankName;
+      updateData.worker_account_encrypted = encryptedAccount;
+    }
 
-  if (updateError) {
-    console.error('Contract update error:', updateError);
-    return { success: false, error: '계약서 상태 업데이트에 실패했어요' };
+    const { error: updateError } = await supabase
+      .from('contracts')
+      .update(updateData)
+      .eq('id', contract.id);
+
+    if (updateError) {
+      console.error('Contract update error:', updateError);
+      return { success: false, error: '계약서 상태 업데이트에 실패했어요' };
+    }
+
+    // 캐시 무효화
+    revalidatePath(`/contract/sign/${token}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Worker sign error:', error);
+    return { success: false, error: '서명 처리 중 오류가 발생했어요' };
   }
-
-  // 캐시 무효화
-  revalidatePath(`/contract/sign/${token}`);
-
-  return { success: true };
 }

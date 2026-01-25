@@ -42,6 +42,24 @@ export default async function SignPage({ params }: SignPageProps) {
     notFound();
   }
 
+  // 로그인한 사용자의 기존 worker_details 조회
+  let existingWorkerDetails = null;
+  if (user) {
+    const { data: workerDetails } = await supabase
+      .from('worker_details')
+      .select('ssn_encrypted, bank_name, account_number_encrypted')
+      .eq('user_id', user.id)
+      .single();
+    
+    if (workerDetails) {
+      existingWorkerDetails = {
+        hasSsn: !!workerDetails.ssn_encrypted,
+        bankName: workerDetails.bank_name,
+        hasAccount: !!workerDetails.account_number_encrypted,
+      };
+    }
+  }
+
   // 만료 체크
   if (contract.expires_at && new Date(contract.expires_at) < new Date()) {
     return (
@@ -76,5 +94,12 @@ export default async function SignPage({ params }: SignPageProps) {
     );
   }
 
-  return <WorkerSignPage contract={contract} token={token} isLoggedIn={isLoggedIn} />;
+  return (
+    <WorkerSignPage 
+      contract={contract} 
+      token={token} 
+      isLoggedIn={isLoggedIn} 
+      existingWorkerDetails={existingWorkerDetails}
+    />
+  );
 }

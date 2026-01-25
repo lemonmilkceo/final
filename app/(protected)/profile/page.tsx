@@ -24,12 +24,31 @@ export default async function ProfilePageContainer() {
     redirect(ROUTES.LOGIN);
   }
 
+  // 근로자인 경우 worker_details 조회
+  let workerDetails = null;
+  if (profile.role === 'worker') {
+    const { data } = await supabase
+      .from('worker_details')
+      .select('bank_name, ssn_encrypted, account_number_encrypted')
+      .eq('user_id', user.id)
+      .single();
+    
+    if (data) {
+      workerDetails = {
+        hasSsn: !!data.ssn_encrypted,
+        bankName: data.bank_name,
+        hasAccount: !!data.account_number_encrypted,
+      };
+    }
+  }
+
   return (
     <ProfilePage
       profile={{
         ...profile,
         email: user.email || null,
       }}
+      workerDetails={workerDetails}
     />
   );
 }
