@@ -19,6 +19,8 @@ const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasSignature, setHasSignature] = useState(false);
+  // useRef to track drawing state synchronously
+  const hasDrawnRef = useRef(false);
 
   // Initialize canvas
   useEffect(() => {
@@ -96,6 +98,7 @@ const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
 
       ctx.lineTo(coords.x, coords.y);
       ctx.stroke();
+      hasDrawnRef.current = true;
       setHasSignature(true);
     },
     [isDrawing, getCoordinates]
@@ -112,12 +115,12 @@ const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
 
     setIsDrawing(false);
 
-    // Export signature as base64
-    if (canvas && hasSignature) {
+    // Export signature as base64 (use ref for synchronous check)
+    if (canvas && hasDrawnRef.current) {
       const signatureData = canvas.toDataURL('image/png');
       onSignatureChange?.(signatureData);
     }
-  }, [isDrawing, hasSignature, onSignatureChange]);
+  }, [isDrawing, onSignatureChange]);
 
   const clearCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -126,6 +129,7 @@ const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
 
     const dpr = window.devicePixelRatio || 1;
     ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+    hasDrawnRef.current = false;
     setHasSignature(false);
     onSignatureChange?.(null);
   }, [onSignatureChange]);
