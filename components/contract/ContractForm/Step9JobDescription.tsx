@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useContractFormStore, type BusinessType } from '@/stores/contractFormStore';
 import BottomSheet from '@/components/ui/BottomSheet';
@@ -144,6 +144,13 @@ export default function Step9JobDescription() {
 
   // 현재 선택된 업종 찾기
   const currentBusinessType = BUSINESS_TYPES.find((b) => b.value === data.businessType);
+
+  // 업종 미선택 시 자동으로 바텀시트 열기
+  useEffect(() => {
+    if (!data.businessType) {
+      setIsBusinessTypeSheetOpen(true);
+    }
+  }, []); // 컴포넌트 마운트 시 1회만 실행
 
   const handleBusinessTypeSelect = (type: BusinessType) => {
     updateData({ businessType: type });
