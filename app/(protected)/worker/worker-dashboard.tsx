@@ -1,17 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import MenuSheet from '@/components/layout/MenuSheet';
 import NotificationSheet from '@/components/notification/NotificationSheet';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
-import EmptyState from '@/components/shared/EmptyState';
+import Toast from '@/components/ui/Toast';
 import { formatCurrency, formatDday } from '@/lib/utils/format';
 import { getNotifications, getUnreadNotificationCount } from '@/app/actions/notifications';
 import clsx from 'clsx';
 import type { ContractStatus } from '@/types';
+
+// 정렬 타입
+type SortType = 'latest' | 'employer';
 
 interface DashboardContract {
   id: string;
@@ -54,10 +57,30 @@ export default function WorkerDashboard({
   contracts,
 }: WorkerDashboardProps) {
   const router = useRouter();
+  
+  // UI 상태
   const [isMenuSheetOpen, setIsMenuSheetOpen] = useState(false);
   const [isNotificationSheetOpen, setIsNotificationSheetOpen] = useState(false);
+  
+  // 편집 모드 상태
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [sortType, setSortType] = useState<SortType>('latest');
+  
+  // 알림
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  
+  // Toast
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastVariant, setToastVariant] = useState<'success' | 'error'>('success');
+
+  const showToastMessage = (message: string, variant: 'success' | 'error') => {
+    setToastMessage(message);
+    setToastVariant(variant);
+    setShowToast(true);
+  };
 
   // 대기중인 계약서 (서명 필요)
   const pendingContracts = contracts.filter(
@@ -68,6 +91,17 @@ export default function WorkerDashboard({
 
   // 완료된 계약서
   const completedContracts = contracts.filter((c) => c.status === 'completed');
+
+  // 정렬된 완료 계약서
+  const sortedCompleted = useMemo(() => {
+    const sorted = [...completedContracts];
+    if (sortType === 'latest') {
+      sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    } else {
+      sorted.sort((a, b) => (a.employer?.name || '').localeCompare(b.employer?.name || ''));
+    }
+    return sorted;
+  }, [completedContracts, sortType]);
 
   // 알림 데이터 로드
   useEffect(() => {
@@ -87,6 +121,37 @@ export default function WorkerDashboard({
   const handleNotificationsUpdate = async () => {
     const count = await getUnreadNotificationCount();
     setUnreadCount(count);
+  };
+
+  // 편집 모드 토글
+  const toggleEditMode = () => {
+    setIsEditMode(!isEditMode);
+    setSelectedIds(new Set());
+  };
+
+  // 선택 토글
+  const toggleSelect = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  // 전체 선택
+  const selectAll = () => {
+    const allIds = completedContracts.map((c) => c.id);
+    setSelectedIds(new Set(allIds));
+  };
+
+  // 삭제 (숨기기)
+  const handleDelete = async () => {
+    // TODO: 삭제 API 호출
+    showToastMessage(`${selectedIds.size}개 계약서가 숨김 처리되었어요`, 'success');
+    setSelectedIds(new Set());
+    setIsEditMode(false);
   };
 
   const getDdayBadge = (expiresAt: string | null) => {
@@ -113,25 +178,83 @@ export default function WorkerDashboard({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <Header
-        showNotification={true}
-        showMenu={true}
-        unreadCount={unreadCount}
-        onNotificationClick={() => setIsNotificationSheetOpen(true)}
-        onMenuClick={() => setIsMenuSheetOpen(true)}
-      />
+    <div className="min-h-screen bg-gray-50 pb-6">
+      {/* 편집 모드 헤더 */}
+      {isEditMode ? (
+        <header className="bg-white px-5 py-4 sticky top-0 z-40 safe-top">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <button onClick={toggleEditMode} className="text-gray-500">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <span className="text-[17px] font-bold text-gray-900">
+                {selectedIds.size}개 선택됨
+              </span>
+            </div>
+            <button
+              onClick={selectAll}
+              className="text-[15px] text-blue-500 font-medium"
+            >
+              전체 선택
+            </button>
+          </div>
+          
+          {/* 액션 바 */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setSortType(sortType === 'latest' ? 'employer' : 'latest')}
+              className={clsx(
+                'flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-medium border',
+                'bg-blue-500 text-white border-blue-500'
+              )}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+              </svg>
+              {sortType === 'latest' ? '최신순' : '사업장별'}
+            </button>
+            
+            <button
+              onClick={handleDelete}
+              disabled={selectedIds.size === 0}
+              className={clsx(
+                'flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-medium border',
+                selectedIds.size > 0
+                  ? 'border-red-200 text-red-500'
+                  : 'border-gray-200 text-gray-400'
+              )}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              숨기기
+            </button>
+          </div>
+        </header>
+      ) : (
+        /* 기본 헤더 */
+        <Header
+          showNotification={true}
+          showMenu={true}
+          unreadCount={unreadCount}
+          onNotificationClick={() => setIsNotificationSheetOpen(true)}
+          onMenuClick={() => setIsMenuSheetOpen(true)}
+        />
+      )}
 
       {/* Content */}
       <div className="px-5 pt-4 pb-24">
-        {/* Welcome Message */}
-        <div className="mb-6">
-          <p className="text-[15px] text-gray-500">안녕하세요,</p>
-          <h1 className="text-[26px] font-bold text-gray-900">
-            {profile.name}님 👋
-          </h1>
-        </div>
+        {/* Welcome Message (편집 모드 아닐 때만) */}
+        {!isEditMode && (
+          <div className="mb-6">
+            <p className="text-[15px] text-gray-500">안녕하세요,</p>
+            <h1 className="text-[26px] font-bold text-gray-900">
+              {profile.name}님 👋
+            </h1>
+          </div>
+        )}
 
         {/* 내 경력 카드 */}
         <Card
@@ -235,7 +358,7 @@ export default function WorkerDashboard({
         )}
 
         {/* Completed Contracts */}
-        {completedContracts.length > 0 && (
+        {completedContracts.length > 0 && !isEditMode && (
           <section className="mb-6">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
@@ -246,12 +369,15 @@ export default function WorkerDashboard({
                   ({completedContracts.length}건)
                 </span>
               </div>
-              <button className="text-[14px] text-blue-500 font-medium">
+              <button 
+                onClick={toggleEditMode}
+                className="text-[14px] text-blue-500 font-medium"
+              >
                 편집
               </button>
             </div>
             <div className="space-y-3">
-              {completedContracts.map((contract) => (
+              {sortedCompleted.map((contract) => (
                 <Card
                   key={contract.id}
                   variant="default"
@@ -275,6 +401,68 @@ export default function WorkerDashboard({
                     <Badge variant="completed">완료</Badge>
                   </div>
                 </Card>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* 편집 모드 계약서 목록 */}
+        {isEditMode && completedContracts.length > 0 && (
+          <section className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-[16px] font-semibold text-gray-900">
+                체결된 계약서
+              </h2>
+              <span className="text-[13px] text-gray-400">
+                {completedContracts.length}건
+              </span>
+            </div>
+            <div className="space-y-3">
+              {sortedCompleted.map((contract) => (
+                <button
+                  key={contract.id}
+                  onClick={() => toggleSelect(contract.id)}
+                  className={clsx(
+                    'w-full bg-white rounded-2xl p-4 text-left transition-all',
+                    selectedIds.has(contract.id)
+                      ? 'ring-2 ring-blue-500 bg-blue-50/50'
+                      : 'border border-gray-100'
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    {/* 체크박스 */}
+                    <div
+                      className={clsx(
+                        'w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors',
+                        selectedIds.has(contract.id)
+                          ? 'bg-blue-500 border-blue-500'
+                          : 'border-gray-300'
+                      )}
+                    >
+                      {selectedIds.has(contract.id) && (
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    
+                    {/* 계약서 정보 */}
+                    <div className="flex-1">
+                      <p className="text-[15px] font-medium text-gray-900">
+                        {contract.employer?.name || '사장님'}
+                      </p>
+                      <p className="text-[13px] text-gray-500">
+                        {contract.wage_type === 'monthly' && contract.monthly_wage
+                          ? `월 ${formatCurrency(contract.monthly_wage)}`
+                          : contract.hourly_wage
+                            ? formatCurrency(contract.hourly_wage)
+                            : '-'}
+                      </p>
+                    </div>
+                    
+                    <Badge variant="completed">완료</Badge>
+                  </div>
+                </button>
               ))}
             </div>
           </section>
@@ -318,6 +506,14 @@ export default function WorkerDashboard({
         userName={profile.name}
         userEmail={profile.email}
         userRole="worker"
+      />
+
+      {/* Toast */}
+      <Toast
+        message={toastMessage}
+        variant={toastVariant}
+        isVisible={showToast}
+        onClose={() => setShowToast(false)}
       />
     </div>
   );
