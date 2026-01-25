@@ -68,7 +68,16 @@ export const MENU_ROUTES = {
   PAYMENT_HISTORY: '/payment-history',
   TERMS: '/terms',
   PRIVACY: '/privacy',
+  SUPPORT: '/support',
   SIGNOUT: '/auth/signout',
+} as const;
+
+// 고객센터 라우트
+export const SUPPORT_ROUTES = {
+  MAIN: '/support',
+  FAQ: '/support/faq',
+  FAQ_DETAIL: (id: string) => `/support/faq/${id}`,
+  CHAT: '/support/chat',
 } as const;
 
 // 설정 라우트
