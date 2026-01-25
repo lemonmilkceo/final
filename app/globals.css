@@ -104,6 +104,11 @@
   50% { opacity: 0.5; }
 }
 
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
 /* ================================================
    3. Base Styles
    ================================================ */
@@ -439,6 +444,10 @@ body {
 
 .animate-pulse-dot {
   animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 3s ease-in-out infinite;
 }
 
 .delay-100 {

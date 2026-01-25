@@ -428,47 +428,85 @@ export default function ContractPreview({
           </div>
         </div>
 
-        {/* AI Review Button */}
+        {/* AI Review Button - Premium Style */}
         <button
           onClick={handleAIReview}
           disabled={isAIReviewLoading}
           className={clsx(
-            'w-full mt-4 bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm',
+            'w-full mt-4 rounded-2xl p-4 relative overflow-hidden',
+            'bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50',
+            'border-2 border-amber-200/60',
             isAIReviewLoading
-              ? 'opacity-50 cursor-not-allowed'
-              : 'active:bg-gray-50'
+              ? 'opacity-70 cursor-not-allowed'
+              : 'active:scale-[0.98] transition-transform'
           )}
         >
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">
-              {isAIReviewLoading ? '⏳' : '🤖'}
-            </span>
-            <div>
-              <p className="text-[15px] font-semibold text-gray-900">
-                {isAIReviewLoading ? 'AI가 검토 중이에요...' : 'AI 노무사 검토 받기'}
-              </p>
-              <p className="text-[13px] text-gray-500">
-                서명 전에 법적 문제가 없는지 확인해요
-              </p>
+          {/* Shimmer Effect */}
+          {!isAIReviewLoading && (
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div 
+                className="absolute inset-0 animate-shimmer"
+                style={{
+                  background: 'linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.15), transparent)',
+                }}
+              />
+            </div>
+          )}
+          
+          <div className="relative flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {/* Icon Box */}
+              <div className={clsx(
+                'w-10 h-10 rounded-xl flex items-center justify-center',
+                'bg-gradient-to-br from-amber-400 to-orange-500',
+                'shadow-sm'
+              )}>
+                <span className="text-xl">
+                  {isAIReviewLoading ? '⏳' : '⚖️'}
+                </span>
+              </div>
+              
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="text-[15px] font-bold text-amber-900">
+                    {isAIReviewLoading ? 'AI가 검토 중...' : 'AI 노무사 검토'}
+                  </p>
+                  {/* PRO Badge */}
+                  {!isAIReviewLoading && (
+                    <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold text-white bg-gradient-to-r from-amber-500 to-orange-500">
+                      PRO
+                    </span>
+                  )}
+                </div>
+                <p className="text-[13px] text-amber-700">
+                  최저임금·휴게시간 등 법적 문제 분석
+                </p>
+              </div>
+            </div>
+
+            {/* Right Side - Credits or Loading */}
+            <div className="flex items-center gap-2">
+              {isAIReviewLoading ? (
+                <LoadingSpinner variant="inline" className="w-5 h-5" />
+              ) : (
+                <>
+                  <svg
+                    className="w-5 h-5 text-amber-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </>
+              )}
             </div>
           </div>
-          {isAIReviewLoading ? (
-            <LoadingSpinner variant="inline" className="w-5 h-5" />
-          ) : (
-            <svg
-              className="w-5 h-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          )}
         </button>
 
         {/* Error Message */}
