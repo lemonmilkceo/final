@@ -133,9 +133,9 @@ export default function Step2WorkerName() {
         </div>
 
         {/* 안내 메시지 */}
-        <div className="bg-blue-50 rounded-2xl p-4">
-          <p className="text-[14px] text-blue-700">
-            📱 이 번호로 계약서 서명 링크가 전송돼요
+        <div className="bg-gray-50 rounded-2xl p-4">
+          <p className="text-[14px] text-gray-500">
+            근로자가 서명할 때 본인 확인에 사용돼요
           </p>
         </div>
       </div>
