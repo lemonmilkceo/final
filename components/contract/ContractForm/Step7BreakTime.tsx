@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useContractFormStore } from '@/stores/contractFormStore';
 import clsx from 'clsx';
 
-const BREAK_OPTIONS = [30, 60];
+const BREAK_OPTIONS = [0, 30, 60];
 
 export default function Step7BreakTime() {
   const { data, updateData, nextStep, prevStep } = useContractFormStore();
@@ -40,25 +40,25 @@ export default function Step7BreakTime() {
         </p>
 
         {/* Break Time Options */}
-        <div className="flex gap-3 mb-4">
+        <div className="grid grid-cols-2 gap-3 mb-4">
           {BREAK_OPTIONS.map((minutes) => (
             <button
               key={minutes}
               onClick={() => handleSelect(minutes)}
               className={clsx(
-                'flex-1 py-4 rounded-2xl font-semibold text-[17px] transition-colors',
+                'py-4 rounded-2xl font-semibold text-[17px] transition-colors',
                 data.breakMinutes === minutes && !showCustom
                   ? 'bg-blue-500 text-white'
                   : 'bg-gray-100 text-gray-700'
               )}
             >
-              {minutes}분
+              {minutes === 0 ? '없음' : `${minutes}분`}
             </button>
           ))}
           <button
             onClick={handleCustom}
             className={clsx(
-              'flex-1 py-4 rounded-2xl font-semibold text-[17px] transition-colors',
+              'py-4 rounded-2xl font-semibold text-[17px] transition-colors col-span-2',
               showCustom ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700'
             )}
           >
