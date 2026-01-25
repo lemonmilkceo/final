@@ -316,9 +316,15 @@ export default function EmployerDashboard({
         </header>
       ) : (
         /* 기본 헤더 */
-        <header className="bg-white px-5 py-4 sticky top-0 z-40 safe-top">
-          <div className="flex items-center justify-between">
-            <span className="text-[14px] text-gray-500">환영합니다</span>
+        <header className="bg-white px-5 sticky top-0 z-40 safe-top">
+          <div className="h-14 flex items-center justify-between">
+            {/* 좌측: 빈 공간 (균형을 위해) */}
+            <div className="w-10" />
+            
+            {/* 중앙: 서비스명 */}
+            <span className="text-[17px] font-bold text-gray-900">싸인해주세요</span>
+            
+            {/* 우측: 알림 + 메뉴 */}
             <div className="flex items-center gap-2">
               {/* 알림 */}
               <button
@@ -351,19 +357,20 @@ export default function EmployerDashboard({
       <div className="px-5">
         {/* 닉네임 + 크레딧 (편집 모드 아닐 때만) */}
         {!isEditMode && (
-          <>
-            <h1 className="text-[28px] font-bold text-gray-900 mt-2 mb-3">
-              {profile.name}님 👋
+          <div className="mb-6">
+            <p className="text-[15px] text-gray-500">안녕하세요,</p>
+            <h1 className="text-[26px] font-bold text-gray-900">
+              {profile.name} 👋
             </h1>
             
             {/* 크레딧 뱃지 */}
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 rounded-full mb-6">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 rounded-full mt-3">
               <span className="text-amber-500">🎟️</span>
               <span className="text-[14px] font-semibold text-amber-700">
                 {credits}건 남음
               </span>
             </div>
-          </>
+          </div>
         )}
 
         {/* 새 계약서 작성 버튼 */}

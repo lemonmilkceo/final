@@ -238,12 +238,17 @@ export default function WorkerDashboard({
         {completedContracts.length > 0 && (
           <section className="mb-6">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-[16px] font-semibold text-gray-900">
-                체결된 계약서
-              </h2>
-              <span className="text-[13px] text-gray-400">
-                {completedContracts.length}건
-              </span>
+              <div className="flex items-center gap-2">
+                <h2 className="text-[16px] font-semibold text-gray-900">
+                  체결된 계약서
+                </h2>
+                <span className="text-[13px] text-gray-400">
+                  ({completedContracts.length}건)
+                </span>
+              </div>
+              <button className="text-[14px] text-blue-500 font-medium">
+                편집
+              </button>
             </div>
             <div className="space-y-3">
               {completedContracts.map((contract) => (
