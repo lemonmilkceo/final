@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import WorkerSignPage from './worker-sign';
+import Link from 'next/link';
 
 interface SignPageProps {
   params: Promise<{ token: string }>;
@@ -79,17 +80,52 @@ export default async function SignPage({ params }: SignPageProps) {
 
   // 이미 완료된 계약서
   if (contract.status === 'completed') {
+    // 로그인 상태면 계약서 상세로 바로 이동 가능
+    const isContractOwner = user && contract.worker_id === user.id;
+    
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center">
         <span className="text-6xl mb-4">✅</span>
         <h1 className="text-[22px] font-bold text-gray-900 mb-2">
-          이미 서명된 계약서예요
+          서명이 완료된 계약서예요
         </h1>
-        <p className="text-[15px] text-gray-500">
-          계약서 확인이 필요하면
-          <br />
-          앱에 로그인해주세요
+        <p className="text-[15px] text-gray-500 mb-8">
+          {isContractOwner 
+            ? '아래 버튼을 눌러 계약서를 확인하세요'
+            : '로그인하면 계약서를 확인할 수 있어요'}
         </p>
+        
+        <div className="w-full max-w-xs space-y-3">
+          {isContractOwner ? (
+            <Link
+              href={`/worker/contract/${contract.id}`}
+              className="block w-full py-4 rounded-2xl bg-blue-500 text-white font-semibold text-[16px] text-center"
+            >
+              계약서 확인하기 📄
+            </Link>
+          ) : isLoggedIn ? (
+            <Link
+              href="/worker"
+              className="block w-full py-4 rounded-2xl bg-blue-500 text-white font-semibold text-[16px] text-center"
+            >
+              내 계약서 목록 보기
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="block w-full py-4 rounded-2xl bg-[#FEE500] text-[#3C1E1E] font-semibold text-[16px] text-center"
+            >
+              카카오로 로그인하기
+            </Link>
+          )}
+          
+          <Link
+            href="/"
+            className="block w-full py-4 rounded-2xl bg-gray-100 text-gray-700 font-semibold text-[16px] text-center"
+          >
+            홈으로 가기
+          </Link>
+        </div>
       </div>
     );
   }
