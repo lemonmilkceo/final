@@ -108,8 +108,10 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('PDF 생성 오류:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('PDF 생성 상세 오류:', errorMessage);
     return NextResponse.json(
-      { error: 'PDF 생성에 실패했어요' },
+      { error: 'PDF 생성에 실패했어요', details: errorMessage },
       { status: 500 }
     );
   }

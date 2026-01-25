@@ -8,20 +8,27 @@ import {
   Font,
 } from '@react-pdf/renderer';
 
-// 한글 폰트 등록 (Noto Sans KR)
-Font.register({
-  family: 'NotoSansKR',
-  fonts: [
-    {
-      src: 'https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NotoSansKR-Regular.woff',
-      fontWeight: 'normal',
-    },
-    {
-      src: 'https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NotoSansKR-Bold.woff',
-      fontWeight: 'bold',
-    },
-  ],
-});
+// 한글 폰트 등록 (Noto Sans KR) - Google Fonts 공식 URL 사용
+try {
+  Font.register({
+    family: 'NotoSansKR',
+    fonts: [
+      {
+        src: 'https://fonts.gstatic.com/s/notosanskr/v36/Pby6FmXiEBPT4ITbgNA5CgmOelz5.woff2',
+        fontWeight: 'normal',
+      },
+      {
+        src: 'https://fonts.gstatic.com/s/notosanskr/v36/Pby7FmXiEBPT4ITbgNA5Cgms1lH6.woff2',
+        fontWeight: 'bold',
+      },
+    ],
+  });
+} catch (error) {
+  console.error('Font registration failed:', error);
+}
+
+// 폰트 로딩 실패 시 하이픈 처리 비활성화
+Font.registerHyphenationCallback((word) => [word]);
 
 const styles = StyleSheet.create({
   page: {
