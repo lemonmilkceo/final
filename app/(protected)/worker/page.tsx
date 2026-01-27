@@ -88,8 +88,15 @@ export default async function WorkerDashboardPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const showOnboardingComplete = params.onboarding === 'complete';
   
-  // 게스트 모드 체크
-  const isGuest = await isGuestMode();
+  const supabase = await createClient();
+
+  // 먼저 로그인 여부 확인
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // 로그인되어 있지 않을 때만 게스트 모드 체크
+  const isGuest = !user && await isGuestMode();
   
   if (isGuest) {
     // 게스트 모드: 샘플 데이터 반환
@@ -105,12 +112,6 @@ export default async function WorkerDashboardPage({ searchParams }: PageProps) {
       />
     );
   }
-
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
   if (!user) {
     redirect(ROUTES.LOGIN);
