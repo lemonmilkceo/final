@@ -179,6 +179,27 @@ export default function ContractPreview({
     return '-';
   };
 
+  // 휴일(주휴일) 계산
+  const formatHolidays = () => {
+    const allDays = ['월', '화', '수', '목', '금', '토', '일'];
+    
+    if (!displayData.useWorkDaysPerWeek && displayData.workDays && displayData.workDays.length > 0) {
+      // 특정 요일 선택 시: 선택 안 한 요일이 휴일
+      const holidays = allDays.filter(day => !displayData.workDays?.includes(day));
+      if (holidays.length === 0) return '없음';
+      return holidays.join(', ');
+    }
+    
+    if (displayData.useWorkDaysPerWeek && displayData.workDaysPerWeek) {
+      // 주 N일 선택 시: 7 - N일이 휴일
+      const holidayCount = 7 - displayData.workDaysPerWeek;
+      if (holidayCount <= 0) return '없음';
+      return `주 ${holidayCount}일`;
+    }
+    
+    return '-';
+  };
+
   const handleSignAndSend = async () => {
     // 게스트 모드에서는 회원가입 안내 팝업 표시
     if (isGuestMode) {
@@ -328,6 +349,7 @@ export default function ContractPreview({
         : `${displayData.startDate} ~`,
     },
     { label: '근무요일', value: formatWorkDays() },
+    { label: '휴일', value: formatHolidays() },
     {
       label: '근무시간',
       value: `${displayData.workStartTime} ~ ${displayData.workEndTime}`,
@@ -340,6 +362,11 @@ export default function ContractPreview({
       label: '사업장 규모',
       value: displayData.businessSize === 'under_5' ? '5인 미만' : '5인 이상',
     },
+    // 5인 이상 사업장만 표시
+    ...(displayData.businessSize === 'over_5' ? [
+      { label: '연차휴가', value: '근로기준법 제60조에 따라 부여' },
+      { label: '가산수당', value: '연장·야간·휴일 근로 시 50% 이상 가산' },
+    ] : []),
   ];
 
   // AI 검토 요청

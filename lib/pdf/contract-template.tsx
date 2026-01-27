@@ -158,6 +158,27 @@ export function ContractPDFDocument({
     return '-';
   };
 
+  // 휴일(주휴일) 계산
+  const formatHolidays = () => {
+    const allDays = ['월', '화', '수', '목', '금', '토', '일'];
+    
+    if (contract.workDays && contract.workDays.length > 0) {
+      // 특정 요일 선택 시: 선택 안 한 요일이 휴일
+      const holidays = allDays.filter(day => !contract.workDays?.includes(day));
+      if (holidays.length === 0) return '없음';
+      return holidays.join(', ');
+    }
+    
+    if (contract.workDaysPerWeek) {
+      // 주 N일 선택 시: 7 - N일이 휴일
+      const holidayCount = 7 - contract.workDaysPerWeek;
+      if (holidayCount <= 0) return '없음';
+      return `주 ${holidayCount}일`;
+    }
+    
+    return '-';
+  };
+
   // 급여 정보 포맷팅
   const formatWage = () => {
     if (contract.wageType === 'monthly' && contract.monthlyWage) {
@@ -230,6 +251,10 @@ export function ContractPDFDocument({
             <Text style={styles.label}>업무 내용</Text>
             <Text style={styles.value}>{contract.jobDescription}</Text>
           </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>휴일</Text>
+            <Text style={styles.value}>{formatHolidays()}</Text>
+          </View>
         </View>
 
         {/* 급여 정보 */}
@@ -245,6 +270,18 @@ export function ContractPDFDocument({
               {contract.businessSize === 'under_5' ? '5인 미만' : '5인 이상'}
             </Text>
           </View>
+          {contract.businessSize === 'over_5' && (
+            <>
+              <View style={styles.row}>
+                <Text style={styles.label}>연차휴가</Text>
+                <Text style={styles.value}>근로기준법 제60조에 따라 부여</Text>
+              </View>
+              <View style={styles.row}>
+                <Text style={styles.label}>가산수당</Text>
+                <Text style={styles.value}>연장·야간·휴일 근로 시 통상임금의 50% 이상 가산</Text>
+              </View>
+            </>
+          )}
         </View>
 
         {/* 사업자 정보 */}

@@ -212,6 +212,27 @@ export default function WorkerSignPage({
     return '-';
   };
 
+  // 휴일(주휴일) 계산
+  const formatHolidays = () => {
+    const allDays = ['월', '화', '수', '목', '금', '토', '일'];
+    
+    if (contract.work_days && contract.work_days.length > 0 && !contract.work_days_per_week) {
+      // 특정 요일 선택 시: 선택 안 한 요일이 휴일
+      const holidays = allDays.filter(day => !contract.work_days?.includes(day));
+      if (holidays.length === 0) return '없음';
+      return holidays.join(', ');
+    }
+    
+    if (contract.work_days_per_week) {
+      // 주 N일 선택 시: 7 - N일이 휴일
+      const holidayCount = 7 - contract.work_days_per_week;
+      if (holidayCount <= 0) return '없음';
+      return `주 ${holidayCount}일`;
+    }
+    
+    return '-';
+  };
+
   // 정보 입력 유효성 검사
   const isDetailsValid = () => {
     const fullSsn = ssnFront + ssnBack;
@@ -300,6 +321,7 @@ export default function WorkerSignPage({
         : `${contract.start_date} ~`,
     },
     { label: '근무요일', value: formatWorkDays() },
+    { label: '휴일', value: formatHolidays() },
     {
       label: '근무시간',
       value: `${contract.work_start_time} ~ ${contract.work_end_time}`,

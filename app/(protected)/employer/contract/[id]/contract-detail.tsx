@@ -187,6 +187,27 @@ export default function ContractDetail({
     return '-';
   };
 
+  // 휴일(주휴일) 계산
+  const formatHolidays = () => {
+    const allDays = ['월', '화', '수', '목', '금', '토', '일'];
+    
+    if (contract.workDays && contract.workDays.length > 0) {
+      // 특정 요일 선택 시: 선택 안 한 요일이 휴일
+      const holidays = allDays.filter(day => !contract.workDays?.includes(day));
+      if (holidays.length === 0) return '없음';
+      return holidays.join(', ');
+    }
+    
+    if (contract.workDaysPerWeek) {
+      // 주 N일 선택 시: 7 - N일이 휴일
+      const holidayCount = 7 - contract.workDaysPerWeek;
+      if (holidayCount <= 0) return '없음';
+      return `주 ${holidayCount}일`;
+    }
+    
+    return '-';
+  };
+
   const handleDelete = async () => {
     if (isGuestMode) {
       setToastMessage('게스트 모드에서는 삭제할 수 없어요');
@@ -331,6 +352,7 @@ export default function ContractDetail({
         : `${formatDate(contract.startDate)} ~`,
     },
     { label: '근무요일', value: formatWorkDays() },
+    { label: '휴일', value: formatHolidays() },
     {
       label: '근무시간',
       value: `${contract.workStartTime} ~ ${contract.workEndTime}`,
@@ -339,6 +361,11 @@ export default function ContractDetail({
     { label: '근무장소', value: contract.workLocation },
     { label: '업무내용', value: contract.jobDescription || '-' },
     { label: '급여일', value: formatPayDay() },
+    // 5인 이상 사업장만 표시
+    ...(contract.businessSize === 'over_5' ? [
+      { label: '연차휴가', value: '근로기준법 제60조에 따라 부여' },
+      { label: '가산수당', value: '연장·야간·휴일 근로 시 50% 이상 가산' },
+    ] : []),
   ];
 
   return (
