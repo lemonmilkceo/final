@@ -59,6 +59,7 @@ export function initKakao(): boolean {
 export function shareContractViaKakao(params: {
   workerName: string;
   shareUrl: string;
+  workplaceName?: string;
   employerName?: string;
 }): boolean {
   if (typeof window === 'undefined' || !window.Kakao) {
@@ -71,14 +72,17 @@ export function shareContractViaKakao(params: {
     if (!initialized) return false;
   }
 
-  const { workerName, shareUrl, employerName } = params;
+  const { workerName, shareUrl, workplaceName, employerName } = params;
+
+  // 사업장명 우선, 없으면 사업자 이름, 없으면 기본값
+  const senderName = workplaceName || employerName || '사업주';
 
   try {
     window.Kakao.Share.sendDefault({
       objectType: 'feed',
       content: {
         title: '📝 근로계약서가 도착했어요',
-        description: `${employerName || '사업주'}님이 ${workerName}님에게 근로계약서를 보냈어요. 내용을 확인하고 서명해주세요.`,
+        description: `${senderName}에서 ${workerName}님에게 근로계약서를 보냈어요. 내용을 확인하고 서명해주세요.`,
         imageUrl: `${process.env.NEXT_PUBLIC_APP_URL}/images/og-contract.png`,
         link: {
           mobileWebUrl: shareUrl,

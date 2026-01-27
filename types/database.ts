@@ -131,12 +131,14 @@ export type Database = {
           work_end_time: string
           work_location: string
           work_start_time: string
+          worker_account_encrypted: string | null
+          worker_bank_name: string | null
           worker_id: string | null
           worker_name: string
           worker_phone: string | null
           worker_ssn_encrypted: string | null
-          worker_bank_name: string | null
-          worker_account_encrypted: string | null
+          workplace_id: string | null
+          workplace_name: string | null
         }
         Insert: {
           break_minutes: number
@@ -167,12 +169,14 @@ export type Database = {
           work_end_time: string
           work_location: string
           work_start_time: string
+          worker_account_encrypted?: string | null
+          worker_bank_name?: string | null
           worker_id?: string | null
           worker_name: string
           worker_phone?: string | null
           worker_ssn_encrypted?: string | null
-          worker_bank_name?: string | null
-          worker_account_encrypted?: string | null
+          workplace_id?: string | null
+          workplace_name?: string | null
         }
         Update: {
           break_minutes?: number
@@ -203,12 +207,14 @@ export type Database = {
           work_end_time?: string
           work_location?: string
           work_start_time?: string
+          worker_account_encrypted?: string | null
+          worker_bank_name?: string | null
           worker_id?: string | null
           worker_name?: string
           worker_phone?: string | null
           worker_ssn_encrypted?: string | null
-          worker_bank_name?: string | null
-          worker_account_encrypted?: string | null
+          workplace_id?: string | null
+          workplace_name?: string | null
         }
         Relationships: [
           {
@@ -230,6 +236,13 @@ export type Database = {
             columns: ["worker_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_workplace_id_fkey"
+            columns: ["workplace_id"]
+            isOneToOne: false
+            referencedRelation: "workplaces"
             referencedColumns: ["id"]
           },
         ]
@@ -466,6 +479,51 @@ export type Database = {
         }
         Relationships: []
       }
+      sensitive_info_logs: {
+        Row: {
+          accessed_at: string
+          contract_id: string
+          id: string
+          info_type: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accessed_at?: string
+          contract_id: string
+          id?: string
+          info_type: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accessed_at?: string
+          contract_id?: string
+          id?: string
+          info_type?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sensitive_info_logs_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sensitive_info_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       signatures: {
         Row: {
           contract_id: string
@@ -591,6 +649,41 @@ export type Database = {
           {
             foreignKeyName: "worker_hidden_contracts_worker_id_fkey"
             columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workplaces: {
+        Row: {
+          address: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workplaces_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

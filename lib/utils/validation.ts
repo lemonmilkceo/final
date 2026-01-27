@@ -44,7 +44,13 @@ export function formatPhone(phone: string): string {
 
 // 계약서 폼 스키마
 export const contractFormSchema = z.object({
+  // Step 1: 사업장
+  workplaceId: z.string().nullable(),
+  workplaceName: z.string().min(1, '사업장명을 입력해주세요'),
+  workLocation: z.string().min(1, '근무 장소를 입력해주세요'),
+  // Step 2: 사업장 규모
   businessSize: businessSizeSchema,
+  // Step 3: 근로자 정보
   workerName: z
     .string()
     .min(2, '이름은 2자 이상 입력해주세요')
@@ -54,23 +60,28 @@ export const contractFormSchema = z.object({
     .string()
     .min(10, '휴대폰 번호를 입력해주세요')
     .regex(phoneRegex, '올바른 휴대폰 번호를 입력해주세요'),
+  // Step 4: 급여
   wageType: wageTypeSchema,
   hourlyWage: z.number().nullable(),
   monthlyWage: z.number().nullable(),
   includesWeeklyAllowance: z.boolean(),
+  // Step 5: 근무기간
   startDate: z.string().min(1, '시작일을 선택해주세요'),
   endDate: z.string().nullable(),
   hasNoEndDate: z.boolean(),
+  // Step 6: 근무요일
   workDays: z.array(z.string()),
   workDaysPerWeek: z.number().nullable(),
   useWorkDaysPerWeek: z.boolean(),
+  // Step 7: 근무시간
   workStartTime: z.string().min(1, '시작 시간을 선택해주세요'),
   workEndTime: z.string().min(1, '종료 시간을 선택해주세요'),
+  // Step 8: 휴게시간
   breakMinutes: z.number().min(0, '휴게시간은 0분 이상이어야 해요'),
-  workLocation: z.string().min(1, '근무 장소를 입력해주세요'),
+  // Step 9: 업무 + 급여일
   businessType: businessTypeSchema,
-  jobDescription: z.string().min(1, '업무 내용을 입력해주세요'),
-  payDay: z.number().min(1).max(31, '1~31일 사이로 입력해주세요'),
+  jobDescription: z.string(),
+  payDay: z.number().min(0).max(31, '1~31일 사이로 입력해주세요'),
   paymentTiming: paymentTimingSchema,
   isLastDayPayment: z.boolean(),
 }).refine(
@@ -88,6 +99,8 @@ export const contractFormSchema = z.object({
 
 // 계약서 생성 스키마 (DB 저장용)
 export const createContractSchema = z.object({
+  workplace_id: z.string().nullable(),
+  workplace_name: z.string().nullable(),
   worker_name: z
     .string()
     .min(2)
@@ -106,8 +119,8 @@ export const createContractSchema = z.object({
   work_end_time: z.string(),
   break_minutes: z.number().min(0),
   work_location: z.string().min(1),
-  job_description: z.string().min(1),
-  pay_day: z.number().min(1).max(31),
+  job_description: z.string(),
+  pay_day: z.number().min(0).max(31),
   payment_timing: paymentTimingSchema,
   is_last_day_payment: z.boolean(),
   business_size: businessSizeSchema,
@@ -119,6 +132,8 @@ export type CreateContractInput = z.infer<typeof createContractSchema>;
 // 폼 데이터를 DB 스키마로 변환
 export function transformFormToDbSchema(formData: ContractFormInput): CreateContractInput {
   return {
+    workplace_id: formData.workplaceId,
+    workplace_name: formData.workplaceName || null,
     worker_name: formData.workerName,
     worker_phone: normalizePhone(formData.workerPhone),
     wage_type: formData.wageType,
@@ -133,7 +148,7 @@ export function transformFormToDbSchema(formData: ContractFormInput): CreateCont
     work_end_time: formData.workEndTime,
     break_minutes: formData.breakMinutes,
     work_location: formData.workLocation,
-    job_description: formData.jobDescription,
+    job_description: formData.jobDescription || '',
     pay_day: formData.isLastDayPayment ? 31 : formData.payDay,
     payment_timing: formData.paymentTiming,
     is_last_day_payment: formData.isLastDayPayment,

@@ -122,6 +122,7 @@ export default function ContractPreview({
   // 표시할 데이터 결정 (새 계약서면 store, 아니면 DB)
   const displayData = isNew
     ? {
+        workplaceName: formData.workplaceName,
         workerName: formData.workerName,
         hourlyWage: formData.hourlyWage || 0,
         includesWeeklyAllowance: formData.includesWeeklyAllowance,
@@ -139,6 +140,7 @@ export default function ContractPreview({
         businessSize: formData.businessSize,
       }
     : {
+        workplaceName: (contract as { workplace_name?: string })?.workplace_name || '',
         workerName: contract?.worker_name || '',
         hourlyWage: contract?.hourly_wage || 0,
         includesWeeklyAllowance: contract?.includes_weekly_allowance || false,
@@ -300,6 +302,7 @@ export default function ContractPreview({
   };
 
   const contractItems = [
+    { label: '사업장', value: displayData.workplaceName || '-' },
     { label: '근로자', value: displayData.workerName },
     {
       label: '시급',
@@ -318,8 +321,8 @@ export default function ContractPreview({
     },
     { label: '휴게시간', value: `${displayData.breakMinutes}분` },
     { label: '근무장소', value: displayData.workLocation },
-    { label: '업무내용', value: displayData.jobDescription },
-    { label: '급여일', value: `매월 ${displayData.payDay}일` },
+    { label: '업무내용', value: displayData.jobDescription || '(업종 기반)' },
+    { label: '급여일', value: displayData.payDay === 0 ? '매월 말일' : `매월 ${displayData.payDay}일` },
     {
       label: '사업장 규모',
       value: displayData.businessSize === 'under_5' ? '5인 미만' : '5인 이상',
@@ -406,6 +409,7 @@ export default function ContractPreview({
     const success = shareContractViaKakao({
       workerName: displayData.workerName,
       shareUrl: fullShareUrl,
+      workplaceName: displayData.workplaceName,
       employerName,
     });
 
