@@ -90,7 +90,15 @@ const MenuSheet: React.FC<MenuSheetProps> = ({
         router.push(`/${newRole}`);
       } else {
         // 로그인 사용자: DB 업데이트
-        await switchRole(newRole);
+        const result = await switchRole(newRole);
+        
+        if (result.success && result.redirectTo) {
+          handleClose();
+          router.push(result.redirectTo);
+        } else if (!result.success) {
+          console.error('역할 전환 실패:', result.error);
+          setIsSwitching(false);
+        }
       }
     } catch (error) {
       console.error('역할 전환 실패:', error);

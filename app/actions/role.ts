@@ -1,16 +1,22 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 
 export type UserRole = 'employer' | 'worker';
 
+interface SwitchRoleResult {
+  success: boolean;
+  redirectTo?: string;
+  error?: string;
+}
+
 /**
  * 사용자 역할 전환
  * @param newRole 전환할 역할
+ * @returns 성공 여부와 리다이렉트 경로
  */
-export async function switchRole(newRole: UserRole) {
+export async function switchRole(newRole: UserRole): Promise<SwitchRoleResult> {
   const supabase = await createClient();
 
   const {
@@ -19,7 +25,7 @@ export async function switchRole(newRole: UserRole) {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    throw new Error('로그인이 필요합니다.');
+    return { success: false, error: '로그인이 필요합니다.' };
   }
 
   // 현재 역할 확인
@@ -31,7 +37,7 @@ export async function switchRole(newRole: UserRole) {
 
   if (profile?.role === newRole) {
     // 이미 같은 역할이면 해당 대시보드로 이동만
-    redirect(`/${newRole}`);
+    return { success: true, redirectTo: `/${newRole}` };
   }
 
   // 역할 업데이트
@@ -41,7 +47,7 @@ export async function switchRole(newRole: UserRole) {
     .eq('id', user.id);
 
   if (updateError) {
-    throw new Error('역할 전환에 실패했습니다.');
+    return { success: false, error: '역할 전환에 실패했습니다.' };
   }
 
   // 캐시 무효화
@@ -49,8 +55,8 @@ export async function switchRole(newRole: UserRole) {
   revalidatePath('/employer');
   revalidatePath('/worker');
 
-  // 새 역할 대시보드로 리다이렉트
-  redirect(`/${newRole}`);
+  // 성공 - 클라이언트에서 리다이렉트 처리
+  return { success: true, redirectTo: `/${newRole}` };
 }
 
 /**

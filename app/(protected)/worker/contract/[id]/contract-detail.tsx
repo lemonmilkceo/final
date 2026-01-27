@@ -8,10 +8,9 @@ import SignatureCanvas from '@/components/contract/SignatureCanvas';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Toast from '@/components/ui/Toast';
 import Badge from '@/components/ui/Badge';
-import Card from '@/components/ui/Card';
 import ContractPDF from '@/components/contract/ContractPDF';
 import { signContractAsWorker } from './actions';
-import { formatCurrency, formatDday } from '@/lib/utils/format';
+import { formatCurrency, formatDate, formatDday } from '@/lib/utils/format';
 import { generatePDF, getContractPDFFilename } from '@/lib/utils/pdf';
 import clsx from 'clsx';
 import type { ContractStatus } from '@/types';
@@ -67,7 +66,6 @@ export default function WorkerContractDetail({
   const [error, setError] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const [showFullContract, setShowFullContract] = useState(false);
   
   // PDF 관련 상태
   const pdfRef = useRef<HTMLDivElement>(null);
@@ -82,12 +80,15 @@ export default function WorkerContractDetail({
     (s) => s.signer_role === 'employer' && s.signed_at
   );
 
+  // 계약 완료 여부 (양측 서명 완료 또는 status가 completed)
+  const isCompleted = contract.status === 'completed' || (workerSigned && employerSigned);
+
   const formatWorkDays = () => {
-    if (contract.work_days_per_week) {
-      return `주 ${contract.work_days_per_week}일`;
-    }
     if (contract.work_days && contract.work_days.length > 0) {
       return contract.work_days.join(', ');
+    }
+    if (contract.work_days_per_week) {
+      return `주 ${contract.work_days_per_week}일`;
     }
     return '-';
   };
@@ -97,20 +98,51 @@ export default function WorkerContractDetail({
     const allDays = ['월', '화', '수', '목', '금', '토', '일'];
     
     if (contract.work_days && contract.work_days.length > 0 && !contract.work_days_per_week) {
-      // 특정 요일 선택 시: 선택 안 한 요일이 휴일
       const holidays = allDays.filter(day => !contract.work_days?.includes(day));
       if (holidays.length === 0) return '없음';
       return holidays.join(', ');
     }
     
     if (contract.work_days_per_week) {
-      // 주 N일 선택 시: 7 - N일이 휴일
       const holidayCount = 7 - contract.work_days_per_week;
       if (holidayCount <= 0) return '없음';
       return `주 ${holidayCount}일`;
     }
     
     return '-';
+  };
+
+  // 급여 정보 포맷팅
+  const formatWage = () => {
+    if (contract.wage_type === 'monthly' && contract.monthly_wage) {
+      return `월 ${formatCurrency(contract.monthly_wage)}`;
+    }
+    if (contract.hourly_wage) {
+      return `시급 ${formatCurrency(contract.hourly_wage)}${contract.includes_weekly_allowance ? ' (주휴수당 포함)' : ''}`;
+    }
+    return '-';
+  };
+
+  // 급여일 포맷팅
+  const formatPayDay = () => {
+    const timing = contract.payment_timing === 'next_month' ? '익월' : '당월';
+    const day = contract.is_last_day_payment ? '말일' : `${contract.pay_day}일`;
+    return `${timing} ${day}`;
+  };
+
+  // 상태 배지
+  const getStatusBadge = () => {
+    if (isCompleted) {
+      return <Badge variant="complete">서명 완료</Badge>;
+    }
+    switch (contract.status) {
+      case 'pending':
+        return <Badge variant="waiting">서명 대기</Badge>;
+      case 'expired':
+        return <Badge variant="expired">만료됨</Badge>;
+      default:
+        return <Badge variant="pending">작성중</Badge>;
+    }
   };
 
   // PDF 다운로드
@@ -169,181 +201,135 @@ export default function WorkerContractDetail({
     }
   };
 
-  // 급여 정보 포맷팅
-  const formatWage = () => {
-    if (contract.wage_type === 'monthly' && contract.monthly_wage) {
-      return `월 ${formatCurrency(contract.monthly_wage)}`;
-    }
-    if (contract.hourly_wage) {
-      return `시급 ${formatCurrency(contract.hourly_wage)}`;
-    }
-    return '-';
-  };
-
-  // 급여일 포맷팅
-  const formatPayDay = () => {
-    const timing = contract.payment_timing === 'next_month' ? '익월' : '당월';
-    const day = contract.is_last_day_payment ? '말일' : `${contract.pay_day}일`;
-    return `${timing} ${day}`;
-  };
-
-  // 요약 카드 항목
-  const summaryItems = [
-    { label: '급여', value: formatWage(), icon: '💰' },
-    { label: '근무요일', value: formatWorkDays(), icon: '📅' },
-    { label: '휴일', value: formatHolidays(), icon: '🏖️' },
+  // 계약 상세 항목 (사업자 페이지와 동일)
+  const contractItems = [
+    { label: '사업장', value: contract.workplace_name || '-' },
+    { label: '사업자', value: contract.employer?.name || '-' },
+    { label: '근로자', value: contract.worker_name },
+    { label: '급여', value: formatWage() },
+    {
+      label: '근무기간',
+      value: contract.end_date
+        ? `${formatDate(contract.start_date)} ~ ${formatDate(contract.end_date)}`
+        : `${formatDate(contract.start_date)} ~`,
+    },
+    { label: '근무요일', value: formatWorkDays() },
+    { label: '휴일', value: formatHolidays() },
     {
       label: '근무시간',
-      value: `${contract.work_start_time}~${contract.work_end_time}`,
-      icon: '⏰',
+      value: `${contract.work_start_time} ~ ${contract.work_end_time}`,
     },
-    { label: '급여일', value: formatPayDay(), icon: '💵' },
+    { label: '휴게시간', value: `${contract.break_minutes}분` },
+    { label: '근무장소', value: contract.work_location },
+    { label: '업무내용', value: contract.job_description || '-' },
+    { label: '급여일', value: formatPayDay() },
+    // 5인 이상 사업장만 표시
+    ...(contract.business_size === 'over_5' ? [
+      { label: '연차휴가', value: '근로기준법 제60조에 따라 부여' },
+      { label: '가산수당', value: '연장·야간·휴일 근로 시 50% 이상 가산' },
+    ] : []),
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
-      <PageHeader title="계약서 확인" />
+    <div className="min-h-screen bg-gray-50 flex flex-col pb-32">
+      <PageHeader title="계약서 상세" />
 
-      {/* Content */}
-      <div className="flex-1 p-4 pb-40">
-        {/* Employer Info */}
+      <div className="flex-1 p-5">
+        {/* 상태 및 기본 정보 */}
         <div className="bg-white rounded-2xl p-5 mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-              <span className="text-2xl">👔</span>
-            </div>
-            <div>
-              <p className="text-[16px] font-semibold text-gray-900">
-                {contract.employer?.name || '사장님'}
-              </p>
-              <p className="text-[13px] text-gray-500">
-                {contract.work_location}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* D-day Badge */}
-        {contract.expires_at && contract.status === 'pending' && (
-          <div className="bg-amber-50 rounded-xl p-4 mb-4 flex items-center gap-2">
-            <span>⏳</span>
-            <span className="text-[14px] text-amber-700">
-              서명 마감 {formatDday(contract.expires_at)}
-            </span>
-          </div>
-        )}
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          {summaryItems.map((item, index) => (
-            <Card key={index} variant="default" className="border border-gray-100">
-              <div className="text-center">
-                <span className="text-2xl mb-2 block">{item.icon}</span>
-                <p className="text-[12px] text-gray-500 mb-1">{item.label}</p>
-                <p className="text-[15px] font-semibold text-gray-900">
-                  {item.value}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                <span className="text-2xl">👔</span>
+              </div>
+              <div>
+                <h2 className="text-[18px] font-bold text-gray-900">
+                  {contract.employer?.name || '사장님'}
+                </h2>
+                <p className="text-[13px] text-gray-500">
+                  {contract.work_location}
                 </p>
               </div>
-            </Card>
-          ))}
-        </div>
+            </div>
+            {getStatusBadge()}
+          </div>
 
-        {/* Full Contract Toggle */}
-        <button
-          onClick={() => setShowFullContract(!showFullContract)}
-          className="w-full bg-white rounded-xl p-4 flex items-center justify-between mb-4"
-        >
-          <span className="text-[15px] text-gray-700">전체 계약서 보기</span>
-          <svg
-            className={clsx(
-              'w-5 h-5 text-gray-400 transition-transform',
-              showFullContract && 'rotate-180'
-            )}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
-        </button>
+          {/* 만료 정보 */}
+          {contract.status === 'pending' && contract.expires_at && !workerSigned && (
+            <div className="bg-amber-50 rounded-xl p-3 mb-4">
+              <div className="flex items-center gap-2">
+                <span>⏰</span>
+                <span className="text-[14px] text-amber-700">
+                  서명 마감: {formatDday(contract.expires_at)}
+                </span>
+              </div>
+            </div>
+          )}
 
-        {/* Full Contract Details */}
-        {showFullContract && (
-          <div className="bg-white rounded-2xl p-5 mb-4 animate-fade-in">
-            <h3 className="text-[17px] font-bold text-gray-900 text-center mb-4">
-              표준근로계약서
-            </h3>
-            <div className="space-y-3 text-[14px]">
-              <div className="flex justify-between py-2 border-b border-gray-100">
-                <span className="text-gray-500">사업장</span>
-                <span className="text-gray-900">{(contract as { workplace_name?: string }).workplace_name || '-'}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-100">
-                <span className="text-gray-500">근로자</span>
-                <span className="text-gray-900">{contract.worker_name}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-100">
-                <span className="text-gray-500">급여</span>
-                <span className="text-gray-900">
-                  {formatWage()}
-                  {contract.wage_type !== 'monthly' && contract.includes_weekly_allowance && ' (주휴 포함)'}
-                </span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-100">
-                <span className="text-gray-500">근무기간</span>
-                <span className="text-gray-900">
-                  {contract.start_date} ~{' '}
-                  {contract.end_date || '미정'}
-                </span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-100">
-                <span className="text-gray-500">근무시간</span>
-                <span className="text-gray-900">
-                  {contract.work_start_time} ~ {contract.work_end_time}
-                </span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-100">
-                <span className="text-gray-500">휴게시간</span>
-                <span className="text-gray-900">{contract.break_minutes}분</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-100">
-                <span className="text-gray-500">업무내용</span>
-                <span className="text-gray-900 text-right max-w-[60%]">
-                  {contract.job_description}
-                </span>
-              </div>
+          {/* 서명 현황 */}
+          <div className="flex gap-3">
+            <div
+              className={clsx(
+                'flex-1 rounded-xl p-3 text-center',
+                employerSigned ? 'bg-green-50' : 'bg-gray-100'
+              )}
+            >
+              <p className="text-[12px] text-gray-500 mb-1">사업자</p>
+              <p
+                className={clsx(
+                  'text-[14px] font-medium',
+                  employerSigned ? 'text-green-600' : 'text-gray-400'
+                )}
+              >
+                {employerSigned ? '✅ 서명 완료' : '⏳ 대기'}
+              </p>
+            </div>
+            <div
+              className={clsx(
+                'flex-1 rounded-xl p-3 text-center',
+                workerSigned ? 'bg-green-50' : 'bg-gray-100'
+              )}
+            >
+              <p className="text-[12px] text-gray-500 mb-1">근로자</p>
+              <p
+                className={clsx(
+                  'text-[14px] font-medium',
+                  workerSigned ? 'text-green-600' : 'text-gray-400'
+                )}
+              >
+                {workerSigned ? '✅ 서명 완료' : '⏳ 대기'}
+              </p>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Signature Status */}
-        <div className="bg-white rounded-2xl p-5">
-          <h3 className="text-[15px] font-semibold text-gray-900 mb-4">
-            서명 현황
+        {/* 계약 상세 정보 (사업자 페이지와 동일) */}
+        <div className="bg-white rounded-2xl p-5 mb-4">
+          <h3 className="text-[16px] font-semibold text-gray-900 mb-4">
+            계약 내용
           </h3>
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[14px] text-gray-600">사업자 서명</span>
-              {employerSigned ? (
-                <Badge variant="completed">완료</Badge>
-              ) : (
-                <Badge variant="pending">대기중</Badge>
-              )}
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-[14px] text-gray-600">근로자 서명</span>
-              {workerSigned ? (
-                <Badge variant="completed">완료</Badge>
-              ) : (
-                <Badge variant="pending">대기중</Badge>
-              )}
-            </div>
+            {contractItems.map((item, index) => (
+              <div
+                key={index}
+                className="flex justify-between py-2 border-b border-gray-100 last:border-0"
+              >
+                <span className="text-[14px] text-gray-500">{item.label}</span>
+                <span className="text-[14px] font-medium text-gray-900 text-right max-w-[60%]">
+                  {item.value || '-'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 작성일 정보 */}
+        <div className="bg-white rounded-2xl p-5">
+          <div className="flex justify-between py-2">
+            <span className="text-[14px] text-gray-500">계약서 작성일</span>
+            <span className="text-[14px] font-medium text-gray-900">
+              {formatDate(contract.created_at)}
+            </span>
           </div>
         </div>
 
@@ -356,21 +342,35 @@ export default function WorkerContractDetail({
         )}
       </div>
 
-      {/* Bottom CTA */}
-      {!workerSigned && contract.status === 'pending' && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-5 pt-3 pb-4 safe-bottom">
+      {/* 하단 액션 버튼 */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-5 pt-3 pb-4 safe-bottom">
+        {/* 완료된 계약서 - PDF 다운로드 옵션 */}
+        {isCompleted && (
+          <div className="flex justify-center gap-8 mb-4">
+            <button
+              onClick={handleDownloadPDF}
+              className="flex flex-col items-center gap-1"
+            >
+              <span className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-xl">
+                📄
+              </span>
+              <span className="text-[12px] text-gray-500">PDF</span>
+            </button>
+          </div>
+        )}
+
+        {/* 서명 대기 중 - 서명 버튼 */}
+        {!workerSigned && contract.status === 'pending' && (
           <button
             onClick={() => setIsSignatureSheetOpen(true)}
             className="w-full py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg"
           >
             서명하고 계약하기 ✍️
           </button>
-        </div>
-      )}
+        )}
 
-      {/* 완료된 계약서 - PDF 다운로드 */}
-      {(contract.status === 'completed' || (workerSigned && employerSigned)) && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-5 pt-3 pb-4 safe-bottom">
+        {/* 완료된 계약서 - 메인 다운로드 버튼 */}
+        {isCompleted && (
           <button
             onClick={handleDownloadPDF}
             className="w-full py-4 rounded-2xl bg-gray-900 text-white font-semibold text-lg flex items-center justify-center gap-2"
@@ -380,8 +380,8 @@ export default function WorkerContractDetail({
             </svg>
             계약서 PDF 다운로드
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Signature Sheet */}
       <BottomSheet
