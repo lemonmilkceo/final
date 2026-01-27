@@ -290,6 +290,7 @@ export default function WorkerSignPage({
   };
 
   const contractItems = [
+    { label: '사업장', value: (contract as { workplace_name?: string }).workplace_name || '-' },
     { label: '근로자', value: contract.worker_name },
     { label: '급여', value: formatWage() },
     {
@@ -305,7 +306,7 @@ export default function WorkerSignPage({
     },
     { label: '휴게시간', value: `${contract.break_minutes}분` },
     { label: '근무장소', value: contract.work_location },
-    { label: '업무내용', value: contract.job_description },
+    { label: '업무내용', value: contract.job_description || '-' },
     { label: '급여일', value: formatPayDay() },
   ];
 

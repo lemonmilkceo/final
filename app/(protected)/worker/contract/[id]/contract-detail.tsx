@@ -220,6 +220,10 @@ export default function WorkerContractDetail({
             </h3>
             <div className="space-y-3 text-[14px]">
               <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-500">사업장</span>
+                <span className="text-gray-900">{(contract as { workplace_name?: string }).workplace_name || '-'}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-gray-100">
                 <span className="text-gray-500">근로자</span>
                 <span className="text-gray-900">{contract.worker_name}</span>
               </div>

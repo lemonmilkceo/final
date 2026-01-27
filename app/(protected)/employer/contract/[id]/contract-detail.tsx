@@ -22,6 +22,7 @@ interface Signature {
 
 interface ContractData {
   id: string;
+  workplaceName?: string | null;
   workerName: string;
   wageType: 'hourly' | 'monthly';
   hourlyWage: number | null;
@@ -320,6 +321,7 @@ export default function ContractDetail({
   };
 
   const contractItems = [
+    { label: '사업장', value: contract.workplaceName || '-' },
     { label: '근로자', value: contract.workerName },
     { label: '급여', value: formatWage() },
     {
@@ -335,7 +337,7 @@ export default function ContractDetail({
     },
     { label: '휴게시간', value: `${contract.breakMinutes}분` },
     { label: '근무장소', value: contract.workLocation },
-    { label: '업무내용', value: contract.jobDescription },
+    { label: '업무내용', value: contract.jobDescription || '-' },
     { label: '급여일', value: formatPayDay() },
   ];
 
