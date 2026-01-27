@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import PageHeader from '@/components/layout/PageHeader';
 import BottomSheet from '@/components/ui/BottomSheet';
@@ -9,14 +9,17 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Toast from '@/components/ui/Toast';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
+import ContractPDF from '@/components/contract/ContractPDF';
 import { signContractAsWorker } from './actions';
 import { formatCurrency, formatDday } from '@/lib/utils/format';
+import { generatePDF, getContractPDFFilename } from '@/lib/utils/pdf';
 import clsx from 'clsx';
 import type { ContractStatus } from '@/types';
 
 interface ContractDetailData {
   id: string;
   worker_name: string;
+  workplace_name?: string | null;
   wage_type?: string;
   hourly_wage: number | null;
   monthly_wage?: number | null;
@@ -33,8 +36,10 @@ interface ContractDetailData {
   pay_day: number;
   payment_timing?: string;
   is_last_day_payment?: boolean;
+  business_size?: string | null;
   status: ContractStatus;
   expires_at: string | null;
+  created_at: string;
   signatures: {
     id: string;
     signer_role: 'employer' | 'worker';
@@ -63,6 +68,11 @@ export default function WorkerContractDetail({
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [showFullContract, setShowFullContract] = useState(false);
+  
+  // PDF 관련 상태
+  const pdfRef = useRef<HTMLDivElement>(null);
+  const [isPDFGenerating, setIsPDFGenerating] = useState(false);
+  const [showPDFSheet, setShowPDFSheet] = useState(false);
 
   const workerSigned = contract.signatures.some(
     (s) => s.signer_role === 'worker' && s.signed_at
@@ -101,6 +111,35 @@ export default function WorkerContractDetail({
     }
     
     return '-';
+  };
+
+  // PDF 다운로드
+  const handleDownloadPDF = () => {
+    setShowPDFSheet(true);
+  };
+
+  // 실제 PDF 생성 및 다운로드
+  const handleGeneratePDF = async () => {
+    if (!pdfRef.current) {
+      setToastMessage('PDF 생성에 실패했어요');
+      setShowToast(true);
+      return;
+    }
+
+    setIsPDFGenerating(true);
+    try {
+      const filename = getContractPDFFilename(contract.worker_name);
+      await generatePDF(pdfRef.current, { filename });
+      setToastMessage('PDF가 다운로드됐어요! 📄');
+      setShowToast(true);
+      setShowPDFSheet(false);
+    } catch (error) {
+      console.error('PDF 생성 오류:', error);
+      setToastMessage('PDF 생성에 실패했어요. 다시 시도해주세요.');
+      setShowToast(true);
+    } finally {
+      setIsPDFGenerating(false);
+    }
   };
 
   const handleSign = async () => {
@@ -329,6 +368,21 @@ export default function WorkerContractDetail({
         </div>
       )}
 
+      {/* 완료된 계약서 - PDF 다운로드 */}
+      {workerSigned && employerSigned && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-5 pt-3 pb-4 safe-bottom">
+          <button
+            onClick={handleDownloadPDF}
+            className="w-full py-4 rounded-2xl bg-gray-900 text-white font-semibold text-lg flex items-center justify-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            계약서 PDF 다운로드
+          </button>
+        </div>
+      )}
+
       {/* Signature Sheet */}
       <BottomSheet
         isOpen={isSignatureSheetOpen}
@@ -361,6 +415,93 @@ export default function WorkerContractDetail({
             '서명 완료'
           )}
         </button>
+      </BottomSheet>
+
+      {/* PDF 미리보기 시트 */}
+      <BottomSheet
+        isOpen={showPDFSheet}
+        onClose={() => setShowPDFSheet(false)}
+        title="PDF 다운로드"
+      >
+        <div className="space-y-4">
+          {/* PDF 미리보기 영역 */}
+          <div className="bg-gray-50 rounded-2xl p-4 max-h-[50vh] overflow-auto">
+            <div className="transform scale-[0.4] origin-top-left" style={{ width: '250%' }}>
+              <ContractPDF
+                ref={pdfRef}
+                data={{
+                  workplaceName: contract.workplace_name || undefined,
+                  employerName: contract.employer?.name || undefined,
+                  workerName: contract.worker_name,
+                  wageType: (contract.wage_type || 'hourly') as 'hourly' | 'monthly',
+                  hourlyWage: contract.hourly_wage,
+                  monthlyWage: contract.monthly_wage || undefined,
+                  includesWeeklyAllowance: contract.includes_weekly_allowance,
+                  payDay: contract.pay_day,
+                  paymentTiming: (contract.payment_timing || 'current_month') as 'current_month' | 'next_month',
+                  isLastDayPayment: contract.is_last_day_payment || false,
+                  startDate: contract.start_date,
+                  endDate: contract.end_date || undefined,
+                  workDays: contract.work_days || undefined,
+                  workDaysPerWeek: contract.work_days_per_week || undefined,
+                  workStartTime: contract.work_start_time,
+                  workEndTime: contract.work_end_time,
+                  breakMinutes: contract.break_minutes,
+                  workLocation: contract.work_location,
+                  jobDescription: contract.job_description || undefined,
+                  businessSize: (contract.business_size || 'under_5') as 'under_5' | 'over_5',
+                  employerSignature: contract.signatures?.find(s => s.signer_role === 'employer')
+                    ? {
+                        signatureData: contract.signatures.find(s => s.signer_role === 'employer')?.signature_data,
+                        signedAt: contract.signatures.find(s => s.signer_role === 'employer')?.signed_at || undefined,
+                      }
+                    : undefined,
+                  workerSignature: contract.signatures?.find(s => s.signer_role === 'worker')
+                    ? {
+                        signatureData: contract.signatures.find(s => s.signer_role === 'worker')?.signature_data,
+                        signedAt: contract.signatures.find(s => s.signer_role === 'worker')?.signed_at || undefined,
+                      }
+                    : undefined,
+                  createdAt: contract.created_at,
+                }}
+              />
+            </div>
+          </div>
+
+          {/* 안내 문구 */}
+          <div className="bg-blue-50 rounded-xl p-3 flex items-start gap-2">
+            <span className="text-lg">💡</span>
+            <p className="text-[13px] text-blue-700">
+              위 미리보기와 동일한 형식의 PDF 파일이 다운로드됩니다.
+            </p>
+          </div>
+
+          {/* 다운로드 버튼 */}
+          <button
+            onClick={handleGeneratePDF}
+            disabled={isPDFGenerating}
+            className={clsx(
+              'w-full py-4 rounded-2xl font-semibold text-lg flex items-center justify-center gap-2',
+              isPDFGenerating
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                : 'bg-blue-500 text-white active:bg-blue-600'
+            )}
+          >
+            {isPDFGenerating ? (
+              <>
+                <LoadingSpinner variant="button" />
+                PDF 생성 중...
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                PDF 다운로드
+              </>
+            )}
+          </button>
+        </div>
       </BottomSheet>
 
       {/* Toast */}
