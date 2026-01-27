@@ -1,7 +1,7 @@
 # 📊 Database Schema Specification
 ## 싸인해주세요 (SignPlease)
 
-> **버전**: 1.16  
+> **버전**: 1.17  
 > **최종 수정일**: 2026년 1월 27일  
 > **작성자**: Technical PO
 
