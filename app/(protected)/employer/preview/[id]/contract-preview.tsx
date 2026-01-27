@@ -80,6 +80,13 @@ export default function ContractPreview({
   const [showToast, setShowToast] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   
+  // Zustand hydration 처리
+  const [isHydrated, setIsHydrated] = useState(false);
+  
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+  
   // 카카오 SDK 초기화
   const [isKakaoReady, setIsKakaoReady] = useState(false);
   
@@ -418,6 +425,18 @@ export default function ContractPreview({
       setShowToast(true);
     }
   };
+
+  // Zustand hydration 대기 (새 계약서인 경우만)
+  if (isNew && !isHydrated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <PageHeader title="계약서 미리보기" />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
