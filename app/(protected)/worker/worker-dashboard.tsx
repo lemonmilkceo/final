@@ -857,24 +857,7 @@ export default function WorkerDashboard({
         </div>
       )}
 
-      {/* 온보딩 미완료 시 안내 배너 */}
-      {!isOnboardingComplete && !isGuestMode && !isEditMode && !isHiddenTab && (
-        <div className="fixed bottom-20 left-4 right-4 z-30">
-          <button
-            onClick={() => router.push('/worker/onboarding')}
-            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl p-4 shadow-lg flex items-center gap-3"
-          >
-            <span className="text-2xl">💡</span>
-            <div className="flex-1 text-left">
-              <p className="text-[15px] font-semibold">정보를 미리 등록해두세요</p>
-              <p className="text-[13px] text-blue-100">다음 계약할 때 다시 입력 안 해도 돼요</p>
-            </div>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
-      )}
+      {/* 온보딩 배너 제거됨 - 서명 링크에서 정보 입력하므로 불필요 */}
     </div>
   );
 }
