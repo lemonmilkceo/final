@@ -60,6 +60,7 @@ interface ContractPreviewProps {
   contract?: PreviewContract;
   isNew: boolean;
   isGuestMode?: boolean;
+  employerName?: string;
 }
 
 export default function ContractPreview({
@@ -67,6 +68,7 @@ export default function ContractPreview({
   contract,
   isNew,
   isGuestMode = false,
+  employerName,
 }: ContractPreviewProps) {
   const router = useRouter();
   const { data: formData, reset } = useContractFormStore();
@@ -404,6 +406,7 @@ export default function ContractPreview({
     const success = shareContractViaKakao({
       workerName: displayData.workerName,
       shareUrl: fullShareUrl,
+      employerName,
     });
 
     if (!success) {

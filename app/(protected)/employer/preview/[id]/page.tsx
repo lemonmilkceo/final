@@ -34,14 +34,32 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
     redirect(ROUTES.LOGIN);
   }
 
-  // 새 계약서 (store에서 데이터 가져오기)
-  if (id === 'new') {
-    return <ContractPreview contractId={null} isNew={true} isGuestMode={isGuestMode} />;
+  // 게스트 모드에서 기존 계약서 조회는 불가
+  if (isGuestMode && id !== 'new') {
+    notFound();
   }
 
-  // 게스트 모드에서 기존 계약서 조회는 불가
-  if (isGuestMode) {
-    notFound();
+  // 사업자 프로필 조회 (로그인된 사용자만)
+  let employerName: string | undefined;
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('name')
+      .eq('id', user.id)
+      .single();
+    employerName = profile?.name || undefined;
+  }
+
+  // 새 계약서 (store에서 데이터 가져오기)
+  if (id === 'new') {
+    return (
+      <ContractPreview
+        contractId={null}
+        isNew={true}
+        isGuestMode={isGuestMode}
+        employerName={employerName}
+      />
+    );
   }
 
   // 기존 계약서 조회
@@ -66,5 +84,12 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
     notFound();
   }
 
-  return <ContractPreview contractId={id} contract={contract} isNew={false} />;
+  return (
+    <ContractPreview
+      contractId={id}
+      contract={contract}
+      isNew={false}
+      employerName={employerName}
+    />
+  );
 }
