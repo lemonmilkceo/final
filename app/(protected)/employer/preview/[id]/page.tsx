@@ -12,23 +12,26 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
   const { id } = await params;
   const supabase = await createClient();
 
-  // 게스트 모드 체크
-  const cookieStore = await cookies();
-  const guestCookie = cookieStore.get('guest-storage');
-  let isGuestMode = false;
-  if (guestCookie?.value) {
-    try {
-      const decodedValue = decodeURIComponent(guestCookie.value);
-      const parsed = JSON.parse(decodedValue);
-      isGuestMode = parsed.state?.isGuest || false;
-    } catch {
-      isGuestMode = false;
-    }
-  }
-
+  // 먼저 로그인 여부 확인
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // 로그인되어 있지 않을 때만 게스트 모드 체크
+  let isGuestMode = false;
+  if (!user) {
+    const cookieStore = await cookies();
+    const guestCookie = cookieStore.get('guest-storage');
+    if (guestCookie?.value) {
+      try {
+        const decodedValue = decodeURIComponent(guestCookie.value);
+        const parsed = JSON.parse(decodedValue);
+        isGuestMode = parsed.state?.isGuest || false;
+      } catch {
+        isGuestMode = false;
+      }
+    }
+  }
 
   if (!user && !isGuestMode) {
     redirect(ROUTES.LOGIN);

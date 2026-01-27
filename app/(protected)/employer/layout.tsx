@@ -30,18 +30,20 @@ export default async function EmployerLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // 게스트 모드 체크
-  const { isGuest, guestRole } = await isGuestMode();
-  
-  if (isGuest && guestRole === 'employer') {
-    // 게스트 모드 사업자인 경우 인증 없이 통과
-    return <>{children}</>;
-  }
-
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // 로그인되어 있지 않을 때만 게스트 모드 체크
+  if (!user) {
+    const { isGuest, guestRole } = await isGuestMode();
+    
+    if (isGuest && guestRole === 'employer') {
+      // 게스트 모드 사업자인 경우 인증 없이 통과
+      return <>{children}</>;
+    }
+  }
 
   if (!user) {
     redirect(ROUTES.LOGIN);

@@ -31,23 +31,25 @@ export default async function WorkerLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // 게스트 모드 체크
-  const { isGuest, guestRole } = await isGuestMode();
-  
-  if (isGuest && guestRole === 'worker') {
-    // 게스트 모드 근로자인 경우 인증 없이 통과
-    return (
-      <div className="min-h-screen bg-gray-50 pb-20">
-        {children}
-        <BottomNav userRole="worker" />
-      </div>
-    );
-  }
-
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // 로그인되어 있지 않을 때만 게스트 모드 체크
+  if (!user) {
+    const { isGuest, guestRole } = await isGuestMode();
+    
+    if (isGuest && guestRole === 'worker') {
+      // 게스트 모드 근로자인 경우 인증 없이 통과
+      return (
+        <div className="min-h-screen bg-gray-50 pb-20">
+          {children}
+          <BottomNav userRole="worker" />
+        </div>
+      );
+    }
+  }
 
   if (!user) {
     redirect(ROUTES.LOGIN);
