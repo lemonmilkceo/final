@@ -369,7 +369,7 @@ export default function WorkerContractDetail({
       )}
 
       {/* 완료된 계약서 - PDF 다운로드 */}
-      {workerSigned && employerSigned && (
+      {(contract.status === 'completed' || (workerSigned && employerSigned)) && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-5 pt-3 pb-4 safe-bottom">
           <button
             onClick={handleDownloadPDF}
