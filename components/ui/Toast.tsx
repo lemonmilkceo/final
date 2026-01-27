@@ -5,7 +5,7 @@ import clsx from 'clsx';
 
 interface ToastProps {
   message: string;
-  variant?: 'success' | 'error';
+  variant?: 'success' | 'error' | 'info';
   duration?: number;
   onClose?: () => void;
   isVisible: boolean;
@@ -46,11 +46,12 @@ const Toast: React.FC<ToastProps> = ({
         {
           'bg-gray-900 text-white': variant === 'success',
           'bg-red-500 text-white': variant === 'error',
+          'bg-blue-500 text-white': variant === 'info',
         }
       )}
       role="alert"
     >
-      <span>{variant === 'success' ? '✅' : '⚠️'}</span>
+      <span>{variant === 'success' ? '✅' : variant === 'error' ? '⚠️' : '💡'}</span>
       <span className="text-[15px] font-medium">{message}</span>
     </div>
   );

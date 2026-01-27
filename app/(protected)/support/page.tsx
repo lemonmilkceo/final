@@ -32,25 +32,25 @@ export default function SupportPage() {
           </div>
         </Link>
 
-        {/* 1:1 문의하기 */}
-        <Link href={SUPPORT_ROUTES.CHAT}>
+        {/* 이메일 문의하기 */}
+        <a href="mailto:lemonmilkceo@gmail.com?subject=[싸인해주세요] 문의드립니다">
           <div className="bg-white rounded-2xl p-5 shadow-sm active:bg-gray-50 transition-colors">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center">
                 <svg className="w-7 h-7 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
               <div className="flex-1">
-                <h2 className="text-[17px] font-bold text-gray-900">1:1 문의하기</h2>
-                <p className="text-[14px] text-gray-500 mt-0.5">상담원과 채팅으로 문의하세요</p>
+                <h2 className="text-[17px] font-bold text-gray-900">이메일 문의</h2>
+                <p className="text-[14px] text-gray-500 mt-0.5">lemonmilkceo@gmail.com</p>
               </div>
               <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </div>
           </div>
-        </Link>
+        </a>
       </div>
 
       {/* 운영시간 안내 */}

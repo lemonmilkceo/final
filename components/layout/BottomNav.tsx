@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
+import Toast from '@/components/ui/Toast';
 
 interface BottomNavProps {
   userRole: 'employer' | 'worker';
@@ -11,6 +12,13 @@ interface BottomNavProps {
 
 const BottomNav: React.FC<BottomNavProps> = ({ userRole }) => {
   const pathname = usePathname();
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+
+  const handleComingSoon = (feature: string) => {
+    setToastMessage(`${feature} 기능은 곧 출시 예정이에요!`);
+    setShowToast(true);
+  };
 
   const workerNavItems = [
     {
@@ -31,6 +39,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ userRole }) => {
         </svg>
       ),
       label: '홈',
+      comingSoon: false,
     },
     {
       href: '/worker/career',
@@ -50,6 +59,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ userRole }) => {
         </svg>
       ),
       label: '경력',
+      comingSoon: false,
     },
     {
       href: '/worker/chat',
@@ -69,6 +79,8 @@ const BottomNav: React.FC<BottomNavProps> = ({ userRole }) => {
         </svg>
       ),
       label: '채팅',
+      comingSoon: true,
+      comingSoonLabel: '채팅',
     },
     {
       href: '/profile',
@@ -88,39 +100,66 @@ const BottomNav: React.FC<BottomNavProps> = ({ userRole }) => {
         </svg>
       ),
       label: '내 정보',
+      comingSoon: false,
     },
   ];
 
   const navItems = userRole === 'worker' ? workerNavItems : workerNavItems;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 safe-bottom z-40">
-      <div className="flex justify-around items-center h-16">
-        {navItems.map((item) => {
-          const isActive =
-            pathname === item.href ||
-            (item.href !== '/worker' && pathname.startsWith(item.href));
+    <>
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 safe-bottom z-40">
+        <div className="flex justify-around items-center h-16">
+          {navItems.map((item) => {
+            const isActive =
+              pathname === item.href ||
+              (item.href !== '/worker' && pathname.startsWith(item.href));
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex flex-col items-center justify-center flex-1 py-2"
-            >
-              {item.icon(isActive)}
-              <span
-                className={clsx(
-                  'text-[11px] mt-1',
-                  isActive ? 'text-blue-500 font-medium' : 'text-gray-400'
-                )}
+            // 채팅은 토스트로 "준비 중" 안내
+            if (item.comingSoon) {
+              return (
+                <button
+                  key={item.href}
+                  onClick={() => handleComingSoon(item.comingSoonLabel || item.label)}
+                  className="flex flex-col items-center justify-center flex-1 py-2"
+                >
+                  {item.icon(false)}
+                  <span className="text-[11px] mt-1 text-gray-400">
+                    {item.label}
+                  </span>
+                </button>
+              );
+            }
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex flex-col items-center justify-center flex-1 py-2"
               >
-                {item.label}
-              </span>
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
+                {item.icon(isActive)}
+                <span
+                  className={clsx(
+                    'text-[11px] mt-1',
+                    isActive ? 'text-blue-500 font-medium' : 'text-gray-400'
+                  )}
+                >
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+
+      {/* Toast */}
+      <Toast
+        message={toastMessage}
+        variant="info"
+        isVisible={showToast}
+        onClose={() => setShowToast(false)}
+      />
+    </>
   );
 };
 
