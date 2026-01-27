@@ -571,7 +571,7 @@ export default function EmployerDashboard({
           <div className="mb-6 mt-4">
             <p className="text-[15px] text-gray-500">안녕하세요,</p>
             <h1 className="text-[26px] font-bold text-gray-900">
-              {profile.name} 👋
+              {profile.name}님 👋
             </h1>
             
             <div className="flex flex-wrap gap-2 mt-3">
