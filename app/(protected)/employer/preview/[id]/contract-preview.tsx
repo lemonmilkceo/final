@@ -109,6 +109,9 @@ export default function ContractPreview({
   
   // 저장 완료 상태 (공유 링크 복사 후)
   const [isSaveCompleted, setIsSaveCompleted] = useState(false);
+  
+  // 저장된 계약서 데이터 (저장 후 표시용)
+  const [savedContractData, setSavedContractData] = useState<typeof formData | null>(null);
 
   // 카카오 SDK 초기화
   useEffect(() => {
@@ -126,25 +129,26 @@ export default function ContractPreview({
     (s) => s.signer_role === 'employer' && s.signed_at
   );
 
-  // 표시할 데이터 결정 (새 계약서면 store, 아니면 DB)
+  // 표시할 데이터 결정 (저장된 데이터 > store > DB 순서)
+  const sourceData = savedContractData || formData;
   const displayData = isNew
     ? {
-        workplaceName: formData.workplaceName,
-        workerName: formData.workerName,
-        hourlyWage: formData.hourlyWage || 0,
-        includesWeeklyAllowance: formData.includesWeeklyAllowance,
-        startDate: formData.startDate,
-        endDate: formData.endDate,
-        workDays: formData.workDays,
-        workDaysPerWeek: formData.workDaysPerWeek,
-        useWorkDaysPerWeek: formData.useWorkDaysPerWeek,
-        workStartTime: formData.workStartTime,
-        workEndTime: formData.workEndTime,
-        breakMinutes: formData.breakMinutes,
-        workLocation: formData.workLocation,
-        jobDescription: formData.jobDescription,
-        payDay: formData.payDay,
-        businessSize: formData.businessSize,
+        workplaceName: sourceData.workplaceName,
+        workerName: sourceData.workerName,
+        hourlyWage: sourceData.hourlyWage || 0,
+        includesWeeklyAllowance: sourceData.includesWeeklyAllowance,
+        startDate: sourceData.startDate,
+        endDate: sourceData.endDate,
+        workDays: sourceData.workDays,
+        workDaysPerWeek: sourceData.workDaysPerWeek,
+        useWorkDaysPerWeek: sourceData.useWorkDaysPerWeek,
+        workStartTime: sourceData.workStartTime,
+        workEndTime: sourceData.workEndTime,
+        breakMinutes: sourceData.breakMinutes,
+        workLocation: sourceData.workLocation,
+        jobDescription: sourceData.jobDescription,
+        payDay: sourceData.payDay,
+        businessSize: sourceData.businessSize,
       }
     : {
         workplaceName: (contract as { workplace_name?: string })?.workplace_name || '',
@@ -204,6 +208,8 @@ export default function ContractPreview({
         );
 
         if (result.success && result.data) {
+          // 현재 폼 데이터를 저장해두고 스토어 초기화
+          setSavedContractData({ ...formData });
           reset(); // 스토어 초기화
           
           // 공유 URL이 있으면 바로 공유 시트 열기
