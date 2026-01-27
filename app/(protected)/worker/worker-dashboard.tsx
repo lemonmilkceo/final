@@ -115,6 +115,13 @@ export default function WorkerDashboard({
 
   // 숨김 탭인지
   const isHiddenTab = selectedTab === 'hidden';
+  
+  // 숨긴 계약서가 없는데 숨김 탭이면 전체 탭으로 이동
+  useEffect(() => {
+    if (hiddenCount === 0 && selectedTab === 'hidden') {
+      setSelectedTab('all');
+    }
+  }, [hiddenCount, selectedTab]);
 
   // 대기중인 계약서 (서명 필요) - 전체 탭에서만 표시
   const pendingContracts = useMemo(() => {
@@ -244,6 +251,13 @@ export default function WorkerDashboard({
         showToastMessage(`${selectedIds.size}개 계약서가 복구됐어요`, 'success');
         setSelectedIds(new Set());
         setIsEditMode(false);
+        
+        // 모든 숨긴 계약서를 복구했으면 전체 탭으로 이동
+        if (selectedIds.size >= hiddenContracts.length) {
+          setSelectedTab('all');
+        }
+        
+        router.refresh();
       } else {
         showToastMessage(result.error || '복구에 실패했어요', 'error');
       }
