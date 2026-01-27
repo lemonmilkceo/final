@@ -124,12 +124,17 @@ export default async function WorkerDashboardPage({ searchParams }: PageProps) {
     .eq('id', user.id)
     .single();
 
-  // 온보딩 완료 여부 확인
-  const { data: workerDetails } = await supabase
+  // 온보딩 완료 여부 확인 (user_id로 조회)
+  const { data: workerDetails, error: workerDetailsError } = await supabase
     .from('worker_details')
-    .select('id')
+    .select('user_id')
     .eq('user_id', user.id)
     .single();
+
+  // 디버그 로그
+  if (workerDetailsError && workerDetailsError.code !== 'PGRST116') {
+    console.error('Worker details fetch error:', workerDetailsError);
+  }
 
   // 온보딩 미완료 시 - 첫 방문이면 온보딩으로, 아니면 대시보드 유지
   // (건너뛰기를 허용하기 위해 강제 리다이렉트 제거)

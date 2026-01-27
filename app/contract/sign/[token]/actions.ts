@@ -117,7 +117,7 @@ export async function signAsWorker(
       
       // worker_details 테이블에도 저장 (프로필용)
       const ssnHash = hashSSN(workerDetails.ssn);
-      await supabase
+      const { error: workerDetailsError } = await supabase
         .from('worker_details')
         .upsert(
           {
@@ -130,6 +130,11 @@ export async function signAsWorker(
           },
           { onConflict: 'user_id' }
         );
+      
+      if (workerDetailsError) {
+        console.error('Worker details save error:', workerDetailsError);
+        // 저장 실패해도 서명은 계속 진행 (치명적 오류 아님)
+      }
     }
 
     // 서명 레코드 생성 (Base64 Data URL 직접 저장)
