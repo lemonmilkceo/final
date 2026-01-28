@@ -134,9 +134,9 @@ export default function OnboardingPage() {
         <button
           onClick={handleGuest}
           disabled={isPending}
-          className="w-full py-3 text-gray-500 text-[15px] font-medium"
+          className="w-full py-4 rounded-2xl font-semibold text-lg bg-gray-100 text-gray-600 active:bg-gray-200 transition-all"
         >
-          먼저 둘러볼게요 →
+          먼저 둘러볼게요
         </button>
         
         {/* 약관 동의 안내 */}
