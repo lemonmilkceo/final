@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useContractFormStore } from '@/stores/contractFormStore';
 import clsx from 'clsx';
 
-const BREAK_OPTIONS = [0, 30, 60];
+const BREAK_OPTIONS = [0, 30, 60, 120];
 
 export default function Step7BreakTime() {
   const { data, updateData, nextStep, prevStep } = useContractFormStore();
