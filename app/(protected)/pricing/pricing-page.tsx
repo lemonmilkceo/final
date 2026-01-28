@@ -13,7 +13,6 @@ import clsx from 'clsx';
 interface PricingPageProps {
   currentCredits: {
     contract: number;
-    aiReview: number;
   };
   userId: string;
 }
@@ -101,17 +100,10 @@ export default function PricingPage({
               </p>
               <p className="text-[12px] text-gray-400">계약서 작성</p>
             </div>
-            <div className="w-px h-10 bg-gray-200" />
-            <div className="flex-1">
-              <p className="text-[24px] font-bold text-gray-900">
-                {currentCredits.aiReview}
-                <span className="text-[14px] font-normal text-gray-500 ml-1">
-                  건
-                </span>
-              </p>
-              <p className="text-[12px] text-gray-400">AI 검토</p>
-            </div>
           </div>
+          <p className="text-[12px] text-blue-500 mt-3">
+            💡 AI 노무사 검토는 무료로 이용할 수 있어요
+          </p>
         </div>
 
         {/* 상품 목록 */}

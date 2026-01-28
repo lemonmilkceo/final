@@ -22,18 +22,10 @@ export default async function Pricing() {
     .eq('credit_type', 'contract')
     .single();
 
-  const { data: aiCredit } = await supabase
-    .from('credits')
-    .select('amount')
-    .eq('user_id', user.id)
-    .eq('credit_type', 'ai_review')
-    .single();
-
   return (
     <PricingPage
       currentCredits={{
         contract: contractCredit?.amount || 0,
-        aiReview: aiCredit?.amount || 0,
       }}
       userId={user.id}
     />

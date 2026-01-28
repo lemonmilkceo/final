@@ -6,12 +6,10 @@ type GuestRole = 'employer' | 'worker' | null;
 interface GuestState {
   isGuest: boolean;
   guestRole: GuestRole;
-  aiReviewUsed: boolean;
   
   // Actions
   setGuestMode: (role: GuestRole) => void;
   clearGuestMode: () => void;
-  useAIReview: () => void;
 }
 
 // 쿠키 기반 스토리지 (미들웨어에서 접근 가능)
@@ -39,25 +37,17 @@ export const useGuestStore = create<GuestState>()(
     (set) => ({
       isGuest: false,
       guestRole: null,
-      aiReviewUsed: false,
 
       setGuestMode: (role) =>
         set({
           isGuest: true,
           guestRole: role,
-          aiReviewUsed: false,
         }),
 
       clearGuestMode: () =>
         set({
           isGuest: false,
           guestRole: null,
-          aiReviewUsed: false,
-        }),
-
-      useAIReview: () =>
-        set({
-          aiReviewUsed: true,
         }),
     }),
     {

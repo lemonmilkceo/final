@@ -112,7 +112,6 @@ export default async function EmployerDashboardPage() {
         }}
         credits={{
           contract: 5,
-          aiReview: 5,
         }}
         contracts={GUEST_SAMPLE_CONTRACTS}
         folders={[]}
@@ -138,14 +137,6 @@ export default async function EmployerDashboardPage() {
     .select('amount')
     .eq('user_id', user.id)
     .eq('credit_type', 'contract')
-    .single();
-
-  // AI 노무사 크레딧 조회
-  const { data: aiCredit } = await supabase
-    .from('credits')
-    .select('amount')
-    .eq('user_id', user.id)
-    .eq('credit_type', 'ai_review')
     .single();
 
   // 활성 계약서 목록 조회 (삭제되지 않은 것만)
@@ -232,7 +223,6 @@ export default async function EmployerDashboardPage() {
       }}
       credits={{
         contract: contractCredit?.amount || 0,
-        aiReview: aiCredit?.amount || 0,
       }}
       contracts={contracts || []}
       deletedContracts={deletedContracts || []}

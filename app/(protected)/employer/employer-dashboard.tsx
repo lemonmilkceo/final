@@ -73,7 +73,6 @@ interface EmployerDashboardProps {
   };
   credits: {
     contract: number;
-    aiReview: number;
   };
   contracts: DashboardContract[];
   deletedContracts?: DashboardContract[];
@@ -591,15 +590,6 @@ export default function EmployerDashboard({
                 <span className="text-lg">💎</span>
                 <span className="text-[14px] font-semibold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
                   계약서 {credits.contract}건
-                </span>
-              </Link>
-              <Link 
-                href="/pricing"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-full border border-amber-200/50 hover:from-amber-100 hover:to-yellow-100 transition-colors"
-              >
-                <span className="text-lg">⚡️</span>
-                <span className="text-[14px] font-semibold bg-gradient-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent">
-                  AI노무사 {credits.aiReview}건
                 </span>
               </Link>
             </div>

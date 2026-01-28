@@ -138,26 +138,7 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    // AI 크레딧 확인 및 차감
-    const { data: creditResult, error: creditError } = await supabase.rpc(
-      'use_credit',
-      {
-        p_user_id: user.id,
-        p_credit_type: 'ai_review',
-        p_amount: 1,
-        p_description: contractId ? 'AI 노무사 검토' : 'AI 노무사 검토 (미리보기)',
-        p_reference_id: contractId || null,
-      }
-    );
-
-    if (creditError || !creditResult) {
-      return NextResponse.json(
-        { error: 'AI 검토 크레딧이 부족해요' },
-        { status: 402 }
-      );
-    }
-
-    // 기본 검토 로직 (규칙 기반)
+    // 기본 검토 로직 (규칙 기반) - AI 노무사 무료 제공
     const basicReview = performBasicReview(contract);
 
     // OpenAI API 호출 (선택적)
