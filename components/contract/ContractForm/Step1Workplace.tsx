@@ -52,6 +52,9 @@ export default function Step1Workplace() {
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
+  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [editingWorkplace, setEditingWorkplace] = useState<Workplace | null>(null);
   
   // 새 사업장 등록 폼
   const [newName, setNewName] = useState('');
@@ -60,6 +63,7 @@ export default function Step1Workplace() {
   const [isPostcodeOpen, setIsPostcodeOpen] = useState(false);
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Daum Postcode 스크립트 로드
   useEffect(() => {
@@ -101,6 +105,93 @@ export default function Step1Workplace() {
       workplaceName: workplace.name,
       workLocation: workplace.address,
     });
+  };
+
+  const handleEditWorkplace = (workplace: Workplace, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingWorkplace(workplace);
+    setNewName(workplace.name);
+    setNewAddress(workplace.address);
+    setDetailAddress('');
+    setIsEditSheetOpen(true);
+  };
+
+  const handleDeleteWorkplace = (workplace: Workplace, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingWorkplace(workplace);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!editingWorkplace) return;
+    
+    setIsDeleting(true);
+    const supabase = createClient();
+    
+    const { error } = await supabase
+      .from('workplaces')
+      .delete()
+      .eq('id', editingWorkplace.id);
+
+    if (!error) {
+      setWorkplaces(workplaces.filter(w => w.id !== editingWorkplace.id));
+      
+      // 삭제한 사업장이 선택된 상태였으면 선택 해제
+      if (data.workplaceId === editingWorkplace.id) {
+        updateData({
+          workplaceId: null,
+          workplaceName: '',
+          workLocation: '',
+        });
+      }
+    }
+    
+    setIsDeleting(false);
+    setIsDeleteConfirmOpen(false);
+    setEditingWorkplace(null);
+  };
+
+  const handleUpdateWorkplace = async () => {
+    if (!editingWorkplace || !newName.trim() || !newAddress.trim()) return;
+    
+    setIsSaving(true);
+    const supabase = createClient();
+
+    const fullAddress = detailAddress.trim() 
+      ? `${newAddress}, ${detailAddress}` 
+      : newAddress;
+
+    const { data: updatedWorkplace, error } = await supabase
+      .from('workplaces')
+      .update({
+        name: newName.trim(),
+        address: fullAddress,
+      })
+      .eq('id', editingWorkplace.id)
+      .select('id, name, address')
+      .single();
+
+    if (!error && updatedWorkplace) {
+      setWorkplaces(workplaces.map(w => 
+        w.id === editingWorkplace.id ? updatedWorkplace : w
+      ));
+      
+      // 수정한 사업장이 선택된 상태였으면 업데이트
+      if (data.workplaceId === editingWorkplace.id) {
+        updateData({
+          workplaceName: updatedWorkplace.name,
+          workLocation: updatedWorkplace.address,
+        });
+      }
+      
+      setIsEditSheetOpen(false);
+      setEditingWorkplace(null);
+      setNewName('');
+      setNewAddress('');
+      setDetailAddress('');
+    }
+    
+    setIsSaving(false);
   };
 
   const handleOpenPostcode = () => {
@@ -189,36 +280,56 @@ export default function Step1Workplace() {
         {/* 저장된 사업장 목록 */}
         <div className="space-y-3 mb-4">
           {workplaces.map((workplace) => (
-            <button
+            <div
               key={workplace.id}
-              onClick={() => handleSelectWorkplace(workplace)}
               className={clsx(
-                'w-full p-4 rounded-2xl text-left transition-all',
+                'w-full p-4 rounded-2xl transition-all',
                 data.workplaceId === workplace.id
                   ? 'bg-blue-50 border-2 border-blue-500'
                   : 'bg-gray-50 border-2 border-transparent'
               )}
             >
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">🏪</span>
-                <div className="flex-1 min-w-0">
-                  <p className={clsx(
-                    'font-semibold text-[16px] mb-1',
-                    data.workplaceId === workplace.id ? 'text-blue-700' : 'text-gray-900'
-                  )}>
-                    {workplace.name}
-                  </p>
-                  <p className="text-[14px] text-gray-500 truncate">
-                    {workplace.address}
-                  </p>
+              <button
+                onClick={() => handleSelectWorkplace(workplace)}
+                className="w-full text-left"
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">🏪</span>
+                  <div className="flex-1 min-w-0">
+                    <p className={clsx(
+                      'font-semibold text-[16px] mb-1',
+                      data.workplaceId === workplace.id ? 'text-blue-700' : 'text-gray-900'
+                    )}>
+                      {workplace.name}
+                    </p>
+                    <p className="text-[14px] text-gray-500 truncate">
+                      {workplace.address}
+                    </p>
+                  </div>
+                  {data.workplaceId === workplace.id && (
+                    <svg className="w-6 h-6 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  )}
                 </div>
-                {data.workplaceId === workplace.id && (
-                  <svg className="w-6 h-6 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                )}
+              </button>
+              
+              {/* 수정/삭제 버튼 */}
+              <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200">
+                <button
+                  onClick={(e) => handleEditWorkplace(workplace, e)}
+                  className="flex-1 py-2 text-[13px] font-medium text-gray-600 bg-white rounded-xl border border-gray-200 active:bg-gray-50"
+                >
+                  수정
+                </button>
+                <button
+                  onClick={(e) => handleDeleteWorkplace(workplace, e)}
+                  className="flex-1 py-2 text-[13px] font-medium text-red-500 bg-white rounded-xl border border-gray-200 active:bg-red-50"
+                >
+                  삭제
+                </button>
               </div>
-            </button>
+            </div>
           ))}
         </div>
 
@@ -368,6 +479,167 @@ export default function Step1Workplace() {
           >
             {isSaving ? '저장 중...' : '저장하고 선택하기'}
           </button>
+        </div>
+      </BottomSheet>
+
+      {/* 사업장 수정 바텀시트 */}
+      <BottomSheet
+        isOpen={isEditSheetOpen}
+        onClose={() => {
+          setIsEditSheetOpen(false);
+          setEditingWorkplace(null);
+          setNewName('');
+          setNewAddress('');
+          setDetailAddress('');
+          setIsPostcodeOpen(false);
+        }}
+        title="사업장 수정"
+      >
+        <div className="space-y-5">
+          {/* 사업장명 */}
+          <div>
+            <label className="block text-[14px] font-medium text-gray-700 mb-2">
+              사업장명
+            </label>
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="예: 커피하우스 강남점"
+              className="w-full bg-gray-100 rounded-2xl px-5 py-4 text-[17px] text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* 주소 */}
+          <div>
+            <label className="block text-[14px] font-medium text-gray-700 mb-2">
+              주소
+            </label>
+            
+            {!isPostcodeOpen ? (
+              <>
+                <button
+                  onClick={handleOpenPostcode}
+                  className="w-full bg-gray-100 rounded-2xl px-5 py-4 text-left flex items-center justify-between mb-3"
+                >
+                  <span className={clsx(
+                    'text-[17px]',
+                    newAddress ? 'text-gray-900' : 'text-gray-400'
+                  )}>
+                    {newAddress || '주소 검색'}
+                  </span>
+                  <svg
+                    className="w-5 h-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </button>
+
+                {newAddress && (
+                  <input
+                    type="text"
+                    value={detailAddress}
+                    onChange={(e) => setDetailAddress(e.target.value)}
+                    placeholder="상세주소 입력 (예: 2층 201호)"
+                    className="w-full bg-gray-100 rounded-2xl px-5 py-4 text-[17px] text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                )}
+              </>
+            ) : (
+              <div className="relative">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[15px] font-medium text-gray-700">주소 검색</span>
+                  <button
+                    onClick={() => setIsPostcodeOpen(false)}
+                    className="text-[14px] text-gray-500"
+                  >
+                    닫기
+                  </button>
+                </div>
+                <div 
+                  id="daum-postcode-container-edit"
+                  className="border border-gray-200 rounded-2xl overflow-hidden"
+                  style={{ height: '300px' }}
+                  ref={(el) => {
+                    if (el && window.daum && !el.hasChildNodes()) {
+                      new window.daum.Postcode({
+                        oncomplete: handleCompletePostcode,
+                        width: '100%',
+                        height: '100%',
+                      }).embed(el);
+                    }
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* 저장 버튼 */}
+          <button
+            onClick={handleUpdateWorkplace}
+            disabled={!newName.trim() || !newAddress.trim() || isSaving}
+            className={clsx(
+              'w-full py-4 rounded-2xl font-semibold text-lg transition-colors',
+              newName.trim() && newAddress.trim() && !isSaving
+                ? 'bg-blue-500 text-white active:bg-blue-600'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            )}
+          >
+            {isSaving ? '저장 중...' : '수정 완료'}
+          </button>
+        </div>
+      </BottomSheet>
+
+      {/* 삭제 확인 다이얼로그 */}
+      <BottomSheet
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => {
+          setIsDeleteConfirmOpen(false);
+          setEditingWorkplace(null);
+        }}
+        title="사업장 삭제"
+      >
+        <div className="space-y-6">
+          <div className="bg-red-50 rounded-2xl p-4">
+            <div className="flex gap-3">
+              <span className="text-2xl">⚠️</span>
+              <div>
+                <p className="text-[15px] font-medium text-red-800 mb-1">
+                  {editingWorkplace?.name}
+                </p>
+                <p className="text-[14px] text-red-700">
+                  이 사업장을 삭제하시겠어요?
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                setIsDeleteConfirmOpen(false);
+                setEditingWorkplace(null);
+              }}
+              className="flex-1 py-4 rounded-2xl font-semibold text-lg bg-gray-100 text-gray-700"
+            >
+              취소
+            </button>
+            <button
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+              className="flex-1 py-4 rounded-2xl font-semibold text-lg bg-red-500 text-white active:bg-red-600 disabled:opacity-50"
+            >
+              {isDeleting ? '삭제 중...' : '삭제'}
+            </button>
+          </div>
         </div>
       </BottomSheet>
     </>
