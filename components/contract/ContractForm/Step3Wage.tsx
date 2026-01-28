@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useContractFormStore, type WageType } from '@/stores/contractFormStore';
 import clsx from 'clsx';
 import { formatCurrency } from '@/lib/utils/format';
+import BottomSheet from '@/components/ui/BottomSheet';
 
 const MINIMUM_WAGE_2026 = 10360;
 const MINIMUM_WAGE_WITH_WEEKLY_ALLOWANCE = 12432; // 10360 × 1.2
@@ -44,6 +45,7 @@ export default function Step3Wage() {
   const [hourlyDisplayValue, setHourlyDisplayValue] = useState('');
   const [monthlyDisplayValue, setMonthlyDisplayValue] = useState('');
   const [error, setError] = useState('');
+  const [isTooltipOpen, setIsTooltipOpen] = useState(false);
 
   useEffect(() => {
     if (data.hourlyWage) {
@@ -257,6 +259,19 @@ export default function Step3Wage() {
                     주휴수당이란? 일주일에 15시간 이상 근무하는 직원에게 지급하는 유급휴일 수당이에요
                   </p>
 
+                  {/* 툴팁 트리거 */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsTooltipOpen(true);
+                    }}
+                    className="text-[13px] text-blue-500 underline underline-offset-2 decoration-dotted mt-2 flex items-center gap-1"
+                  >
+                    <span>💡</span>
+                    주휴수당 포함 시급이 뭐예요?
+                  </button>
+
                   {data.includesWeeklyAllowance && (
                     <p className="text-[13px] text-blue-600 mt-3 flex items-center gap-1">
                       <span>✓</span>
@@ -270,6 +285,63 @@ export default function Step3Wage() {
             </button>
           </>
         )}
+
+        {/* 주휴수당 포함 시급 설명 바텀시트 */}
+        <BottomSheet
+          isOpen={isTooltipOpen}
+          onClose={() => setIsTooltipOpen(false)}
+          title="💡 주휴수당 포함 시급이란?"
+        >
+          <div className="space-y-4">
+            <p className="text-[15px] text-gray-700 leading-relaxed">
+              쉽게 말해, <span className="font-semibold text-gray-900">근무시간과 관계없이 항상 같은 시급을 주겠다</span>는 뜻이에요.
+            </p>
+
+            {/* 예시 박스 */}
+            <div className="bg-gray-50 rounded-2xl p-4">
+              <p className="text-[14px] font-semibold text-gray-900 mb-3">
+                예시: 시급 12,500원으로 계약했을 때
+              </p>
+              <div className="space-y-2">
+                <div className="flex items-start gap-2">
+                  <span className="text-[13px]">•</span>
+                  <div>
+                    <p className="text-[13px] text-gray-700">
+                      <span className="font-medium">주 10시간 근무</span> → 12,500원 지급
+                    </p>
+                    <p className="text-[12px] text-gray-500">(주휴수당 발생 안 함)</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-[13px]">•</span>
+                  <div>
+                    <p className="text-[13px] text-gray-700">
+                      <span className="font-medium">주 20시간 근무</span> → 12,500원 지급
+                    </p>
+                    <p className="text-[12px] text-gray-500">(주휴수당이 이미 포함된 금액)</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 주의사항 */}
+            <div className="bg-amber-50 rounded-xl p-3 flex items-start gap-2">
+              <span className="text-[14px]">👉</span>
+              <p className="text-[13px] text-amber-700 leading-relaxed">
+                이 옵션을 선택하면 최저시급 기준이{' '}
+                <span className="font-bold">{formatCurrency(MINIMUM_WAGE_WITH_WEEKLY_ALLOWANCE)}</span>으로 올라가요
+              </p>
+            </div>
+
+            {/* 확인 버튼 */}
+            <button
+              onClick={() => setIsTooltipOpen(false)}
+              className="w-full py-4 rounded-2xl bg-blue-500 text-white font-semibold text-[16px] active:bg-blue-600 transition-colors"
+            >
+              확인했어요
+            </button>
+          </div>
+        </BottomSheet>
 
         {/* 월급 입력 */}
         {data.wageType === 'monthly' && (
