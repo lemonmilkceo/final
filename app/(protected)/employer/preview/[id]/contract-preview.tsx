@@ -142,7 +142,9 @@ export default function ContractPreview({
     ? {
         workplaceName: sourceData.workplaceName,
         workerName: sourceData.workerName,
+        wageType: sourceData.wageType || 'hourly',
         hourlyWage: sourceData.hourlyWage || 0,
+        monthlyWage: sourceData.monthlyWage || 0,
         includesWeeklyAllowance: sourceData.includesWeeklyAllowance,
         startDate: sourceData.startDate,
         endDate: sourceData.endDate,
@@ -160,7 +162,9 @@ export default function ContractPreview({
     : {
         workplaceName: (contract as { workplace_name?: string })?.workplace_name || '',
         workerName: contract?.worker_name || '',
+        wageType: (contract as { wage_type?: string })?.wage_type || 'hourly',
         hourlyWage: contract?.hourly_wage || 0,
+        monthlyWage: (contract as { monthly_wage?: number })?.monthly_wage || 0,
         includesWeeklyAllowance: contract?.includes_weekly_allowance || false,
         startDate: contract?.start_date || '',
         endDate: contract?.end_date,
@@ -342,12 +346,23 @@ export default function ContractPreview({
     }
   };
 
+  // 급여 표시 포맷
+  const formatWage = () => {
+    const isMonthly = displayData.wageType === 'monthly';
+    const wageAmount = isMonthly ? displayData.monthlyWage : displayData.hourlyWage;
+    const wageLabel = isMonthly ? '월급' : '시급';
+    const weeklyAllowanceText = displayData.includesWeeklyAllowance ? ' (주휴수당 포함)' : '';
+    return { label: wageLabel, value: `${formatCurrency(wageAmount)}${weeklyAllowanceText}` };
+  };
+
+  const wageInfo = formatWage();
+
   const contractItems = [
     { label: '사업장', value: displayData.workplaceName || '-' },
     { label: '근로자', value: displayData.workerName },
     {
-      label: '시급',
-      value: `${formatCurrency(displayData.hourlyWage)}${displayData.includesWeeklyAllowance ? ' (주휴수당 포함)' : ''}`,
+      label: wageInfo.label,
+      value: wageInfo.value,
     },
     {
       label: '근무기간',
