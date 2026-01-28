@@ -221,6 +221,8 @@ export default function ContractPreview({
     if (isNew) {
       // 서명이 없으면 서명 먼저 요청
       if (!signatureData) {
+        setToastMessage('서명을 먼저 해주세요 ✍️');
+        setShowToast(true);
         setIsSignatureSheetOpen(true);
         return;
       }
@@ -697,73 +699,71 @@ export default function ContractPreview({
           </div>
         ) : (
           <>
-            {/* Share Options */}
-            <div className="flex justify-center gap-6 mb-4">
-              <button
-                onClick={handleDownloadPDF}
-                className="flex flex-col items-center gap-1"
-              >
-                <span className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center relative">
-                  <svg
-                    className="w-6 h-6 text-gray-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                </span>
-                <span className="text-[12px] text-gray-500">PDF</span>
-              </button>
-              <button
-                onClick={handleCopyShareLink}
-                disabled={!shareUrl}
-                className={clsx(
-                  'flex flex-col items-center gap-1',
-                  !shareUrl && 'opacity-50'
-                )}
-              >
-                <span className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                  <svg
-                    className="w-6 h-6 text-gray-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-                    />
-                  </svg>
-                </span>
-                <span className="text-[12px] text-gray-500">링크</span>
-              </button>
-              <button
-                onClick={handleKakaoShare}
-                className="flex flex-col items-center gap-1"
-              >
-                <span className="w-12 h-12 bg-[#FEE500] rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-[#191919]" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M10 2C5.02944 2 1 5.25562 1 9.28571C1 11.8571 2.67188 14.1143 5.19531 15.4286L4.35156 18.5714C4.28516 18.8286 4.57422 19.0286 4.80078 18.8857L8.5 16.4571C9 16.5143 9.5 16.5714 10 16.5714C14.9706 16.5714 19 13.3158 19 9.28571C19 5.25562 14.9706 2 10 2Z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                </span>
-                <span className="text-[12px] text-gray-500">카카오톡</span>
-              </button>
-            </div>
+            {/* Share Options - 저장 완료 후에만 표시 */}
+            {(isSaveCompleted || shareUrl) && (
+              <div className="flex justify-center gap-6 mb-4">
+                <button
+                  onClick={handleDownloadPDF}
+                  className="flex flex-col items-center gap-1"
+                >
+                  <span className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center relative">
+                    <svg
+                      className="w-6 h-6 text-gray-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                  </span>
+                  <span className="text-[12px] text-gray-500">PDF</span>
+                </button>
+                <button
+                  onClick={handleCopyShareLink}
+                  className="flex flex-col items-center gap-1"
+                >
+                  <span className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                    <svg
+                      className="w-6 h-6 text-gray-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                      />
+                    </svg>
+                  </span>
+                  <span className="text-[12px] text-gray-500">링크</span>
+                </button>
+                <button
+                  onClick={handleKakaoShare}
+                  className="flex flex-col items-center gap-1"
+                >
+                  <span className="w-12 h-12 bg-[#FEE500] rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-[#191919]" viewBox="0 0 20 20">
+                      <path
+                        fillRule="evenodd"
+                        clipRule="evenodd"
+                        d="M10 2C5.02944 2 1 5.25562 1 9.28571C1 11.8571 2.67188 14.1143 5.19531 15.4286L4.35156 18.5714C4.28516 18.8286 4.57422 19.0286 4.80078 18.8857L8.5 16.4571C9 16.5143 9.5 16.5714 10 16.5714C14.9706 16.5714 19 13.3158 19 9.28571C19 5.25562 14.9706 2 10 2Z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                  </span>
+                  <span className="text-[12px] text-gray-500">카카오톡</span>
+                </button>
+              </div>
+            )}
 
-            {/* Share URL Display */}
+            {/* Share URL Display - 저장 완료 후에만 표시 */}
             {shareUrl && (
               <button 
                 onClick={() => setIsShareSheetOpen(true)}
@@ -778,32 +778,41 @@ export default function ContractPreview({
               </button>
             )}
 
-            {/* Main CTA */}
-            <button
-              onClick={handleSignAndSend}
-              disabled={isLoading}
-              className={clsx(
-                'w-full py-4 rounded-2xl font-semibold text-lg flex items-center justify-center gap-2',
-                isLoading
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-blue-500 text-white active:bg-blue-600'
-              )}
-            >
-              {isLoading ? (
-                <>
-                  <LoadingSpinner variant="button" />
-                  처리 중...
-                </>
-              ) : isGuestMode ? (
-                '체험 완료하기 🎉'
-              ) : isNew ? (
-                signatureData ? '저장하고 공유하기 📤' : '서명하고 저장하기 ✍️'
-              ) : employerSigned ? (
-                '근로자에게 보내기 📤'
-              ) : (
-                <>서명하고 보내기 ✍️</>
-              )}
-            </button>
+            {/* Main CTA - 저장 완료 후 홈으로 가기 버튼으로 변경 */}
+            {isSaveCompleted || shareUrl ? (
+              <button
+                onClick={() => router.push('/employer')}
+                className="w-full py-4 rounded-2xl font-semibold text-lg bg-blue-500 text-white active:bg-blue-600"
+              >
+                홈으로 가기 🏠
+              </button>
+            ) : (
+              <button
+                onClick={handleSignAndSend}
+                disabled={isLoading}
+                className={clsx(
+                  'w-full py-4 rounded-2xl font-semibold text-lg flex items-center justify-center gap-2',
+                  isLoading
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-blue-500 text-white active:bg-blue-600'
+                )}
+              >
+                {isLoading ? (
+                  <>
+                    <LoadingSpinner variant="button" />
+                    처리 중...
+                  </>
+                ) : isGuestMode ? (
+                  '체험 완료하기 🎉'
+                ) : isNew ? (
+                  signatureData ? '저장하고 공유하기 📤' : '서명하고 저장하기 ✍️'
+                ) : employerSigned ? (
+                  '근로자에게 보내기 📤'
+                ) : (
+                  <>서명하고 보내기 ✍️</>
+                )}
+              </button>
+            )}
           </>
         )}
       </div>
