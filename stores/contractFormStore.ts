@@ -5,7 +5,7 @@ import type { BusinessSize } from '@/types';
 export type WageType = 'hourly' | 'monthly';
 export type PaymentTiming = 'current_month' | 'next_month';
 
-export type BusinessType = 'restaurant' | 'cafe' | 'convenience_store' | 'retail' | 'beauty' | 'office' | null;
+export type BusinessType = 'restaurant' | 'cafe' | 'convenience_store' | 'retail' | 'beauty' | 'office' | 'pc_cafe' | 'startup' | null;
 
 export interface ContractFormData {
   // Step 1: 사업장 선택

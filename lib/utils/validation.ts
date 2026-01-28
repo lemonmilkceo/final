@@ -20,6 +20,8 @@ export const businessTypeSchema = z.enum([
   'retail',
   'beauty',
   'office',
+  'pc_cafe',
+  'startup',
 ]).nullable();
 
 // 휴대폰 번호 정규식 (010-1234-5678 또는 01012345678)
