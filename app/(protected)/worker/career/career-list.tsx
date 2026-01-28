@@ -120,16 +120,16 @@ export default function CareerList({
                     <span className="text-lg">🏢</span>
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="text-[15px] font-semibold text-gray-900">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[15px] font-semibold text-gray-900 truncate">
                           {contract.employer?.name || contract.work_location}
                         </p>
-                        <p className="text-[13px] text-gray-500">
+                        <p className="text-[13px] text-gray-500 line-clamp-2">
                           {contract.job_description}
                         </p>
                       </div>
-                      <p className="text-[13px] text-blue-500 font-medium">
+                      <p className="text-[13px] text-blue-500 font-medium whitespace-nowrap flex-shrink-0">
                         {calculateDuration(
                           contract.start_date,
                           contract.end_date
