@@ -316,31 +316,78 @@ function performBasicReview(contract: ContractData): ReviewResult {
   }
 
   // 3. 주휴수당 검토
-  if (workDays >= 5 && !contract.includes_weekly_allowance) {
-    items.push({
-      category: 'weekly_allowance',
-      status: 'warning',
-      title: '주휴수당 미포함',
-      description: `주 ${workDays}일 근무 시 주휴수당이 발생할 수 있어요. 현재 시급에 포함되어 있지 않아요.`,
-      suggestion: '주휴수당 포함 여부를 확인하거나, 별도 지급 계획을 세우세요.',
-    });
-    hasWarning = true;
-  } else if (contract.includes_weekly_allowance) {
-    items.push({
-      category: 'weekly_allowance',
-      status: 'pass',
-      title: '주휴수당 포함',
-      description: '시급에 주휴수당이 포함되어 있어요.',
-      suggestion: null,
-    });
+  // 주 15시간 이상 근무 시에만 주휴수당 발생
+  const dailyWorkHours = (workMinutes - contract.break_minutes) / 60;
+  const weeklyWorkHours = dailyWorkHours * workDays;
+  const isWeeklyAllowanceRequired = weeklyWorkHours >= 15;
+  
+  const isMonthlyWageType = contract.wage_type === 'monthly';
+  
+  if (isMonthlyWageType) {
+    // 월급제: 주휴수당 포함 시급으로 환산하여 최저시급 검토
+    // 주휴수당 = 주 근무시간의 약 20% (8시간/40시간)
+    const monthlyWage = contract.monthly_wage || 0;
+    const monthlyWorkHours = weeklyWorkHours * 4.345;
+    // 주휴수당 포함 총 시간 = 근무시간 × 1.2 (주휴 8시간/40시간 = 20%)
+    const totalHoursWithWeeklyAllowance = monthlyWorkHours * 1.2;
+    const effectiveHourlyWithWeekly = totalHoursWithWeeklyAllowance > 0 
+      ? Math.round(monthlyWage / totalHoursWithWeeklyAllowance) 
+      : 0;
+    
+    if (isWeeklyAllowanceRequired && effectiveHourlyWithWeekly < MINIMUM_WAGE) {
+      items.push({
+        category: 'weekly_allowance',
+        status: 'warning',
+        title: '주휴수당 포함 시급 미달 가능',
+        description: `월급을 주휴수당 포함 시급으로 환산하면 약 ${effectiveHourlyWithWeekly.toLocaleString()}원이에요. 최저시급 ${MINIMUM_WAGE.toLocaleString()}원보다 낮을 수 있어요.`,
+        suggestion: '월급을 인상하거나 근무시간을 조정해보세요.',
+      });
+      hasWarning = true;
+    } else if (isWeeklyAllowanceRequired) {
+      items.push({
+        category: 'weekly_allowance',
+        status: 'pass',
+        title: '주휴수당 포함 적정',
+        description: `월급에 주휴수당이 적절히 반영되어 있어요. (환산 시급 약 ${effectiveHourlyWithWeekly.toLocaleString()}원)`,
+        suggestion: null,
+      });
+    } else {
+      items.push({
+        category: 'weekly_allowance',
+        status: 'pass',
+        title: '주휴수당 해당 없음',
+        description: `주 ${weeklyWorkHours.toFixed(1)}시간 근무로 주휴수당 의무 대상이 아니에요. (주 15시간 미만)`,
+        suggestion: null,
+      });
+    }
   } else {
-    items.push({
-      category: 'weekly_allowance',
-      status: 'pass',
-      title: '주휴수당 해당 없음',
-      description: `주 ${workDays}일 근무로 주휴수당 의무 대상이 아니에요.`,
-      suggestion: null,
-    });
+    // 시급제: 주휴수당 포함 여부 체크
+    if (isWeeklyAllowanceRequired && !contract.includes_weekly_allowance) {
+      items.push({
+        category: 'weekly_allowance',
+        status: 'warning',
+        title: '주휴수당 미포함',
+        description: `주 ${weeklyWorkHours.toFixed(1)}시간 근무 시 주휴수당이 발생해요. 현재 시급에 포함되어 있지 않아요.`,
+        suggestion: '주휴수당 포함 시급으로 설정하거나, 별도 지급 계획을 세우세요.',
+      });
+      hasWarning = true;
+    } else if (contract.includes_weekly_allowance) {
+      items.push({
+        category: 'weekly_allowance',
+        status: 'pass',
+        title: '주휴수당 포함',
+        description: '시급에 주휴수당이 포함되어 있어요.',
+        suggestion: null,
+      });
+    } else {
+      items.push({
+        category: 'weekly_allowance',
+        status: 'pass',
+        title: '주휴수당 해당 없음',
+        description: `주 ${weeklyWorkHours.toFixed(1)}시간 근무로 주휴수당 의무 대상이 아니에요. (주 15시간 미만)`,
+        suggestion: null,
+      });
+    }
   }
 
   // 4. 필수 항목 검토
