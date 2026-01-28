@@ -47,7 +47,7 @@ const Header: React.FC<HeaderProps> = ({
         )}
 
         {/* 우측: 크레딧 + 알림 + 메뉴 */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-[40px] justify-end">
           {/* 크레딧 (사업자만) */}
           {credits !== undefined && (
             <Link
