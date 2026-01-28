@@ -1,16 +1,23 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import BottomSheet from '@/components/ui/BottomSheet';
 import { formatRelativeTime } from '@/lib/utils/format';
 import { markNotificationAsRead, markAllNotificationsAsRead } from '@/app/actions/notifications';
 import clsx from 'clsx';
+
+interface NotificationData {
+  contractId?: string;
+  [key: string]: unknown;
+}
 
 interface Notification {
   id: string;
   type: 'contract_sent' | 'contract_signed' | 'contract_expired_soon' | 'contract_expired';
   title: string;
   body: string;
+  data?: NotificationData | null;
   is_read: boolean;
   created_at: string;
 }
@@ -20,6 +27,7 @@ interface NotificationSheetProps {
   onClose: () => void;
   notifications: Notification[];
   onNotificationsUpdate?: () => void;
+  userRole?: 'employer' | 'worker';
 }
 
 const getNotificationIcon = (type: Notification['type']) => {
@@ -42,7 +50,9 @@ export default function NotificationSheet({
   onClose,
   notifications,
   onNotificationsUpdate,
+  userRole = 'employer',
 }: NotificationSheetProps) {
+  const router = useRouter();
   const [localNotifications, setLocalNotifications] = useState(notifications);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -60,6 +70,14 @@ export default function NotificationSheet({
         );
         onNotificationsUpdate?.();
       }
+    }
+
+    // 알림에 계약서 ID가 있으면 해당 계약서로 이동
+    if (notification.data?.contractId) {
+      const contractPath = userRole === 'employer' 
+        ? `/employer/contract/${notification.data.contractId}`
+        : `/worker/contract/${notification.data.contractId}`;
+      router.push(contractPath);
     }
 
     onClose();

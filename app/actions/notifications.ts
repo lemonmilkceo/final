@@ -102,11 +102,18 @@ export async function markAllNotificationsAsRead() {
 // DB 스키마에 정의된 알림 타입
 type NotificationType = 'contract_sent' | 'contract_signed' | 'contract_expired_soon' | 'contract_expired';
 
+// 알림 데이터 타입 (JSON으로 저장)
+interface NotificationData {
+  contractId?: string;
+  [key: string]: unknown;
+}
+
 export async function createNotification(params: {
   userId: string;
   type: NotificationType;
   title: string;
   body: string;
+  data?: NotificationData;
 }) {
   const supabase = await createClient();
 
@@ -115,6 +122,7 @@ export async function createNotification(params: {
     type: params.type,
     title: params.title,
     body: params.body,
+    data: params.data || null,
     is_read: false,
   });
 

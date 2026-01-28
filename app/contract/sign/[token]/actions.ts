@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { encryptData, hashSSN } from '@/lib/utils/encryption';
+import { createNotification } from '@/app/actions/notifications';
 import type { ActionResult } from '@/types';
 
 // 근로자 상세정보 타입
@@ -57,10 +58,10 @@ export async function signAsWorker(
 ): Promise<ActionResult> {
   const supabase = await createClient();
 
-  // 계약서 조회 (share_token으로)
+  // 계약서 조회 (share_token으로) - 알림을 위해 employer_id, worker_name도 조회
   const { data: contract, error: contractError } = await supabase
     .from('contracts')
-    .select('id, status, expires_at')
+    .select('id, status, expires_at, employer_id, worker_name')
     .eq('share_token', token)
     .single();
 
@@ -174,6 +175,22 @@ export async function signAsWorker(
     if (updateError) {
       console.error('Contract update error:', updateError);
       return { success: false, error: '계약서 상태 업데이트에 실패했어요' };
+    }
+
+    // 사업자에게 알림 생성 (비동기로 처리, 실패해도 서명은 완료됨)
+    if (contract.employer_id) {
+      try {
+        await createNotification({
+          userId: contract.employer_id,
+          type: 'contract_signed',
+          title: '계약 완료! 🎉',
+          body: `${contract.worker_name}님이 계약서에 서명했어요`,
+          data: { contractId: contract.id },
+        });
+      } catch (notifError) {
+        // 알림 생성 실패는 로그만 남기고 계속 진행
+        console.error('Notification creation error:', notifError);
+      }
     }
 
     // 캐시 무효화

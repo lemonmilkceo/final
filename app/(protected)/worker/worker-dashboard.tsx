@@ -786,6 +786,7 @@ export default function WorkerDashboard({
         onClose={() => setIsNotificationSheetOpen(false)}
         notifications={notifications}
         onNotificationsUpdate={handleNotificationsUpdate}
+        userRole="worker"
       />
 
       {/* Menu Sheet */}

@@ -724,6 +724,7 @@ export default function EmployerDashboard({
         onClose={() => setIsNotificationSheetOpen(false)}
         notifications={notifications}
         onNotificationsUpdate={handleNotificationsUpdate}
+        userRole="employer"
       />
 
       {/* Menu Sheet */}
