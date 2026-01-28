@@ -44,10 +44,6 @@ export default function OnboardingPage() {
     }
   };
 
-  const handleSkip = () => {
-    router.push(ROUTES.SIGNUP);
-  };
-
   const handleStart = () => {
     router.push(ROUTES.SIGNUP);
   };
@@ -61,14 +57,6 @@ export default function OnboardingPage() {
 
   return (
     <div className="relative min-h-screen bg-white flex flex-col">
-      {/* Skip Button */}
-      <button
-        onClick={handleSkip}
-        className="absolute top-4 right-4 text-gray-400 text-[15px] z-10 safe-top"
-      >
-        건너뛰기
-      </button>
-
       {/* Slide Content */}
       <div
         className="flex-1 flex flex-col items-center justify-center px-6"
