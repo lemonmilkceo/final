@@ -106,7 +106,7 @@ export const useContractFormStore = create<ContractFormStore>()(
     }),
     {
       name: 'contract-form-storage',
-      storage: createJSONStorage(() => sessionStorage),
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );

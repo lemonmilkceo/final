@@ -131,8 +131,16 @@ export default function EmployerDashboard({
   // 임시저장된 계약서 데이터 확인
   const { data: draftData, step: draftStep, reset: resetDraft } = useContractFormStore();
   
-  // 임시저장 데이터가 있는지 확인
-  const hasDraft = draftStep > 1 || draftData.workerName.trim() !== '';
+  // Hydration 완료 여부
+  const [isHydrated, setIsHydrated] = useState(false);
+  
+  // Hydration 완료 후 상태 확인
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+  
+  // 임시저장 데이터가 있는지 확인 (hydration 후에만)
+  const hasDraft = isHydrated && (draftStep > 1 || draftData.workerName.trim() !== '');
 
   const showToastMessage = (message: string, variant: 'success' | 'error') => {
     setToastMessage(message);
@@ -613,6 +621,29 @@ export default function EmployerDashboard({
               </div>
             </div>
           </div>
+        )}
+
+        {/* 임시저장된 계약서 배너 */}
+        {hasDraft && !isEditMode && !isTrashMode && (
+          <button
+            onClick={() => setIsDraftSheetOpen(true)}
+            className="w-full mb-4 bg-amber-50 rounded-2xl p-4 text-left border border-amber-200/50 active:bg-amber-100 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">📝</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-[15px] font-semibold text-amber-800">
+                  작성 중인 계약서가 있어요
+                </p>
+                <p className="text-[13px] text-amber-600 truncate">
+                  {draftData.workerName ? `${draftData.workerName}님` : ''} {draftStep}단계까지 작성됨
+                </p>
+              </div>
+              <svg className="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </button>
         )}
 
         {/* 새 계약서 작성 버튼 (휴지통이 아닐 때만) */}
