@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import clsx from 'clsx';
 import MenuSheet from '@/components/layout/MenuSheet';
 import ContractCard from '@/components/contract/ContractCard';
@@ -575,18 +576,24 @@ export default function EmployerDashboard({
             </h1>
             
             <div className="flex flex-wrap gap-2 mt-3">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-full border border-cyan-200/50">
+              <Link 
+                href="/pricing"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-full border border-cyan-200/50 hover:from-cyan-100 hover:to-blue-100 transition-colors"
+              >
                 <span className="text-lg">💎</span>
                 <span className="text-[14px] font-semibold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
                   계약서 {credits.contract}건
                 </span>
-              </div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-full border border-amber-200/50">
+              </Link>
+              <Link 
+                href="/pricing"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-full border border-amber-200/50 hover:from-amber-100 hover:to-yellow-100 transition-colors"
+              >
                 <span className="text-lg">⚡️</span>
                 <span className="text-[14px] font-semibold bg-gradient-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent">
                   AI노무사 {credits.aiReview}건
                 </span>
-              </div>
+              </Link>
             </div>
           </div>
         )}
