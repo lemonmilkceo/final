@@ -17,6 +17,8 @@ const MINIMUM_WAGE = 10360;
 
 interface ContractData {
   hourly_wage: number;
+  monthly_wage?: number | null;
+  wage_type?: 'hourly' | 'monthly';
   includes_weekly_allowance: boolean;
   work_days_per_week: number | null;
   work_days: string[] | null;
@@ -119,6 +121,8 @@ export async function POST(request: NextRequest) {
       isNewContract = true;
       contract = {
         hourly_wage: contractData.hourlyWage || 0,
+        monthly_wage: contractData.monthlyWage || null,
+        wage_type: contractData.wageType || 'hourly',
         includes_weekly_allowance: contractData.includesWeeklyAllowance || false,
         work_days_per_week: contractData.workDaysPerWeek || null,
         work_days: contractData.workDays || null,
@@ -216,27 +220,69 @@ function performBasicReview(contract: ContractData): ReviewResult {
   let hasFail = false;
 
   // 1. 최저시급 검토
-  const effectiveWage = contract.includes_weekly_allowance
-    ? contract.hourly_wage
-    : contract.hourly_wage;
-
-  if (effectiveWage < MINIMUM_WAGE) {
-    items.push({
-      category: 'minimum_wage',
-      status: 'fail',
-      title: '최저시급 미달',
-      description: `현재 시급 ${effectiveWage.toLocaleString()}원은 2026년 최저시급 ${MINIMUM_WAGE.toLocaleString()}원보다 낮아요.`,
-      suggestion: `시급을 ${MINIMUM_WAGE.toLocaleString()}원 이상으로 조정하세요.`,
-    });
-    hasFail = true;
+  const isMonthlyWage = contract.wage_type === 'monthly';
+  
+  if (isMonthlyWage) {
+    // 월급제일 경우: 월급 금액과 근무시간으로 시급 환산하여 검토
+    const monthlyWage = contract.monthly_wage || 0;
+    
+    // 근무시간 계산
+    const [startHour, startMin] = contract.work_start_time.split(':').map(Number);
+    const [endHour, endMin] = contract.work_end_time.split(':').map(Number);
+    let workMinutes = (endHour * 60 + endMin) - (startHour * 60 + startMin);
+    if (workMinutes < 0) workMinutes += 24 * 60;
+    const dailyWorkHours = (workMinutes - contract.break_minutes) / 60;
+    
+    // 주 근무일수
+    const workDaysPerWeek = contract.work_days?.length || contract.work_days_per_week || 5;
+    
+    // 월 근무시간 계산 (주 근무시간 × 4.345주)
+    const weeklyWorkHours = dailyWorkHours * workDaysPerWeek;
+    const monthlyWorkHours = weeklyWorkHours * 4.345;
+    
+    // 환산 시급 계산
+    const calculatedHourlyWage = monthlyWorkHours > 0 ? Math.round(monthlyWage / monthlyWorkHours) : 0;
+    
+    if (calculatedHourlyWage < MINIMUM_WAGE) {
+      items.push({
+        category: 'minimum_wage',
+        status: 'fail',
+        title: '최저시급 미달 (월급 환산)',
+        description: `월급 ${monthlyWage.toLocaleString()}원을 시급으로 환산하면 약 ${calculatedHourlyWage.toLocaleString()}원이에요. 2026년 최저시급 ${MINIMUM_WAGE.toLocaleString()}원보다 낮아요.`,
+        suggestion: `월급을 ${Math.ceil(MINIMUM_WAGE * monthlyWorkHours).toLocaleString()}원 이상으로 조정하거나 근무시간을 조정하세요.`,
+      });
+      hasFail = true;
+    } else {
+      items.push({
+        category: 'minimum_wage',
+        status: 'pass',
+        title: '최저시급 충족 (월급 환산)',
+        description: `월급 ${monthlyWage.toLocaleString()}원은 시급 환산 시 약 ${calculatedHourlyWage.toLocaleString()}원으로 최저시급을 충족해요.`,
+        suggestion: null,
+      });
+    }
   } else {
-    items.push({
-      category: 'minimum_wage',
-      status: 'pass',
-      title: '최저시급 충족',
-      description: `시급 ${effectiveWage.toLocaleString()}원은 최저시급을 충족해요.`,
-      suggestion: null,
-    });
+    // 시급제일 경우: 기존 로직
+    const effectiveWage = contract.hourly_wage;
+
+    if (effectiveWage < MINIMUM_WAGE) {
+      items.push({
+        category: 'minimum_wage',
+        status: 'fail',
+        title: '최저시급 미달',
+        description: `현재 시급 ${effectiveWage.toLocaleString()}원은 2026년 최저시급 ${MINIMUM_WAGE.toLocaleString()}원보다 낮아요.`,
+        suggestion: `시급을 ${MINIMUM_WAGE.toLocaleString()}원 이상으로 조정하세요.`,
+      });
+      hasFail = true;
+    } else {
+      items.push({
+        category: 'minimum_wage',
+        status: 'pass',
+        title: '최저시급 충족',
+        description: `시급 ${effectiveWage.toLocaleString()}원은 최저시급을 충족해요.`,
+        suggestion: null,
+      });
+    }
   }
 
   // 2. 휴게시간 검토
@@ -331,11 +377,17 @@ function performBasicReview(contract: ContractData): ReviewResult {
 }
 
 async function getAISuggestions(openai: OpenAI, contract: ContractData): Promise<string> {
+  const isMonthlyWage = contract.wage_type === 'monthly';
+  const wageInfo = isMonthlyWage 
+    ? `월급: ${(contract.monthly_wage || 0).toLocaleString()}원` 
+    : `시급: ${contract.hourly_wage.toLocaleString()}원`;
+    
   const prompt = `
 당신은 한국 노동법 전문 노무사입니다. 다음 근로계약서 내용을 검토하고 개선 제안을 해주세요.
 
 계약서 정보:
-- 시급: ${contract.hourly_wage.toLocaleString()}원
+- 급여 형태: ${isMonthlyWage ? '월급제' : '시급제'}
+- ${wageInfo}
 - 주휴수당 포함 여부: ${contract.includes_weekly_allowance ? '포함' : '미포함'}
 - 근무일: ${contract.work_days?.join(', ') || `주 ${contract.work_days_per_week}일`}
 - 근무시간: ${contract.work_start_time} ~ ${contract.work_end_time}
