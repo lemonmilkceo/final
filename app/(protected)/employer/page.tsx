@@ -106,7 +106,7 @@ export default async function EmployerDashboardPage() {
     return (
       <EmployerDashboard
         profile={{
-          name: '게스트 사장님',
+          name: '게스트 사장',
           email: null,
           avatarUrl: null,
         }}

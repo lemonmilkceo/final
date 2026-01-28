@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import type { Json } from '@/types/database';
 
 export async function getNotifications() {
   const supabase = await createClient();
@@ -105,7 +106,7 @@ type NotificationType = 'contract_sent' | 'contract_signed' | 'contract_expired_
 // 알림 데이터 타입 (JSON으로 저장)
 interface NotificationData {
   contractId?: string;
-  [key: string]: unknown;
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 export async function createNotification(params: {
@@ -122,7 +123,7 @@ export async function createNotification(params: {
     type: params.type,
     title: params.title,
     body: params.body,
-    data: params.data || null,
+    data: params.data as Json | undefined,
     is_read: false,
   });
 
