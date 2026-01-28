@@ -111,8 +111,8 @@ export default async function EmployerDashboardPage() {
           avatarUrl: null,
         }}
         credits={{
-          contract: 3,
-          aiReview: 3,
+          contract: 5,
+          aiReview: 5,
         }}
         contracts={GUEST_SAMPLE_CONTRACTS}
         folders={[]}

@@ -925,11 +925,11 @@ BEGIN
     NEW.raw_user_meta_data->>'avatar_url'
   );
   
-  -- 무료 크레딧 3개 지급
+  -- 무료 크레딧 5개 지급 (계약서 5개, AI노무사 5개)
   INSERT INTO public.credits (user_id, credit_type, amount)
   VALUES 
-    (NEW.id, 'contract', 3),
-    (NEW.id, 'ai_review', 0);
+    (NEW.id, 'contract', 5),
+    (NEW.id, 'ai_review', 5);
   
   RETURN NEW;
 END;
