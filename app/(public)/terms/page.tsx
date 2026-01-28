@@ -26,26 +26,34 @@ export default function TermsPage() {
           <li>본 서비스는 근로계약서 작성을 <strong>보조</strong>하는 도구일 뿐, 법률 자문이나 법적 대리 서비스가 아닙니다.</li>
         </ol>
 
-        <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제3조 (면책 조항) ⚠️ 중요</h2>
+        <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제3조 (전자서명의 법적 효력)</h2>
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+          <p className="text-[15px] text-gray-700 leading-relaxed">
+            본 서비스를 통해 작성된 전자 근로계약서는 「근로기준법」 제17조 제2항 및 「전자서명법」 제3조에 따라 <strong>서면 근로계약서와 동일한 법적 효력</strong>을 가집니다.
+          </p>
+        </div>
+
+        <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제4조 (면책 조항) ⚠️ 중요</h2>
         <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
           <ol className="text-[15px] text-gray-700 leading-relaxed list-decimal pl-5 space-y-3">
-            <li><strong>본 서비스는 근로계약서 양식을 제공할 뿐, 체결된 계약의 법적 효력, 유효성, 적법성 또는 이와 관련된 분쟁에 대하여 어떠한 책임도 지지 않습니다.</strong></li>
-            <li><strong>이용자(고용주 및 피고용인)는 본 서비스를 통해 작성된 계약서의 내용을 스스로 검토하고, 그 법적 효력과 정확성에 대한 모든 책임을 부담합니다.</strong></li>
+            <li><strong>본 서비스는 근로계약서 양식을 제공할 뿐, 이용자가 입력한 계약 내용의 유효성, 적법성 또는 이와 관련된 분쟁에 대하여 어떠한 책임도 지지 않습니다.</strong></li>
+            <li><strong>이용자(고용주 및 피고용인)는 본 서비스를 통해 작성된 계약서의 내용을 스스로 검토하고, 그 정확성에 대한 모든 책임을 부담합니다.</strong></li>
             <li>
               회사는 다음 각 호의 사항에 대하여 책임을 지지 않습니다:
               <ul className="list-disc pl-5 mt-2 space-y-1">
                 <li>이용자가 입력한 정보의 정확성, 진실성 또는 적법성</li>
-                <li>근로계약서 양식이 특정 법률, 규정 또는 단체협약에 부합하는지 여부</li>
+                <li>근로계약서 내용이 특정 법률, 규정 또는 단체협약에 부합하는지 여부</li>
                 <li>계약 당사자 간 발생하는 임금, 근로조건, 해고 등 일체의 노동 분쟁</li>
-                <li>전자서명의 법적 효력에 관한 사항</li>
+                <li>특정 기관(법원, 행정기관 등)에서 개별 사안에 따라 전자문서를 인정하지 않는 경우</li>
                 <li>서비스 이용으로 인해 발생하는 직접적, 간접적, 부수적 손해</li>
               </ul>
             </li>
             <li><strong>이용자는 본 서비스 이용 전, 필요시 노무사, 변호사 등 전문가의 법률 자문을 받으실 것을 강력히 권고합니다.</strong></li>
+            <li>본 서비스에서 제공하는 근로계약서 양식은 일반적인 참고용이며, 개별 사업장의 특수한 상황이나 최신 법령 개정사항을 완벽하게 반영하지 못할 수 있습니다.</li>
           </ol>
         </div>
 
-        <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제4조 (이용자의 의무)</h2>
+        <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제5조 (이용자의 의무)</h2>
         <ol className="text-[15px] text-gray-700 leading-relaxed list-decimal pl-5 space-y-2">
           <li>이용자는 본 약관 및 관계 법령을 준수하여야 합니다.</li>
           <li>이용자는 서비스 이용 시 정확하고 진실한 정보를 입력하여야 합니다.</li>
@@ -53,14 +61,14 @@ export default function TermsPage() {
           <li>이용자는 서비스를 불법적인 목적이나 본 약관에서 금지하는 행위에 이용하여서는 안 됩니다.</li>
         </ol>
 
-        <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제5조 (회원가입 및 계정)</h2>
+        <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제6조 (회원가입 및 계정)</h2>
         <ol className="text-[15px] text-gray-700 leading-relaxed list-decimal pl-5 space-y-2">
           <li>회원가입은 <strong>카카오 로그인(Kakao Sync)</strong> 방식으로만 가능합니다.</li>
           <li>회사는 카카오 로그인을 통해 제공받는 정보(카카오 고유 ID, 닉네임, 프로필 사진)를 회원 식별 및 서비스 제공 목적으로 사용합니다.</li>
           <li>이용자는 자신의 계정을 제3자에게 양도, 대여하거나 공유할 수 없습니다.</li>
         </ol>
 
-        <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제6조 (서비스의 제공 및 변경)</h2>
+        <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제7조 (서비스의 제공 및 변경)</h2>
         <ol className="text-[15px] text-gray-700 leading-relaxed list-decimal pl-5 space-y-2">
           <li>
             회사는 다음과 같은 서비스를 제공합니다:
@@ -74,7 +82,7 @@ export default function TermsPage() {
           <li>서비스 내용의 중요한 변경이 있는 경우, 회사는 변경 7일 전에 서비스 내 공지사항을 통해 이를 안내합니다.</li>
         </ol>
 
-        <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제7조 (서비스 이용의 제한 및 중지)</h2>
+        <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제8조 (서비스 이용의 제한 및 중지)</h2>
         <ol className="text-[15px] text-gray-700 leading-relaxed list-decimal pl-5 space-y-2">
           <li>
             회사는 다음 각 호에 해당하는 경우 서비스 이용을 제한하거나 중지할 수 있습니다:
@@ -88,19 +96,19 @@ export default function TermsPage() {
           <li>베타 서비스 특성상, 회사는 사전 통지 없이 서비스를 종료할 수 있으며, 이로 인한 손해에 대해 책임을 지지 않습니다.</li>
         </ol>
 
-        <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제8조 (지식재산권)</h2>
+        <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제9조 (지식재산권)</h2>
         <ol className="text-[15px] text-gray-700 leading-relaxed list-decimal pl-5 space-y-2">
           <li>서비스에 포함된 모든 콘텐츠(디자인, 로고, 텍스트, 소프트웨어 등)에 대한 지식재산권은 회사에 귀속됩니다.</li>
           <li>이용자가 작성한 근로계약서의 내용에 대한 권리는 해당 이용자에게 귀속됩니다.</li>
         </ol>
 
-        <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제9조 (분쟁 해결)</h2>
+        <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제10조 (분쟁 해결)</h2>
         <ol className="text-[15px] text-gray-700 leading-relaxed list-decimal pl-5 space-y-2">
           <li>본 약관과 관련하여 분쟁이 발생한 경우, 회사와 이용자는 원만한 해결을 위해 성실히 협의합니다.</li>
           <li>협의가 이루어지지 않는 경우, 관할 법원은 민사소송법에 따른 관할 법원으로 합니다.</li>
         </ol>
 
-        <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제10조 (약관의 개정)</h2>
+        <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제11조 (약관의 개정)</h2>
         <ol className="text-[15px] text-gray-700 leading-relaxed list-decimal pl-5 space-y-2">
           <li>회사는 관련 법령에 위배되지 않는 범위에서 본 약관을 개정할 수 있습니다.</li>
           <li>약관이 개정되는 경우, 회사는 시행일 7일 전부터 서비스 내 공지사항을 통해 변경 내용을 안내합니다.</li>
