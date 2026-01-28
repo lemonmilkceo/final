@@ -1,14 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGuestStore } from '@/stores/guestStore';
 import Image from 'next/image';
+import { signInWithKakao } from '@/app/(public)/login/actions';
 
 export default function GuestRoleSelectPage() {
   const router = useRouter();
   const { setGuestMode } = useGuestStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const handleRoleSelect = async (role: 'employer' | 'worker') => {
     setIsLoading(true);
@@ -99,10 +101,15 @@ export default function GuestRoleSelectPage() {
           이미 계정이 있으신가요?
         </p>
         <button
-          onClick={() => router.push('/login')}
-          className="text-[15px] font-semibold text-blue-500"
+          onClick={() => {
+            startTransition(async () => {
+              await signInWithKakao();
+            });
+          }}
+          disabled={isPending}
+          className="text-[15px] font-semibold text-blue-500 disabled:opacity-50"
         >
-          로그인하기
+          {isPending ? '로그인 중...' : '로그인하기'}
         </button>
       </div>
     </div>
