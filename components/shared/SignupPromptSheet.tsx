@@ -1,7 +1,7 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useGuestStore } from '@/stores/guestStore';
+import { signInWithKakao } from '@/app/(public)/login/actions';
 
 interface SignupPromptSheetProps {
   isOpen: boolean;
@@ -38,21 +38,15 @@ export default function SignupPromptSheet({
   onClose,
   feature = 'default',
 }: SignupPromptSheetProps) {
-  const router = useRouter();
   const { clearGuestMode } = useGuestStore();
 
   const message = FEATURE_MESSAGES[feature] || FEATURE_MESSAGES.default;
 
-  const handleSignup = () => {
+  // 카카오 로그인 바로 실행
+  const handleKakaoLogin = async () => {
     clearGuestMode();
     onClose();
-    router.push('/login');
-  };
-
-  const handleLogin = () => {
-    clearGuestMode();
-    onClose();
-    router.push('/login');
+    await signInWithKakao();
   };
 
   if (!isOpen) return null;
@@ -102,7 +96,7 @@ export default function SignupPromptSheet({
             <div className="space-y-3">
               {/* 카카오 로그인 버튼 */}
               <button
-                onClick={handleSignup}
+                onClick={handleKakaoLogin}
                 className="w-full py-4 bg-[#FEE500] text-[#191919] rounded-full font-semibold text-[16px] hover:bg-[#FFEB3B] transition-colors flex items-center justify-center gap-2"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -111,9 +105,9 @@ export default function SignupPromptSheet({
                 카카오로 3초만에 시작하기
               </button>
 
-              {/* 이미 계정이 있어요 */}
+              {/* 이미 계정이 있어요 - 카카오 로그인과 동일하게 처리 */}
               <button
-                onClick={handleLogin}
+                onClick={handleKakaoLogin}
                 className="w-full py-4 bg-white border-2 border-gray-200 text-gray-600 rounded-full font-semibold text-[16px] hover:bg-gray-50 transition-colors"
               >
                 이미 계정이 있어요

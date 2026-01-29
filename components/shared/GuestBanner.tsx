@@ -1,17 +1,16 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useGuestStore } from '@/stores/guestStore';
+import { signInWithKakao } from '@/app/(public)/login/actions';
 
 export default function GuestBanner() {
-  const router = useRouter();
   const { isGuest, clearGuestMode } = useGuestStore();
 
   if (!isGuest) return null;
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     clearGuestMode();
-    router.push('/login');
+    await signInWithKakao();
   };
 
   return (
