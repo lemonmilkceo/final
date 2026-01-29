@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import MenuSheet from '@/components/layout/MenuSheet';
 import NotificationSheet from '@/components/notification/NotificationSheet';
+import GuestBanner from '@/components/shared/GuestBanner';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
 import Toast from '@/components/ui/Toast';
@@ -394,6 +395,9 @@ export default function WorkerDashboard({
           onMenuClick={() => setIsMenuSheetOpen(true)}
         />
       )}
+
+      {/* 게스트 모드 배너 */}
+      {isGuestMode && !isEditMode && <GuestBanner />}
 
       {/* 탭 (숨긴 계약서가 있을 때만) */}
       {showTabs && !isEditMode && (

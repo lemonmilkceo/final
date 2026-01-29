@@ -7,6 +7,7 @@ import clsx from 'clsx';
 import MenuSheet from '@/components/layout/MenuSheet';
 import ContractCard from '@/components/contract/ContractCard';
 import EmptyState from '@/components/shared/EmptyState';
+import GuestBanner from '@/components/shared/GuestBanner';
 import NotificationSheet from '@/components/notification/NotificationSheet';
 import FolderModal from '@/components/folder/FolderModal';
 import MoveFolderSheet from '@/components/folder/MoveFolderSheet';
@@ -560,6 +561,9 @@ export default function EmployerDashboard({
           </div>
         </header>
       )}
+
+      {/* 게스트 모드 배너 */}
+      {isGuestMode && !isEditMode && <GuestBanner />}
 
       {/* 폴더 탭 (조건부 표시) */}
       {showFolderTabs && !isEditMode && (
