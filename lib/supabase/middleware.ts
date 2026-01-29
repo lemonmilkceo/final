@@ -22,6 +22,7 @@ const GUEST_ALLOWED_ROUTES = [
   '/employer/preview',
   '/worker',
   '/worker/career',
+  '/worker/contract',
 ];
 
 // 역할 전환 기능 도입으로 역할별 경로 제한 제거

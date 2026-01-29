@@ -9,6 +9,8 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Toast from '@/components/ui/Toast';
 import Badge from '@/components/ui/Badge';
 import ContractPDF from '@/components/contract/ContractPDF';
+import GuestBanner from '@/components/shared/GuestBanner';
+import SignupPromptSheet from '@/components/shared/SignupPromptSheet';
 import { signContractAsWorker } from './actions';
 import { formatCurrency, formatDate, formatDday } from '@/lib/utils/format';
 import { generatePDF, getContractPDFFilename } from '@/lib/utils/pdf';
@@ -54,10 +56,12 @@ interface ContractDetailData {
 
 interface WorkerContractDetailProps {
   contract: ContractDetailData;
+  isGuestMode?: boolean;
 }
 
 export default function WorkerContractDetail({
   contract,
+  isGuestMode = false,
 }: WorkerContractDetailProps) {
   const router = useRouter();
   const [isSignatureSheetOpen, setIsSignatureSheetOpen] = useState(false);
@@ -71,6 +75,9 @@ export default function WorkerContractDetail({
   const pdfRef = useRef<HTMLDivElement>(null);
   const [isPDFGenerating, setIsPDFGenerating] = useState(false);
   const [showPDFSheet, setShowPDFSheet] = useState(false);
+  
+  // 게스트 모드 회원가입 유도 시트
+  const [showSignupSheet, setShowSignupSheet] = useState(false);
 
   const workerSigned = contract.signatures.some(
     (s) => s.signer_role === 'worker' && s.signed_at
@@ -230,9 +237,23 @@ export default function WorkerContractDetail({
     ] : []),
   ];
 
+  // 게스트 모드에서 서명 버튼 클릭 시
+  const handleGuestSignClick = () => {
+    setShowSignupSheet(true);
+  };
+
+  // 게스트 모드에서 PDF 다운로드 클릭 시
+  const handleGuestPDFClick = () => {
+    setToastMessage('PDF 다운로드는 회원만 가능해요');
+    setShowToast(true);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col pb-32">
       <PageHeader title="계약서 상세" />
+      
+      {/* 게스트 모드 배너 */}
+      {isGuestMode && <GuestBanner />}
 
       <div className="flex-1 p-5">
         {/* 상태 및 기본 정보 */}
@@ -348,8 +369,11 @@ export default function WorkerContractDetail({
         {isCompleted && (
           <div className="flex justify-center gap-8 mb-4">
             <button
-              onClick={handleDownloadPDF}
-              className="flex flex-col items-center gap-1"
+              onClick={isGuestMode ? handleGuestPDFClick : handleDownloadPDF}
+              className={clsx(
+                "flex flex-col items-center gap-1",
+                isGuestMode && "opacity-50"
+              )}
             >
               <span className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-xl">
                 📄
@@ -362,7 +386,7 @@ export default function WorkerContractDetail({
         {/* 서명 대기 중 - 서명 버튼 */}
         {!workerSigned && contract.status === 'pending' && (
           <button
-            onClick={() => setIsSignatureSheetOpen(true)}
+            onClick={isGuestMode ? handleGuestSignClick : () => setIsSignatureSheetOpen(true)}
             className="w-full py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg"
           >
             서명하고 계약하기 ✍️
@@ -371,15 +395,27 @@ export default function WorkerContractDetail({
 
         {/* 완료된 계약서 - 메인 다운로드 버튼 */}
         {isCompleted && (
-          <button
-            onClick={handleDownloadPDF}
-            className="w-full py-4 rounded-2xl bg-gray-900 text-white font-semibold text-lg flex items-center justify-center gap-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            계약서 PDF 다운로드
-          </button>
+          <>
+            <button
+              onClick={isGuestMode ? handleGuestPDFClick : handleDownloadPDF}
+              className={clsx(
+                "w-full py-4 rounded-2xl font-semibold text-lg flex items-center justify-center gap-2",
+                isGuestMode 
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-gray-900 text-white"
+              )}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              계약서 PDF 다운로드
+            </button>
+            {isGuestMode && (
+              <p className="text-center text-[13px] text-gray-400 mt-2">
+                PDF 다운로드는 회원만 가능해요
+              </p>
+            )}
+          </>
         )}
       </div>
 
@@ -509,6 +545,13 @@ export default function WorkerContractDetail({
         message={toastMessage}
         isVisible={showToast}
         onClose={() => setShowToast(false)}
+      />
+
+      {/* 게스트 모드 회원가입 유도 시트 */}
+      <SignupPromptSheet
+        isOpen={showSignupSheet}
+        onClose={() => setShowSignupSheet(false)}
+        feature="sign"
       />
     </div>
   );
