@@ -10,6 +10,7 @@ import ConfirmSheet from '@/components/ui/ConfirmSheet';
 import Toast from '@/components/ui/Toast';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ContractPDF from '@/components/contract/ContractPDF';
+import GuestBanner from '@/components/shared/GuestBanner';
 import { formatCurrency, formatDate, formatDday } from '@/lib/utils/format';
 import { generatePDF, getContractPDFFilename } from '@/lib/utils/pdf';
 import { deleteContract } from './actions';
@@ -372,6 +373,9 @@ export default function ContractDetail({
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col pb-32">
       <PageHeader title="계약서 상세" />
+      
+      {/* 게스트 모드 배너 */}
+      {isGuestMode && <GuestBanner />}
 
       <div className="flex-1 p-5">
         {/* 상태 및 기본 정보 */}

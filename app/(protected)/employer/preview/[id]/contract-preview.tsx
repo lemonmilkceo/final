@@ -9,6 +9,7 @@ import SignatureCanvas from '@/components/contract/SignatureCanvas';
 import Toast from '@/components/ui/Toast';
 import AIReviewSheet from '@/components/contract/AIReviewSheet';
 import SignupPromptSheet from '@/components/shared/SignupPromptSheet';
+import GuestBanner from '@/components/shared/GuestBanner';
 import ContractPDF from '@/components/contract/ContractPDF';
 import { useContractFormStore } from '@/stores/contractFormStore';
 import { createContract } from '@/app/(protected)/employer/create/actions';
@@ -531,6 +532,9 @@ export default function ContractPreview({
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
       <PageHeader title="계약서 미리보기" />
+      
+      {/* 게스트 모드 배너 */}
+      {isGuestMode && <GuestBanner />}
 
       {/* Contract Preview */}
       <div className="flex-1 p-4 pb-40">
