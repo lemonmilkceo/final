@@ -8,9 +8,16 @@ const PROTECTED_ROUTES = [
   '/employer',
   '/worker',
   '/select-role',
-  '/pricing',
   '/payment-history',
   '/profile',
+];
+
+/**
+ * 공개 경로 (게스트/비로그인 모두 접근 가능)
+ * pricing은 가격 정보를 미리 볼 수 있게 공개
+ */
+const PUBLIC_ROUTES = [
+  '/pricing',
 ];
 
 /**

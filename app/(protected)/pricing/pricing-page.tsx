@@ -3,10 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PageHeader from '@/components/layout/PageHeader';
-import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Toast from '@/components/ui/Toast';
 import PaymentWidget from '@/components/payment/PaymentWidget';
+import GuestBanner from '@/components/shared/GuestBanner';
+import SignupPromptSheet from '@/components/shared/SignupPromptSheet';
 import { formatCurrency } from '@/lib/utils/format';
 import clsx from 'clsx';
 
@@ -14,7 +15,8 @@ interface PricingPageProps {
   currentCredits: {
     contract: number;
   };
-  userId: string;
+  userId: string | null;
+  isGuestMode?: boolean;
 }
 
 // 상품 정의
@@ -51,12 +53,14 @@ const PRODUCTS = [
 export default function PricingPage({
   currentCredits,
   userId,
+  isGuestMode = false,
 }: PricingPageProps) {
   const router = useRouter();
   const [selectedProduct, setSelectedProduct] = useState(PRODUCTS[1]); // 기본 인기상품
   const [showPayment, setShowPayment] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [showSignupSheet, setShowSignupSheet] = useState(false);
 
   const handlePaymentSuccess = () => {
     setShowPayment(false);
@@ -82,29 +86,57 @@ export default function PricingPage({
     return discount;
   };
 
+  // 결제하기 버튼 클릭
+  const handlePaymentClick = () => {
+    if (isGuestMode || !userId) {
+      setShowSignupSheet(true);
+    } else {
+      setShowPayment(true);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <PageHeader title="크레딧 충전" />
+      
+      {/* 게스트 모드 배너 */}
+      {isGuestMode && <GuestBanner />}
 
       <div className="flex-1 p-5">
-        {/* 현재 보유 크레딧 */}
-        <div className="bg-white rounded-2xl p-5 mb-6">
-          <p className="text-[14px] text-gray-500 mb-2">현재 보유 크레딧</p>
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <p className="text-[24px] font-bold text-gray-900">
-                {currentCredits.contract}
-                <span className="text-[14px] font-normal text-gray-500 ml-1">
-                  건
-                </span>
-              </p>
-              <p className="text-[12px] text-gray-400">계약서 작성</p>
+        {/* 현재 보유 크레딧 - 게스트 모드에서는 가입 유도 메시지 */}
+        {isGuestMode ? (
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl p-5 mb-6">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">🎁</span>
+              <div>
+                <p className="text-[16px] font-bold text-gray-900 mb-1">
+                  가입하면 무료 5건!
+                </p>
+                <p className="text-[13px] text-gray-600">
+                  지금 가입하면 계약서 5건을 무료로 드려요
+                </p>
+              </div>
             </div>
           </div>
-          <p className="text-[12px] text-blue-500 mt-3">
-            💡 AI 노무사 검토는 무료로 이용할 수 있어요
-          </p>
-        </div>
+        ) : (
+          <div className="bg-white rounded-2xl p-5 mb-6">
+            <p className="text-[14px] text-gray-500 mb-2">현재 보유 크레딧</p>
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <p className="text-[24px] font-bold text-gray-900">
+                  {currentCredits.contract}
+                  <span className="text-[14px] font-normal text-gray-500 ml-1">
+                    건
+                  </span>
+                </p>
+                <p className="text-[12px] text-gray-400">계약서 작성</p>
+              </div>
+            </div>
+            <p className="text-[12px] text-blue-500 mt-3">
+              💡 AI 노무사 검토는 무료로 이용할 수 있어요
+            </p>
+          </div>
+        )}
 
         {/* 상품 목록 */}
         <div className="space-y-3 mb-6">
@@ -210,13 +242,17 @@ export default function PricingPage({
 
       {/* 하단 결제 버튼 */}
       <div className="bg-white border-t border-gray-100 px-5 pt-3 pb-4 safe-bottom">
-        <Button onClick={() => setShowPayment(true)}>
-          {formatCurrency(selectedProduct.price)} 결제하기
+        <Button onClick={handlePaymentClick}>
+          {isGuestMode ? (
+            '가입하고 무료 5건 받기 🎁'
+          ) : (
+            `${formatCurrency(selectedProduct.price)} 결제하기`
+          )}
         </Button>
       </div>
 
-      {/* 결제 위젯 */}
-      {showPayment && (
+      {/* 결제 위젯 (로그인된 사용자만) */}
+      {showPayment && userId && (
         <PaymentWidget
           product={selectedProduct}
           userId={userId}
@@ -225,6 +261,13 @@ export default function PricingPage({
           onClose={() => setShowPayment(false)}
         />
       )}
+
+      {/* 게스트 모드 회원가입 유도 시트 */}
+      <SignupPromptSheet
+        isOpen={showSignupSheet}
+        onClose={() => setShowSignupSheet(false)}
+        feature="create"
+      />
 
       {/* 토스트 */}
       <Toast
