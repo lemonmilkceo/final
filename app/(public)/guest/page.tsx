@@ -36,10 +36,10 @@ export default function GuestRoleSelectPage() {
       <div className="flex-1 flex flex-col items-center justify-center px-8">
         <div className="mb-8 text-center">
           <Image
-            src="/images/logo-pencil.svg"
+            src="/images/logo.png"
             alt="싸인해주세요"
-            width={48}
-            height={48}
+            width={64}
+            height={64}
             className="mx-auto mb-4"
           />
           <h1 className="text-[24px] font-bold text-gray-900 mb-2">

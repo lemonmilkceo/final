@@ -43,12 +43,12 @@ export default function SplashPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white">
       {/* Logo */}
-      <div className="w-20 h-20 mb-4 animate-bounce-slow">
+      <div className="w-24 h-24 mb-4 animate-bounce-slow">
         <Image
-          src="/images/logo-pencil.svg"
+          src="/images/logo.png"
           alt="싸인해주세요 로고"
-          width={80}
-          height={80}
+          width={96}
+          height={96}
           priority
         />
       </div>

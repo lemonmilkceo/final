@@ -3,6 +3,7 @@
 import { Button, KakaoIcon } from '@/components/ui/Button';
 import { signInWithKakao } from '../login/actions';
 import { useTransition } from 'react';
+import Image from 'next/image';
 
 export function SignupForm() {
   const [isPending, startTransition] = useTransition();
@@ -21,19 +22,13 @@ export function SignupForm() {
       {/* Content */}
       <div className="flex-1 flex flex-col items-center justify-center">
         {/* Logo */}
-        <div className="w-16 h-16 mb-4 flex items-center justify-center">
-          <svg
-            className="w-12 h-12 text-primary"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-            <path d="m15 5 4 4" />
-          </svg>
+        <div className="w-20 h-20 mb-4 flex items-center justify-center">
+          <Image
+            src="/images/logo.png"
+            alt="싸인해주세요 로고"
+            width={80}
+            height={80}
+          />
         </div>
 
         {/* Title */}

@@ -9,6 +9,16 @@ export const metadata: Metadata = {
     '1분이면 끝! 어려운 법률 용어 없이 질문에 답하기만 하면 근로계약서가 완성됩니다.',
   keywords: ['근로계약서', '알바', '계약서', '서명', '전자계약', 'AI 노무사'],
   authors: [{ name: 'SignPlease' }],
+  icons: {
+    icon: [
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
+  manifest: '/manifest.json',
   openGraph: {
     title: '싸인해주세요 | 간편한 근로계약서 작성',
     description:
