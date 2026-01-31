@@ -71,6 +71,7 @@ export const SAMPLE_CONTRACT_DETAILS: Record<string, {
   includes_weekly_allowance: boolean;
   status: 'draft' | 'pending' | 'completed' | 'expired' | 'deleted';
   business_size: 'under_5' | 'over_5';
+  workplace_name: string;
   start_date: string;
   end_date: string | null;
   work_days: string[];
@@ -102,6 +103,7 @@ export const SAMPLE_CONTRACT_DETAILS: Record<string, {
     includes_weekly_allowance: true,
     status: 'completed',
     business_size: 'over_5',
+    workplace_name: '싸인카페 강남점',
     start_date: '2026-01-01',
     end_date: '2026-06-30',
     work_days: ['월', '화', '수', '목', '금'],
@@ -131,6 +133,7 @@ export const SAMPLE_CONTRACT_DETAILS: Record<string, {
     includes_weekly_allowance: false,
     status: 'pending',
     business_size: 'under_5',
+    workplace_name: '카페모카 합정점',
     start_date: '2026-02-01',
     end_date: null,
     work_days: ['토', '일'],
@@ -160,6 +163,7 @@ export const SAMPLE_CONTRACT_DETAILS: Record<string, {
     includes_weekly_allowance: true,
     status: 'draft',
     business_size: 'over_5',
+    workplace_name: '롯데마트 잠실점',
     start_date: '2026-03-01',
     end_date: '2026-08-31',
     work_days: ['월', '수', '금'],
@@ -186,6 +190,7 @@ export const SAMPLE_CONTRACT_DETAILS: Record<string, {
     includes_weekly_allowance: true,
     status: 'completed',
     business_size: 'over_5',
+    workplace_name: '이마트 반포점',
     start_date: '2025-09-01',
     end_date: '2026-02-28',
     work_days: ['월', '화', '수', '목', '금'],
@@ -215,6 +220,7 @@ export const SAMPLE_CONTRACT_DETAILS: Record<string, {
     includes_weekly_allowance: false,
     status: 'pending',
     business_size: 'under_5',
+    workplace_name: '브런치카페 이태원점',
     start_date: '2026-02-01',
     end_date: null,
     work_days: ['화', '목', '토'],

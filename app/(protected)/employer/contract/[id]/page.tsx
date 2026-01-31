@@ -52,6 +52,7 @@ export default async function ContractDetailPage({ params }: PageProps) {
       <ContractDetail
         contract={{
           id: sampleContract.id,
+          workplaceName: sampleContract.workplace_name,
           workerName: sampleContract.worker_name,
           wageType: 'hourly',
           hourlyWage: sampleContract.hourly_wage,
