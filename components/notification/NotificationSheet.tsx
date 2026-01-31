@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import BottomSheet from '@/components/ui/BottomSheet';
 import { formatRelativeTime } from '@/lib/utils/format';
@@ -55,6 +55,11 @@ export default function NotificationSheet({
   const router = useRouter();
   const [localNotifications, setLocalNotifications] = useState(notifications);
   const [isLoading, setIsLoading] = useState(false);
+
+  // props의 notifications가 변경되면 localNotifications도 동기화
+  useEffect(() => {
+    setLocalNotifications(notifications);
+  }, [notifications]);
 
   const unreadCount = localNotifications.filter((n) => !n.is_read).length;
 
