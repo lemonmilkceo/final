@@ -10,17 +10,21 @@
 ## 1. 개요
 
 ### 1.1 목적
+
 회원가입 시 휴대폰 번호를 SMS 인증번호로 검증하여 본인 확인을 강화합니다.
 
 ### 1.2 현재 상태
+
 - 현재: 휴대폰 번호 매칭 (계약서에 저장된 번호와 입력 번호 비교)
 - 변경: SMS 인증번호 발송/검증으로 완전 교체
 
 ### 1.3 적용 시점
+
 - **회원가입 시**: 모든 신규 사용자 (필수)
 - 기존 MVP의 "휴대폰 번호 매칭" 방식은 제거
 
 ### 1.4 선정 제공사
+
 - **알리고 (Aligo)**: 카카오 알림톡과 동일한 서비스 사용
 - SMS 단가: 약 15~20원/건
 
@@ -52,11 +56,11 @@
 
 ### 2.2 인증 규칙
 
-| 항목 | 설정값 |
-|------|--------|
-| 인증번호 길이 | 4자리 숫자 |
-| 유효 시간 | 3분 |
-| 재발송 제한 | 시간당 3회 |
+| 항목           | 설정값                  |
+| -------------- | ----------------------- |
+| 인증번호 길이  | 4자리 숫자              |
+| 유효 시간      | 3분                     |
+| 재발송 제한    | 시간당 3회              |
 | 오류 입력 제한 | 3회 실패 시 재발송 필요 |
 
 ---
@@ -114,7 +118,9 @@ import crypto from 'crypto';
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -210,10 +216,7 @@ function generateVerificationCode(): string {
 
 function hashCode(code: string): string {
   const salt = process.env.SMS_CODE_SALT || 'signplease-sms-salt';
-  return crypto
-    .createHmac('sha256', salt)
-    .update(code)
-    .digest('hex');
+  return crypto.createHmac('sha256', salt).update(code).digest('hex');
 }
 ```
 
@@ -228,7 +231,9 @@ import crypto from 'crypto';
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -282,10 +287,11 @@ export async function POST(request: NextRequest) {
 
     const remainingAttempts = 2 - verification.attempts;
     return NextResponse.json(
-      { 
-        error: remainingAttempts > 0 
-          ? `인증번호가 틀렸어요. ${remainingAttempts}번 더 시도할 수 있어요.`
-          : '입력 횟수를 초과했어요. 인증번호를 다시 발송해주세요.'
+      {
+        error:
+          remainingAttempts > 0
+            ? `인증번호가 틀렸어요. ${remainingAttempts}번 더 시도할 수 있어요.`
+            : '입력 횟수를 초과했어요. 인증번호를 다시 발송해주세요.',
       },
       { status: 400 }
     );
@@ -312,10 +318,7 @@ export async function POST(request: NextRequest) {
 
 function hashCode(code: string): string {
   const salt = process.env.SMS_CODE_SALT || 'signplease-sms-salt';
-  return crypto
-    .createHmac('sha256', salt)
-    .update(code)
-    .digest('hex');
+  return crypto.createHmac('sha256', salt).update(code).digest('hex');
 }
 ```
 
@@ -346,7 +349,7 @@ export async function sendSMS(params: SMSParams): Promise<SMSResult> {
     sender: process.env.SENDER_PHONE_NUMBER!,
     receiver: params.phoneNumber,
     msg: params.message,
-    msg_type: 'SMS',  // 단문
+    msg_type: 'SMS', // 단문
   });
 
   try {
@@ -594,10 +597,12 @@ export async function GET(request: NextRequest) {
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    
+
     if (!error) {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (user) {
         // 프로필 확인
         const { data: profile } = await supabase
@@ -631,6 +636,7 @@ export async function GET(request: NextRequest) {
 ## 9. 테스트 체크리스트
 
 ### 9.1 기능 테스트
+
 - [ ] 인증번호 발송 정상 동작
 - [ ] 3분 타이머 정상 동작
 - [ ] 인증번호 검증 성공
@@ -640,6 +646,7 @@ export async function GET(request: NextRequest) {
 - [ ] 만료된 인증번호 에러 처리
 
 ### 9.2 엣지 케이스
+
 - [ ] 잘못된 전화번호 형식
 - [ ] 이미 인증된 번호로 재시도
 - [ ] 세션 만료 상태에서 인증 시도
@@ -649,23 +656,23 @@ export async function GET(request: NextRequest) {
 
 ## 10. 보안 고려사항
 
-| 항목 | 조치 |
-|------|------|
-| 인증번호 저장 | 해시하여 저장 (평문 저장 금지) |
-| Rate Limiting | 시간당 3회 제한 |
-| Brute Force 방지 | 3회 실패 시 재발송 필요 |
-| 만료 처리 | 3분 후 자동 만료 |
-| 로그 | 발송 내역 notification_logs에 저장 |
+| 항목             | 조치                               |
+| ---------------- | ---------------------------------- |
+| 인증번호 저장    | 해시하여 저장 (평문 저장 금지)     |
+| Rate Limiting    | 시간당 3회 제한                    |
+| Brute Force 방지 | 3회 실패 시 재발송 필요            |
+| 만료 처리        | 3분 후 자동 만료                   |
+| 로그             | 발송 내역 notification_logs에 저장 |
 
 ---
 
 ## 11. 비용 예상
 
-| 항목 | 단가 | 예상 월 발송량 | 월 비용 |
-|------|------|---------------|--------|
-| SMS 인증 | 약 18원/건 | 500건 | 9,000원 |
-| 재발송 | 약 18원/건 | 100건 (20%) | 1,800원 |
-| **총합** | | | **약 11,000원/월** |
+| 항목     | 단가       | 예상 월 발송량 | 월 비용            |
+| -------- | ---------- | -------------- | ------------------ |
+| SMS 인증 | 약 18원/건 | 500건          | 9,000원            |
+| 재발송   | 약 18원/건 | 100건 (20%)    | 1,800원            |
+| **총합** |            |                | **약 11,000원/월** |
 
 ---
 

@@ -58,16 +58,18 @@ export async function checkAccountBeforeDelete(): Promise<AccountCheckResult> {
       .or(`employer_id.eq.${user.id},worker_id.eq.${user.id}`)
       .eq('status', 'completed');
 
-    // 남은 크레딧 조회 (사업자인 경우)
+    // 남은 크레딧 조회 (사업자인 경우 - 계약서 크레딧만)
     let remainingCredits = 0;
     if (profile?.role === 'employer') {
-      const { data: credits } = await supabase
+      const { data: contractCredit } = await supabase
         .from('credits')
-        .select('amount, credit_type')
-        .eq('user_id', user.id);
+        .select('amount')
+        .eq('user_id', user.id)
+        .eq('credit_type', 'contract')
+        .single();
 
-      if (credits && credits.length > 0) {
-        remainingCredits = credits.reduce((sum, c) => sum + (c.amount || 0), 0);
+      if (contractCredit) {
+        remainingCredits = contractCredit.amount || 0;
       }
     }
 

@@ -10,13 +10,16 @@
 ## 1. 개요
 
 ### 1.1 목적
+
 사장님이 계약서를 작성 완료 후 근로자에게 자동으로 카카오 알림톡을 발송하여 서명 링크를 전달합니다.
 
 ### 1.2 현재 상태
+
 - 현재: 카카오톡 SDK 기반 공유 (사장님이 직접 공유 버튼 클릭)
 - 변경: 알림톡으로 자동 발송 (SDK 공유 기능 대체)
 
 ### 1.3 선정 제공사
+
 - **알리고 (Aligo)**: 저렴하고 국내에서 많이 사용되는 서비스
 - 홈페이지: https://smartsms.aligo.in
 
@@ -26,12 +29,12 @@
 
 ### 2.1 사전 준비 (사업자등록 후)
 
-| 항목 | 설명 | 상태 |
-|------|------|------|
-| 사업자등록증 | 알리고 가입 및 카카오 채널 연동에 필수 | 대기 |
-| 알리고 계정 | API Key 발급 | 대기 |
-| 카카오 비즈니스 채널 | 알림톡 발송에 필수 (pfId) | 대기 |
-| 알림톡 템플릿 | 카카오에 사전 등록/승인 필요 | 대기 |
+| 항목                 | 설명                                   | 상태 |
+| -------------------- | -------------------------------------- | ---- |
+| 사업자등록증         | 알리고 가입 및 카카오 채널 연동에 필수 | 대기 |
+| 알리고 계정          | API Key 발급                           | 대기 |
+| 카카오 비즈니스 채널 | 알림톡 발송에 필수 (pfId)              | 대기 |
+| 알림톡 템플릿        | 카카오에 사전 등록/승인 필요           | 대기 |
 
 ### 2.2 환경 변수
 
@@ -74,6 +77,7 @@ KAKAO_CHANNEL_ID=xxx  # 카카오 비즈니스 채널 ID (pfId)
 | #{만료일} | expires_at (포맷팅) | 2026.02.08 |
 
 **버튼**:
+
 - 타입: WL (웹링크)
 - 버튼명: 계약서 확인하기
 - URL: `${APP_URL}/contract/sign/${share_token}`
@@ -102,14 +106,14 @@ interface AlimtalkRequest {
   phoneNumber: string;
   variables: Record<string, string>;
   buttonUrl: string;
-  fallbackSms?: boolean;  // 실패 시 SMS 발송 여부 (기본: true)
+  fallbackSms?: boolean; // 실패 시 SMS 발송 여부 (기본: true)
 }
 
 interface AlimtalkResponse {
   success: boolean;
   messageId?: string;
   error?: string;
-  fallbackUsed?: boolean;  // SMS로 대체 발송되었는지
+  fallbackUsed?: boolean; // SMS로 대체 발송되었는지
 }
 ```
 
@@ -140,9 +144,9 @@ interface AligoAlimtalkParams {
       linkPc: string;
     }>;
   };
-  failover?: 'Y' | 'N';  // SMS Fallback
-  fsubject_1?: string;   // Fallback SMS 제목
-  fmessage_1?: string;   // Fallback SMS 내용
+  failover?: 'Y' | 'N'; // SMS Fallback
+  fsubject_1?: string; // Fallback SMS 제목
+  fmessage_1?: string; // Fallback SMS 내용
 }
 
 export async function sendAlimtalk(params: {
@@ -162,13 +166,15 @@ export async function sendAlimtalk(params: {
     subject_1: '[싸인해주세요] 근로계약서 알림',
     message_1: params.message,
     button_1: {
-      button: [{
-        name: '계약서 확인하기',
-        linkType: 'WL',
-        linkTypeName: '웹링크',
-        linkMo: params.buttonUrl,
-        linkPc: params.buttonUrl,
-      }]
+      button: [
+        {
+          name: '계약서 확인하기',
+          linkType: 'WL',
+          linkTypeName: '웹링크',
+          linkMo: params.buttonUrl,
+          linkPc: params.buttonUrl,
+        },
+      ],
     },
     failover: 'Y',
     fsubject_1: '[싸인해주세요]',
@@ -202,11 +208,16 @@ export async function sendAlimtalk(params: {
 ```typescript
 // app/(protected)/employer/preview/[id]/actions.ts
 
-export async function sendContract(contractId: string): Promise<ActionResult<{ shareUrl: string }>> {
+export async function sendContract(
+  contractId: string
+): Promise<ActionResult<{ shareUrl: string }>> {
   const supabase = await createClient();
 
   // 인증 확인
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
   if (!user || authError) {
     return { success: false, error: '인증이 필요합니다.' };
   }
@@ -255,7 +266,7 @@ export async function sendContract(contractId: string): Promise<ActionResult<{ s
     status: alimtalkResult.success ? 'sent' : 'failed',
     message_id: alimtalkResult.messageId,
     error: alimtalkResult.error,
-    fallback_used: !alimtalkResult.success,  // SMS Fallback 여부
+    fallback_used: !alimtalkResult.success, // SMS Fallback 여부
   });
 
   if (!alimtalkResult.success) {
@@ -288,9 +299,13 @@ function buildAlimtalkMessage(params: {
   startDate: string;
   expiresAt: string | null;
 }): string {
-  const formattedWage = new Intl.NumberFormat('ko-KR').format(params.hourlyWage);
-  const formattedStartDate = new Date(params.startDate).toLocaleDateString('ko-KR');
-  const formattedExpiry = params.expiresAt 
+  const formattedWage = new Intl.NumberFormat('ko-KR').format(
+    params.hourlyWage
+  );
+  const formattedStartDate = new Date(params.startDate).toLocaleDateString(
+    'ko-KR'
+  );
+  const formattedExpiry = params.expiresAt
     ? new Date(params.expiresAt).toLocaleDateString('ko-KR')
     : '7일 이내';
 
@@ -345,15 +360,20 @@ CREATE POLICY notification_logs_select_own ON notification_logs
 ## 7. 재전송 기능
 
 ### 7.1 재전송 제한
+
 - 일일 3회까지 재전송 가능
 - 제한 초과 시 에러 메시지 표시
 
 ### 7.2 재전송 액션
 
 ```typescript
-export async function resendContract(contractId: string): Promise<ActionResult> {
+export async function resendContract(
+  contractId: string
+): Promise<ActionResult> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   // 오늘 발송 횟수 확인
   const today = new Date();
@@ -367,9 +387,9 @@ export async function resendContract(contractId: string): Promise<ActionResult> 
     .gte('created_at', today.toISOString());
 
   if (count && count >= 3) {
-    return { 
-      success: false, 
-      error: '하루에 3번까지만 재전송할 수 있어요. 내일 다시 시도해주세요.' 
+    return {
+      success: false,
+      error: '하루에 3번까지만 재전송할 수 있어요. 내일 다시 시도해주세요.',
     };
   }
 
@@ -385,11 +405,13 @@ export async function resendContract(contractId: string): Promise<ActionResult> 
 ### 8.1 미리보기 페이지 버튼 변경
 
 **기존**:
+
 ```
 [카카오톡으로 공유] [링크 복사]
 ```
 
 **변경**:
+
 ```
 [저장하고 전송하기 📤]
 ```
@@ -415,7 +437,7 @@ export async function resendContract(contractId: string): Promise<ActionResult> 
 ```
 ⚠️ 알림톡 발송 실패
 
-카카오톡 알림톡 발송에 실패하여 
+카카오톡 알림톡 발송에 실패하여
 SMS로 대체 발송되었습니다.
 
 계약서: 홍길동
@@ -427,6 +449,7 @@ SMS로 대체 발송되었습니다.
 ## 9. 테스트 체크리스트
 
 ### 9.1 기능 테스트
+
 - [ ] 알림톡 정상 발송
 - [ ] 변수 치환 정상 동작
 - [ ] 버튼 URL 정상 작동
@@ -436,6 +459,7 @@ SMS로 대체 발송되었습니다.
 - [ ] 에러 알림 표시
 
 ### 9.2 엣지 케이스
+
 - [ ] 잘못된 전화번호
 - [ ] 카카오톡 미설치 사용자
 - [ ] 알리고 API 타임아웃
@@ -445,25 +469,25 @@ SMS로 대체 발송되었습니다.
 
 ## 10. 구현 일정 (예상)
 
-| 단계 | 작업 | 소요 시간 |
-|------|------|----------|
-| 1 | 알리고 계정 생성 및 API 키 발급 | 사업자등록 후 1일 |
-| 2 | 카카오 비즈니스 채널 생성 | 1일 |
-| 3 | 알림톡 템플릿 등록 및 승인 | 2-3일 (카카오 검수) |
-| 4 | API 연동 개발 | 2일 |
-| 5 | UI 변경 | 1일 |
-| 6 | 테스트 및 QA | 2일 |
-| **총합** | | **약 1-2주** |
+| 단계     | 작업                            | 소요 시간           |
+| -------- | ------------------------------- | ------------------- |
+| 1        | 알리고 계정 생성 및 API 키 발급 | 사업자등록 후 1일   |
+| 2        | 카카오 비즈니스 채널 생성       | 1일                 |
+| 3        | 알림톡 템플릿 등록 및 승인      | 2-3일 (카카오 검수) |
+| 4        | API 연동 개발                   | 2일                 |
+| 5        | UI 변경                         | 1일                 |
+| 6        | 테스트 및 QA                    | 2일                 |
+| **총합** |                                 | **약 1-2주**        |
 
 ---
 
 ## 11. 비용 예상
 
-| 항목 | 단가 | 예상 월 발송량 | 월 비용 |
-|------|------|---------------|--------|
-| 알림톡 | 약 8원/건 | 1,000건 | 8,000원 |
-| SMS Fallback | 약 15원/건 | 100건 (10%) | 1,500원 |
-| **총합** | | | **약 10,000원/월** |
+| 항목         | 단가       | 예상 월 발송량 | 월 비용            |
+| ------------ | ---------- | -------------- | ------------------ |
+| 알림톡       | 약 8원/건  | 1,000건        | 8,000원            |
+| SMS Fallback | 약 15원/건 | 100건 (10%)    | 1,500원            |
+| **총합**     |            |                | **약 10,000원/월** |
 
 ---
 
