@@ -5,6 +5,7 @@ import Header from '@/components/layout/Header';
 import Card from '@/components/ui/Card';
 import EmptyState from '@/components/shared/EmptyState';
 import Toast from '@/components/ui/Toast';
+import SignupPromptSheet from '@/components/shared/SignupPromptSheet';
 import { formatCurrency, formatDate } from '@/lib/utils/format';
 
 interface CareerContract {
@@ -37,9 +38,66 @@ export default function CareerList({
   isGuestMode = false,
 }: CareerListProps) {
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastVariant, setToastVariant] = useState<'success' | 'error' | 'info'>('info');
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSignupSheet, setShowSignupSheet] = useState(false);
 
-  const handleExportClick = () => {
+  const showToastMessage = (message: string, variant: 'success' | 'error' | 'info' = 'info') => {
+    setToastMessage(message);
+    setToastVariant(variant);
     setShowToast(true);
+  };
+
+  const handleExportClick = async () => {
+    // 게스트 모드: 회원가입 유도
+    if (isGuestMode) {
+      setShowSignupSheet(true);
+      return;
+    }
+
+    // 실제 PDF 다운로드 로직
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/pdf/career-certificate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || '경력증명서 생성에 실패했어요');
+      }
+
+      // Base64 → Blob → 다운로드
+      const binaryString = atob(data.pdf);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      
+      // 다운로드 링크 생성 및 클릭
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = data.filename || '경력증명서.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      showToastMessage('경력증명서가 다운로드되었어요', 'success');
+    } catch (error) {
+      console.error('경력증명서 다운로드 오류:', error);
+      const errorMessage = error instanceof Error ? error.message : '경력증명서 생성에 실패했어요';
+      showToastMessage(errorMessage, 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const formatPeriod = (startDate: string, endDate: string | null) => {
@@ -166,32 +224,56 @@ export default function CareerList({
         {contracts.length > 0 && (
           <button 
             onClick={handleExportClick}
-            className="w-full mt-6 py-4 rounded-2xl border-2 border-gray-200 text-gray-700 font-medium text-[15px] flex items-center justify-center gap-2"
+            disabled={isLoading}
+            className={`w-full mt-6 py-4 rounded-2xl border-2 font-medium text-[15px] flex items-center justify-center gap-2 transition-colors ${
+              isLoading 
+                ? 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed' 
+                : 'border-gray-200 text-gray-700 hover:border-blue-300 hover:text-blue-600'
+            }`}
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            경력증명서 발급
+            {isLoading ? (
+              <>
+                <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                생성 중...
+              </>
+            ) : (
+              <>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                경력증명서 발급
+              </>
+            )}
           </button>
         )}
       </div>
 
       {/* Toast */}
       <Toast
-        message="경력증명서 발급 기능은 곧 출시 예정이에요!"
-        variant="info"
+        message={toastMessage}
+        variant={toastVariant}
         isVisible={showToast}
         onClose={() => setShowToast(false)}
+      />
+
+      {/* 게스트 모드 회원가입 유도 시트 */}
+      <SignupPromptSheet
+        isOpen={showSignupSheet}
+        onClose={() => setShowSignupSheet(false)}
+        feature="pdf"
       />
     </div>
   );
