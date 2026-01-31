@@ -1,12 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Header from '@/components/layout/Header';
 import Card from '@/components/ui/Card';
 import EmptyState from '@/components/shared/EmptyState';
 import Toast from '@/components/ui/Toast';
 import SignupPromptSheet from '@/components/shared/SignupPromptSheet';
+import BottomSheet from '@/components/ui/BottomSheet';
+import CareerCertificatePDF from '@/components/career/CareerCertificatePDF';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { formatCurrency, formatDate } from '@/lib/utils/format';
+import { generatePDF } from '@/lib/utils/pdf';
 
 interface CareerContract {
   id: string;
@@ -40,8 +44,10 @@ export default function CareerList({
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastVariant, setToastVariant] = useState<'success' | 'error' | 'info'>('info');
-  const [isLoading, setIsLoading] = useState(false);
   const [showSignupSheet, setShowSignupSheet] = useState(false);
+  const [showPDFSheet, setShowPDFSheet] = useState(false);
+  const [isPDFGenerating, setIsPDFGenerating] = useState(false);
+  const pdfRef = useRef<HTMLDivElement>(null);
 
   const showToastMessage = (message: string, variant: 'success' | 'error' | 'info' = 'info') => {
     setToastMessage(message);
@@ -49,55 +55,70 @@ export default function CareerList({
     setShowToast(true);
   };
 
-  const handleExportClick = async () => {
+  // 버튼 클릭 시 바텀시트 열기
+  const handleExportClick = () => {
     // 게스트 모드: 회원가입 유도
     if (isGuestMode) {
       setShowSignupSheet(true);
       return;
     }
 
-    // 실제 PDF 다운로드 로직
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/pdf/career-certificate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+    // 바텀시트 열기
+    setShowPDFSheet(true);
+  };
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || '경력증명서 생성에 실패했어요');
-      }
-
-      // Base64 → Blob → 다운로드
-      const binaryString = atob(data.pdf);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      const blob = new Blob([bytes], { type: 'application/pdf' });
-      
-      // 다운로드 링크 생성 및 클릭
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = data.filename || '경력증명서.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      showToastMessage('경력증명서가 다운로드되었어요', 'success');
-    } catch (error) {
-      console.error('경력증명서 다운로드 오류:', error);
-      const errorMessage = error instanceof Error ? error.message : '경력증명서 생성에 실패했어요';
-      showToastMessage(errorMessage, 'error');
-    } finally {
-      setIsLoading(false);
+  // 실제 PDF 생성 및 다운로드
+  const handleGeneratePDF = async () => {
+    if (!pdfRef.current) {
+      showToastMessage('PDF 생성에 실패했어요', 'error');
+      return;
     }
+
+    setIsPDFGenerating(true);
+    try {
+      const workerName = contracts[0]?.worker_name || '근로자';
+      const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
+      const filename = `경력증명서_${workerName}_${dateStr}.pdf`;
+      
+      await generatePDF(pdfRef.current, { filename });
+      showToastMessage('경력증명서가 다운로드되었어요', 'success');
+      setShowPDFSheet(false);
+    } catch (error) {
+      console.error('PDF 생성 오류:', error);
+      showToastMessage('PDF 생성에 실패했어요. 다시 시도해주세요.', 'error');
+    } finally {
+      setIsPDFGenerating(false);
+    }
+  };
+
+  // 경력 데이터 변환 (PDF용)
+  const getPDFData = () => {
+    const careers = contracts.map((contract) => {
+      const startDate = new Date(contract.start_date);
+      const endDate = contract.end_date ? new Date(contract.end_date) : new Date();
+      const durationDays = Math.ceil(
+        (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      return {
+        id: contract.id,
+        workplaceName: contract.employer?.name || contract.work_location || '미지정',
+        jobDescription: contract.job_description || '업무 내용 미기재',
+        startDate: contract.start_date,
+        endDate: contract.end_date,
+        durationDays: durationDays > 0 ? durationDays : 1,
+      };
+    });
+
+    return {
+      worker: {
+        name: contracts[0]?.worker_name || '근로자',
+      },
+      careers,
+      totalDays,
+      totalContracts,
+      issueDate: new Date().toISOString(),
+    };
   };
 
   const formatPeriod = (startDate: string, endDate: string | null) => {
@@ -224,39 +245,22 @@ export default function CareerList({
         {contracts.length > 0 && (
           <button 
             onClick={handleExportClick}
-            disabled={isLoading}
-            className={`w-full mt-6 py-4 rounded-2xl border-2 font-medium text-[15px] flex items-center justify-center gap-2 transition-colors ${
-              isLoading 
-                ? 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed' 
-                : 'border-gray-200 text-gray-700 hover:border-blue-300 hover:text-blue-600'
-            }`}
+            className="w-full mt-6 py-4 rounded-2xl border-2 border-gray-200 text-gray-700 font-medium text-[15px] flex items-center justify-center gap-2 transition-colors hover:border-blue-300 hover:text-blue-600"
           >
-            {isLoading ? (
-              <>
-                <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                생성 중...
-              </>
-            ) : (
-              <>
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-                경력증명서 발급
-              </>
-            )}
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            경력증명서 발급
           </button>
         )}
       </div>
@@ -275,6 +279,58 @@ export default function CareerList({
         onClose={() => setShowSignupSheet(false)}
         feature="pdf"
       />
+
+      {/* PDF 미리보기 시트 */}
+      <BottomSheet
+        isOpen={showPDFSheet}
+        onClose={() => setShowPDFSheet(false)}
+        title="경력증명서 미리보기"
+      >
+        <div className="space-y-4">
+          {/* PDF 미리보기 영역 */}
+          <div className="bg-gray-50 rounded-2xl p-4 max-h-[50vh] overflow-auto">
+            <div className="transform scale-[0.35] origin-top-left" style={{ width: '285%' }}>
+              <CareerCertificatePDF
+                ref={pdfRef}
+                data={getPDFData()}
+              />
+            </div>
+          </div>
+
+          {/* 안내 문구 */}
+          <div className="bg-blue-50 rounded-xl p-3 flex items-start gap-2">
+            <span className="text-lg">💡</span>
+            <p className="text-[13px] text-blue-700">
+              위 미리보기와 동일한 형식의 PDF 파일이 다운로드됩니다.
+            </p>
+          </div>
+
+          {/* 다운로드 버튼 */}
+          <button
+            onClick={handleGeneratePDF}
+            disabled={isPDFGenerating}
+            className={`w-full py-4 rounded-2xl font-semibold text-lg flex items-center justify-center gap-2 ${
+              isPDFGenerating
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                : 'bg-blue-500 text-white active:bg-blue-600'
+            }`}
+          >
+            {isPDFGenerating ? (
+              <>
+                <LoadingSpinner variant="button" />
+                PDF 생성 중...
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                PDF 다운로드
+              </>
+            )}
+          </button>
+        </div>
+      </BottomSheet>
     </div>
   );
 }
