@@ -2947,4 +2947,131 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ---
 
+## 📝 Amendment 25: 퇴사 처리 및 근무이력서 발급 기능 (2026년 1월 31일)
+
+> **버전**: 1.25  
+> **날짜**: 2026년 1월 31일  
+> **변경 사유**: 근로자 퇴사일 입력 및 정확한 경력 관리 기능 추가
+
+### 변경 개요
+- 근로자 계약서 상세에 "퇴사 처리" 버튼 추가
+- 퇴사일 입력 시 근무일수 정확하게 계산
+- "경력증명서" → "근무이력서"로 명칭 변경 (법적 면책)
+- 내 경력 페이지에서 퇴사일 미입력 안내 배너 추가
+
+### Story A25.1: DB 마이그레이션
+
+- [x] **Task A25.1.1**: contracts 테이블에 resignation_date 컬럼 추가 ✅
+  - 타입: date, nullable
+  - 설명: 실제 퇴사일 (근로자 입력)
+
+### Story A25.2: 유틸리티 함수 생성
+
+- [x] **Task A25.2.1**: `lib/utils/career.ts` 생성 ✅
+  - `getEffectiveEndDate()`: 우선순위(resignation_date > end_date > null)
+  - `getCareerStatus()`: 계약 상태 계산 (ongoing, resigned, expired, needs_input)
+  - `validateResignationDate()`: 퇴사일 유효성 검사
+  - `calculateWorkDays()`: 근무일수 계산
+
+### Story A25.3: Server Actions 생성
+
+- [x] **Task A25.3.1**: `app/actions/resignation.ts` 생성 ✅
+  - `setResignationDate()`: 퇴사일 설정
+  - `clearResignationDate()`: 퇴사일 초기화
+
+### Story A25.4: 근로자 계약서 상세 UI 수정
+
+- [x] **Task A25.4.1**: 퇴사 처리 버튼 추가 ✅
+  - 완료된 계약서에만 표시
+  - 퇴사일 입력 BottomSheet 구현
+
+- [x] **Task A25.4.2**: 근무기간 표시 로직 변경 ✅
+  - resignation_date 우선 표시
+  - "(퇴사)" 라벨 추가
+
+### Story A25.5: 내 경력 페이지 개선
+
+- [x] **Task A25.5.1**: 퇴사일 미입력 안내 배너 추가 ✅
+  - "퇴사일을 입력하면 더 정확한 근무이력서를 발급받을 수 있어요"
+
+- [x] **Task A25.5.2**: 계약서 카드 클릭 시 상세 페이지 이동 ✅
+  - 카드 hover 효과 및 우측 화살표 추가
+
+- [x] **Task A25.5.3**: 상태 배지 표시 ✅
+  - "근무 중", "퇴사 완료", "퇴사일 미입력" 등
+
+### Story A25.6: 경력증명서 → 근무이력서 변경
+
+- [x] **Task A25.6.1**: 명칭 변경 ✅
+  - "경력증명서" → "근무이력서"
+  - "Certificate of Employment" → "Work History Summary"
+
+- [x] **Task A25.6.2**: 면책 문구 추가 ✅
+  - "싸인해주세요 계약 정보 기반 참고용 문서"
+  - "공식 증명이 필요하면 해당 사업장에 요청해주세요"
+
+### Story A25.7: 사업자 화면 수정
+
+- [x] **Task A25.7.1**: 계약서 상세에 퇴사일 표시 ✅
+  - resignation_date 있으면 "(퇴사)" 라벨과 함께 표시
+
+### Story A25.8: RLS 정책 수정
+
+- [x] **Task A25.8.1**: contracts_update_employer 정책 수정 ✅
+  - 모든 상태의 계약서 UPDATE 허용 (삭제 기능 지원)
+
+---
+
+## 📊 Amendment 25 완료 요약
+
+| Task | 상태 | 설명 |
+|------|------|------|
+| A25.1.1 | ✅ | DB 마이그레이션 (resignation_date) |
+| A25.2.1 | ✅ | 경력 유틸리티 함수 |
+| A25.3.1 | ✅ | 퇴사 처리 Server Actions |
+| A25.4.1 | ✅ | 퇴사 처리 버튼 UI |
+| A25.4.2 | ✅ | 근무기간 표시 로직 |
+| A25.5.1 | ✅ | 퇴사일 미입력 안내 배너 |
+| A25.5.2 | ✅ | 카드 클릭 이동 |
+| A25.5.3 | ✅ | 상태 배지 표시 |
+| A25.6.1 | ✅ | 명칭 변경 |
+| A25.6.2 | ✅ | 면책 문구 추가 |
+| A25.7.1 | ✅ | 사업자 화면 퇴사일 표시 |
+| A25.8.1 | ✅ | RLS 정책 수정 |
+
+---
+
+### 📌 수정된 파일
+
+| 파일 | 변경 내용 |
+|------|----------|
+| `docs/schema.md` | resignation_date 컬럼 문서화 |
+| `types/database.ts` | contracts 타입에 resignation_date 추가 |
+| `lib/utils/career.ts` | 신규 생성 - 경력 관련 유틸리티 |
+| `app/actions/resignation.ts` | 신규 생성 - 퇴사 처리 Server Actions |
+| `app/(protected)/worker/contract/[id]/contract-detail.tsx` | 퇴사 처리 UI |
+| `app/(protected)/worker/contract/[id]/page.tsx` | resignation_date 전달 |
+| `app/(protected)/worker/career/career-list.tsx` | 안내 배너, 카드 클릭, 상태 배지 |
+| `app/(protected)/worker/career/page.tsx` | resignation_date 조회 |
+| `app/(protected)/employer/contract/[id]/contract-detail.tsx` | 퇴사일 표시 |
+| `app/(protected)/employer/contract/[id]/page.tsx` | resignation_date 전달 |
+| `components/career/CareerCertificatePDF.tsx` | 명칭 및 면책 문구 변경 |
+
+---
+
+### 📌 데이터 우선순위 로직
+
+```typescript
+// 근무 종료일 우선순위
+1순위: resignation_date (근로자가 직접 입력한 퇴사일)
+2순위: end_date (계약서에 명시된 종료일, 오늘 이전이면 종료로 간주)
+3순위: null (무기한 계약, 현재 진행 중)
+```
+
+---
+
+> **Amendment 25 끝**
+
+---
+
 > **문서 끝**

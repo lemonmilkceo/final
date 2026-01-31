@@ -5,7 +5,10 @@ import { useRouter } from 'next/navigation';
 import PageHeader from '@/components/layout/PageHeader';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import BottomSheet from '@/components/ui/BottomSheet';
+import Toast from '@/components/ui/Toast';
 import { updateProfile, updateWorkerDetails } from './actions';
+import { checkAccountBeforeDelete, deleteAccount } from '@/app/actions/account';
 import clsx from 'clsx';
 
 // 은행 목록
@@ -59,6 +62,16 @@ export default function ProfilePage({ profile, workerDetails }: ProfilePageProps
   const [workerDetailsLoading, setWorkerDetailsLoading] = useState(false);
   const [workerDetailsError, setWorkerDetailsError] = useState<string | null>(null);
   const [workerDetailsSuccess, setWorkerDetailsSuccess] = useState(false);
+
+  // 회원탈퇴 상태
+  const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteCheckData, setDeleteCheckData] = useState<{
+    pendingContracts: number;
+    completedContracts: number;
+    remainingCredits: number;
+  } | null>(null);
+  const [toast, setToast] = useState<{ message: string; variant: 'success' | 'error' } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,6 +133,41 @@ export default function ProfilePage({ profile, workerDetails }: ProfilePageProps
 
   const roleLabel = profile.role === 'employer' ? '사업자' : '근로자';
   const roleBgColor = profile.role === 'employer' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700';
+
+  // 회원탈퇴 시트 열기 (탈퇴 전 정보 조회)
+  const handleOpenDeleteSheet = async () => {
+    setDeleteLoading(true);
+    const result = await checkAccountBeforeDelete();
+    
+    if (result.success && result.data) {
+      setDeleteCheckData({
+        pendingContracts: result.data.pendingContracts,
+        completedContracts: result.data.completedContracts,
+        remainingCredits: result.data.remainingCredits,
+      });
+      setIsDeleteSheetOpen(true);
+    } else {
+      setToast({ message: result.error || '정보를 불러오는 중 오류가 발생했습니다.', variant: 'error' });
+    }
+    setDeleteLoading(false);
+  };
+
+  // 회원탈퇴 처리
+  const handleDeleteAccount = async () => {
+    setDeleteLoading(true);
+    const result = await deleteAccount();
+    
+    if (result.success) {
+      setToast({ message: '탈퇴가 완료되었습니다.', variant: 'success' });
+      // 잠시 후 메인 페이지로 이동
+      setTimeout(() => {
+        router.push('/');
+      }, 1500);
+    } else {
+      setToast({ message: result.error || '탈퇴 처리 중 오류가 발생했습니다.', variant: 'error' });
+      setDeleteLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -349,7 +397,96 @@ export default function ProfilePage({ profile, workerDetails }: ProfilePageProps
             })}
           </p>
         </div>
+
+        {/* 회원탈퇴 버튼 */}
+        <div className="mt-8 pt-6 border-t border-gray-100">
+          <button
+            onClick={handleOpenDeleteSheet}
+            disabled={deleteLoading}
+            className="text-[14px] text-red-500 font-medium hover:underline disabled:opacity-50"
+          >
+            {deleteLoading ? '확인 중...' : '회원탈퇴'}
+          </button>
+        </div>
       </div>
+
+      {/* 회원탈퇴 확인 BottomSheet */}
+      <BottomSheet
+        isOpen={isDeleteSheetOpen}
+        onClose={() => setIsDeleteSheetOpen(false)}
+        title="정말 탈퇴하시겠어요?"
+      >
+        <div className="space-y-4">
+          {/* 경고 메시지 */}
+          <div className="bg-red-50 rounded-xl p-4">
+            <p className="text-[14px] text-red-700 font-medium mb-2">
+              ⚠️ 탈퇴 시 아래 정보가 모두 삭제되며 복구할 수 없어요.
+            </p>
+            <ul className="text-[13px] text-red-600 space-y-1 ml-4">
+              <li>• 작성한 계약서</li>
+              <li>• 서명 기록</li>
+              <li>• 크레딧 잔액</li>
+              <li>• 결제 내역</li>
+            </ul>
+          </div>
+
+          {/* 현재 계정 상태 */}
+          {deleteCheckData && (
+            <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+              <p className="text-[14px] font-medium text-gray-900">현재 계정 상태</p>
+              <div className="text-[13px] text-gray-600 space-y-1">
+                {deleteCheckData.pendingContracts > 0 && (
+                  <p className="text-amber-600 font-medium">
+                    ⚠️ 진행 중인 계약서 {deleteCheckData.pendingContracts}개
+                  </p>
+                )}
+                <p>완료된 계약서: {deleteCheckData.completedContracts}개</p>
+                {deleteCheckData.remainingCredits > 0 && (
+                  <p className="text-amber-600 font-medium">
+                    💳 남은 크레딧: {deleteCheckData.remainingCredits}개 (환불 불가)
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 안내 문구 */}
+          <p className="text-[12px] text-gray-500 text-center">
+            탈퇴 후에도 상대방의 계약서에는 &apos;탈퇴한 회원&apos;으로 표시됩니다.
+          </p>
+
+          {/* 버튼들 */}
+          <div className="space-y-3 pt-2">
+            <button
+              onClick={handleDeleteAccount}
+              disabled={deleteLoading}
+              className={clsx(
+                'w-full py-3.5 rounded-xl font-semibold text-[16px]',
+                'bg-red-500 text-white',
+                'disabled:opacity-50 disabled:cursor-not-allowed',
+                'active:bg-red-600 transition-colors'
+              )}
+            >
+              {deleteLoading ? '처리 중...' : '탈퇴하기'}
+            </button>
+            <button
+              onClick={() => setIsDeleteSheetOpen(false)}
+              disabled={deleteLoading}
+              className="w-full py-3.5 rounded-xl font-semibold text-[16px] text-gray-700 bg-gray-100 active:bg-gray-200 transition-colors"
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      </BottomSheet>
+
+      {/* 토스트 메시지 */}
+      <Toast
+        message={toast?.message || ''}
+        variant={toast?.variant || 'success'}
+        isVisible={!!toast}
+        onClose={() => setToast(null)}
+      />
     </div>
   );
 }

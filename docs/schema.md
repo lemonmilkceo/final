@@ -2046,3 +2046,101 @@ export const contractTypeSchema = z.enum(['regular', 'contract']);
 ---
 
 > **Amendment 20 끝**
+
+---
+
+## 📝 Amendment 21: 퇴사일 필드 및 RLS 정책 수정 (2026년 1월 31일)
+
+> **버전**: 1.22  
+> **변경 사유**: 근로자 퇴사일 입력 기능 지원
+
+### 21.1 contracts 테이블 - resignation_date 컬럼
+
+#### 컬럼 정의
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `resignation_date` | `date` | YES | `NULL` | 실제 퇴사일 (근로자 입력) |
+
+이미 Amendment 20 이전에 추가되었으나, 명세 문서화를 위해 기록합니다.
+
+```sql
+-- 이미 적용됨
+ALTER TABLE contracts ADD COLUMN IF NOT EXISTS resignation_date date;
+
+COMMENT ON COLUMN contracts.resignation_date IS '실제 퇴사일 (근로자 입력)';
+```
+
+### 21.2 데이터 우선순위 로직
+
+근무 종료일을 결정할 때 다음 우선순위 적용:
+
+| 우선순위 | 필드 | 조건 | 결과 |
+|----------|------|------|------|
+| 1순위 | `resignation_date` | NOT NULL | 퇴사일 사용 |
+| 2순위 | `end_date` | NOT NULL AND < TODAY | 종료일 사용 |
+| 3순위 | `end_date` | NOT NULL AND >= TODAY | 현재 진행 중 |
+| 4순위 | NULL | 둘 다 NULL | 무기한 계약 (현재 진행 중) |
+
+### 21.3 RLS 정책 수정
+
+#### contracts_update_employer 정책 수정
+
+**기존 정책 (문제):**
+```sql
+-- 기존: draft, pending 상태만 UPDATE 가능
+CREATE POLICY contracts_update_employer ON contracts
+  FOR UPDATE TO authenticated
+  USING (
+    (SELECT auth.uid()) = employer_id
+    AND status IN ('draft', 'pending')
+  );
+```
+
+**변경된 정책:**
+```sql
+-- 변경: 모든 상태에서 UPDATE 가능 (삭제, 복구 등 지원)
+DROP POLICY IF EXISTS contracts_update_employer ON contracts;
+
+CREATE POLICY contracts_update_employer ON contracts
+  FOR UPDATE TO authenticated
+  USING ((SELECT auth.uid()) = employer_id)
+  WITH CHECK ((SELECT auth.uid()) = employer_id);
+```
+
+#### 변경 이유
+- Soft delete (status = 'deleted') 기능을 위해 completed, expired 상태도 UPDATE 필요
+- 사업자가 모든 상태의 계약서를 관리할 수 있도록 허용
+
+### 21.4 근로자 퇴사일 업데이트 권한
+
+근로자가 자신의 계약서에 `resignation_date`를 업데이트할 수 있도록 기존 정책 활용:
+
+```sql
+-- 근로자가 자신의 계약서 resignation_date 업데이트
+-- contracts_update_by_token 정책 활용 (Amendment 13에서 추가됨)
+```
+
+### 21.5 TypeScript 타입
+
+```typescript
+// types/database.ts - contracts 테이블
+export interface ContractsRow {
+  // ... 기존 필드들 ...
+  resignation_date: string | null;  // 실제 퇴사일 (근로자 입력)
+}
+
+export interface ContractsInsert {
+  // ... 기존 필드들 ...
+  resignation_date?: string | null;
+}
+
+export interface ContractsUpdate {
+  // ... 기존 필드들 ...
+  resignation_date?: string | null;
+}
+```
+
+---
+
+> **Amendment 21 끝**
