@@ -245,7 +245,7 @@ export default function CareerList({
         {contracts.length > 0 && (
           <button 
             onClick={handleExportClick}
-            className="w-full mt-6 py-4 rounded-2xl border-2 border-gray-200 text-gray-700 font-medium text-[15px] flex items-center justify-center gap-2 transition-colors hover:border-blue-300 hover:text-blue-600"
+            className="w-full mt-6 py-4 rounded-2xl bg-blue-500 text-white font-medium text-[15px] flex items-center justify-center gap-2 transition-colors hover:bg-blue-600 active:bg-blue-700"
           >
             <svg
               className="w-5 h-5"
