@@ -374,7 +374,29 @@ export default function WorkerContractDetail({
 
       {/* 하단 액션 버튼 */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-5 pt-3 pb-4 safe-bottom">
-        {/* 완료된 계약서 - 아이콘 버튼만 표시 (메인 버튼 제거) */}
+        {/* 서명 대기 중 - 서명 버튼 */}
+        {!workerSigned && contract.status === 'pending' && (
+          <button
+            onClick={isGuestMode ? handleGuestSignClick : () => setIsSignatureSheetOpen(true)}
+            className="w-full py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg"
+          >
+            서명하고 계약하기 ✍️
+          </button>
+        )}
+
+        {/* 근로자 서명 완료, 사업자 대기 중 - 안내 메시지 */}
+        {workerSigned && !employerSigned && contract.status === 'pending' && (
+          <div className="text-center">
+            <p className="text-[15px] text-gray-600 mb-2">
+              ✅ 서명을 완료했어요
+            </p>
+            <p className="text-[13px] text-gray-400">
+              사업자 서명 후 계약이 완료됩니다
+            </p>
+          </div>
+        )}
+
+        {/* 완료된 계약서 - 아이콘 버튼만 표시 */}
         {isCompleted && (
           <div className="flex justify-center gap-8">
             <button
@@ -390,16 +412,6 @@ export default function WorkerContractDetail({
               <span className="text-[12px] text-gray-500">PDF 다운로드</span>
             </button>
           </div>
-        )}
-
-        {/* 서명 대기 중 - 서명 버튼 */}
-        {!workerSigned && contract.status === 'pending' && (
-          <button
-            onClick={isGuestMode ? handleGuestSignClick : () => setIsSignatureSheetOpen(true)}
-            className="w-full py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg"
-          >
-            서명하고 계약하기 ✍️
-          </button>
         )}
 
         {/* 게스트 모드 안내 */}
