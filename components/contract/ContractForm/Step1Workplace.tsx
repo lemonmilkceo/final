@@ -4,7 +4,27 @@ import { useState, useEffect } from 'react';
 import { useContractFormStore } from '@/stores/contractFormStore';
 import { createClient } from '@/lib/supabase/client';
 import BottomSheet from '@/components/ui/BottomSheet';
+import SignupPromptSheet from '@/components/shared/SignupPromptSheet';
 import clsx from 'clsx';
+
+// 게스트 모드용 샘플 사업장
+const SAMPLE_WORKPLACES = [
+  {
+    id: 'sample-1',
+    name: '카페 샘플',
+    address: '서울시 강남구 테헤란로 123',
+  },
+  {
+    id: 'sample-2',
+    name: '편의점 샘플',
+    address: '서울시 서초구 서초대로 456',
+  },
+  {
+    id: 'sample-3',
+    name: '음식점 샘플',
+    address: '서울시 마포구 홍익로 789',
+  },
+];
 
 // Daum Postcode API 타입 선언
 declare global {
@@ -56,6 +76,10 @@ export default function Step1Workplace() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [editingWorkplace, setEditingWorkplace] = useState<Workplace | null>(null);
   
+  // 게스트 모드 상태
+  const [isGuestMode, setIsGuestMode] = useState(false);
+  const [isSignupPromptOpen, setIsSignupPromptOpen] = useState(false);
+  
   // 새 사업장 등록 폼
   const [newName, setNewName] = useState('');
   const [newAddress, setNewAddress] = useState('');
@@ -85,6 +109,7 @@ export default function Step1Workplace() {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
+        // 로그인 사용자: DB에서 사업장 목록 로드
         const { data: workplacesData } = await supabase
           .from('workplaces')
           .select('id, name, address')
@@ -92,6 +117,11 @@ export default function Step1Workplace() {
           .order('created_at', { ascending: false });
         
         setWorkplaces(workplacesData || []);
+        setIsGuestMode(false);
+      } else {
+        // 게스트 모드: 샘플 사업장 표시
+        setWorkplaces(SAMPLE_WORKPLACES);
+        setIsGuestMode(true);
       }
       setIsLoading(false);
     }
@@ -314,28 +344,37 @@ export default function Step1Workplace() {
                 </div>
               </button>
               
-              {/* 수정/삭제 버튼 */}
-              <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200">
-                <button
-                  onClick={(e) => handleEditWorkplace(workplace, e)}
-                  className="flex-1 py-2 text-[13px] font-medium text-gray-600 bg-white rounded-xl border border-gray-200 active:bg-gray-50"
-                >
-                  수정
-                </button>
-                <button
-                  onClick={(e) => handleDeleteWorkplace(workplace, e)}
-                  className="flex-1 py-2 text-[13px] font-medium text-red-500 bg-white rounded-xl border border-gray-200 active:bg-red-50"
-                >
-                  삭제
-                </button>
-              </div>
+              {/* 수정/삭제 버튼 - 게스트 모드에서는 숨김 */}
+              {!isGuestMode && (
+                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200">
+                  <button
+                    onClick={(e) => handleEditWorkplace(workplace, e)}
+                    className="flex-1 py-2 text-[13px] font-medium text-gray-600 bg-white rounded-xl border border-gray-200 active:bg-gray-50"
+                  >
+                    수정
+                  </button>
+                  <button
+                    onClick={(e) => handleDeleteWorkplace(workplace, e)}
+                    className="flex-1 py-2 text-[13px] font-medium text-red-500 bg-white rounded-xl border border-gray-200 active:bg-red-50"
+                  >
+                    삭제
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
 
         {/* 새 사업장 등록 버튼 */}
         <button
-          onClick={() => setIsAddSheetOpen(true)}
+          onClick={() => {
+            if (isGuestMode) {
+              // 게스트 모드: 회원가입 유도
+              setIsSignupPromptOpen(true);
+            } else {
+              setIsAddSheetOpen(true);
+            }
+          }}
           className="w-full p-4 rounded-2xl border-2 border-dashed border-gray-300 text-gray-500 flex items-center justify-center gap-2 hover:border-blue-400 hover:text-blue-500 transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -344,7 +383,24 @@ export default function Step1Workplace() {
           <span className="font-medium">새 사업장 등록</span>
         </button>
 
-        {workplaces.length === 0 && (
+        {/* 게스트 모드 안내 */}
+        {isGuestMode && (
+          <div className="mt-4 bg-blue-50 rounded-2xl p-4">
+            <div className="flex gap-3">
+              <span className="text-xl">💡</span>
+              <div>
+                <p className="text-[14px] font-medium text-blue-800 mb-1">
+                  체험용 샘플 사업장이에요
+                </p>
+                <p className="text-[13px] text-blue-700">
+                  회원가입하면 실제 사업장을 등록하고 관리할 수 있어요
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {workplaces.length === 0 && !isGuestMode && (
           <p className="text-center text-[14px] text-gray-400 mt-6">
             등록된 사업장이 없어요.<br />
             위 버튼을 눌러 사업장을 등록해주세요.
@@ -642,6 +698,13 @@ export default function Step1Workplace() {
           </div>
         </div>
       </BottomSheet>
+
+      {/* 게스트 모드 회원가입 유도 시트 */}
+      <SignupPromptSheet
+        isOpen={isSignupPromptOpen}
+        onClose={() => setIsSignupPromptOpen(false)}
+        feature="workplace"
+      />
     </>
   );
 }

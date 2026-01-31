@@ -6,7 +6,7 @@ import { signInWithKakao } from '@/app/(public)/login/actions';
 interface SignupPromptSheetProps {
   isOpen: boolean;
   onClose: () => void;
-  feature?: 'create' | 'sign' | 'pdf' | 'default';
+  feature?: 'create' | 'sign' | 'pdf' | 'workplace' | 'default';
 }
 
 // 기능별 메시지 정의
@@ -25,6 +25,11 @@ const FEATURE_MESSAGES = {
     title: 'PDF 다운로드는 회원 전용이에요',
     description: '로그인하면 계약서를 PDF로 저장할 수 있어요',
     benefits: ['계약서 PDF 다운로드', '경력증명서 발급', '모든 계약서 보관'],
+  },
+  workplace: {
+    title: '사업장 등록은 회원 전용이에요',
+    description: '회원가입하면 사업장을 직접 등록하고 관리할 수 있어요',
+    benefits: ['사업장 무제한 등록', '등록한 사업장 재사용', '계약서 자동 연동'],
   },
   default: {
     title: '회원가입이 필요해요',
