@@ -1973,3 +1973,74 @@ export const businessTypeSchema = z.enum([
 ---
 
 > **Amendment 19 끝**
+
+---
+
+## 📝 Amendment 20: 계약 형태 필드 추가 (2026년 1월 31일)
+
+> **버전**: 1.21  
+> **변경 사유**: 정규직(4대보험)/계약직(3.3% 원천징수) 계약 형태 선택 기능 추가
+
+### 20.1 Enum 타입 추가
+
+| Value | Description |
+|-------|-------------|
+| `regular` | 정규직 (4대보험 가입) |
+| `contract` | 계약직 (3.3% 원천징수) |
+
+```sql
+-- 별도 enum 생성 없이 text + CHECK 제약조건 사용
+```
+
+### 20.2 스키마 변경 사항
+
+#### contracts 테이블에 contract_type 컬럼 추가
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `contract_type` | `text` | NO | `'contract'` | 계약 형태 (정규직/계약직) |
+
+**마이그레이션 SQL:**
+```sql
+-- 계약 형태 컬럼 추가
+ALTER TABLE contracts ADD COLUMN contract_type text NOT NULL DEFAULT 'contract';
+
+-- 제약 조건 추가
+ALTER TABLE contracts ADD CONSTRAINT check_contract_type 
+  CHECK (contract_type IN ('regular', 'contract'));
+
+-- 컬럼 설명 추가
+COMMENT ON COLUMN contracts.contract_type IS '계약 형태: regular(정규직, 4대보험), contract(계약직, 3.3% 원천징수)';
+```
+
+### 20.3 TypeScript 타입 정의
+
+```typescript
+// stores/contractFormStore.ts
+export type ContractType = 'regular' | 'contract';
+
+// lib/utils/validation.ts
+export const contractTypeSchema = z.enum(['regular', 'contract']);
+```
+
+### 20.4 UI 라벨
+
+| 값 | 라벨 | 설명 |
+|----|------|------|
+| `regular` | 정규직 (4대보험) | 국민연금, 건강보험, 고용보험, 산재보험 가입 |
+| `contract` | 계약직 (3.3%) | 사업소득으로 3.3% 원천징수 후 지급 |
+
+### 20.5 영향받는 화면
+
+| 화면 | 변경 내용 |
+|------|----------|
+| 계약서 작성 Step 2 | 계약 형태 선택 UI 추가 |
+| 계약서 미리보기 | 계약 형태 표시 |
+| 계약서 상세 (사업자) | 계약 형태 표시 |
+| 계약서 상세 (근로자) | 계약 형태 표시 |
+| 근로자 서명 페이지 | 계약 형태 표시 |
+| PDF 계약서 | 계약 형태 포함 |
+
+---
+
+> **Amendment 20 끝**

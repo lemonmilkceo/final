@@ -2852,4 +2852,99 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ---
 
+## 📝 Amendment 24: 계약 형태 선택 기능 추가
+> **버전**: 1.24  
+> **날짜**: 2026년 1월 31일  
+> **변경 사유**: 정규직(4대보험)/계약직(3.3%) 계약 형태 선택 기능 추가
+
+### 변경 개요
+- 계약서 작성 시 사업장 선택 후 "계약 형태" 선택 단계 추가
+- 정규직 (4대보험 가입)과 계약직 (3.3% 원천징수) 중 선택
+- 전체 스텝 9 → 10단계로 변경
+
+### Story A24.1: 계약 형태 기능 구현
+
+- [x] **Task A24.1.1**: 스키마 문서 업데이트 ✅
+  - `docs/schema.md`에 Amendment 20 추가
+  - `contract_type` 컬럼 정의 (regular/contract)
+
+- [x] **Task A24.1.2**: DB 마이그레이션 (Supabase MCP) ✅
+  - `contracts` 테이블에 `contract_type` 컬럼 추가
+  - CHECK 제약조건 추가
+
+- [x] **Task A24.1.3**: 타입 업데이트 ✅
+  - `types/database.ts`에 `contract_type` 필드 추가
+  - `lib/utils/validation.ts`에 `contractTypeSchema` 추가
+
+- [x] **Task A24.1.4**: 스토어 수정 ✅
+  - `stores/contractFormStore.ts`에 `ContractType` 타입 추가
+  - `TOTAL_STEPS` 9 → 10으로 변경
+  - `contractType` 필드 추가 (기본값: 'contract')
+
+- [x] **Task A24.1.5**: Step2ContractType 컴포넌트 생성 ✅
+  - `components/contract/ContractForm/Step2ContractType.tsx` 생성
+  - 정규직/계약직 선택 카드 UI
+
+- [x] **Task A24.1.6**: 계약서 작성 페이지 수정 ✅
+  - `app/(protected)/employer/create/page.tsx` 스텝 순서 조정
+  - Step 2에 계약 형태 컴포넌트 배치
+
+- [x] **Task A24.1.7**: 저장 로직 확인 ✅
+  - `transformFormToDbSchema`에 `contract_type` 포함 확인
+
+- [x] **Task A24.1.8**: 표시 로직 수정 ✅
+  - 계약서 미리보기, 상세, 근로자 서명 페이지에 계약형태 표시
+
+- [x] **Task A24.1.9**: PDF 수정 ✅
+  - `ContractPDF.tsx`에 계약형태 필드 추가
+
+---
+
+## 📊 Amendment 24 완료 요약
+
+| Task | 상태 | 설명 |
+|------|------|------|
+| A24.1.1 | ✅ | 스키마 문서 업데이트 |
+| A24.1.2 | ✅ | DB 마이그레이션 |
+| A24.1.3 | ✅ | 타입 업데이트 |
+| A24.1.4 | ✅ | 스토어 수정 |
+| A24.1.5 | ✅ | Step2ContractType 컴포넌트 |
+| A24.1.6 | ✅ | 페이지 수정 |
+| A24.1.7 | ✅ | 저장 로직 확인 |
+| A24.1.8 | ✅ | 표시 로직 수정 |
+| A24.1.9 | ✅ | PDF 수정 |
+
+---
+
+### 📌 수정된 파일
+
+| 파일 | 변경 내용 |
+|------|----------|
+| `docs/schema.md` | Amendment 20 추가 (contract_type) |
+| `types/database.ts` | contracts 타입에 contract_type 추가 |
+| `lib/utils/validation.ts` | contractTypeSchema 추가, 스키마 수정 |
+| `stores/contractFormStore.ts` | ContractType 타입, TOTAL_STEPS 10 |
+| `components/contract/ContractForm/Step2ContractType.tsx` | 신규 생성 |
+| `app/(protected)/employer/create/page.tsx` | 스텝 순서 조정 |
+| `app/(protected)/employer/preview/[id]/contract-preview.tsx` | 계약형태 표시 |
+| `app/(protected)/employer/contract/[id]/contract-detail.tsx` | 계약형태 표시 |
+| `app/(protected)/worker/contract/[id]/contract-detail.tsx` | 계약형태 표시 |
+| `app/contract/sign/[token]/worker-sign.tsx` | 계약형태 표시 |
+| `components/contract/ContractPDF.tsx` | 계약형태 필드 추가 |
+
+---
+
+### 📌 계약 형태 옵션
+
+| 값 | 라벨 | 설명 |
+|----|------|------|
+| `regular` | 정규직 (4대보험) | 국민연금, 건강보험, 고용보험, 산재보험 가입 |
+| `contract` | 계약직 (3.3%) | 사업소득으로 3.3% 원천징수 후 지급 |
+
+---
+
+> **Amendment 24 끝**
+
+---
+
 > **문서 끝**

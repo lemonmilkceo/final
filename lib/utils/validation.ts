@@ -6,6 +6,9 @@ export const MINIMUM_WAGE_2026 = 10360;
 // 사업장 규모 enum
 export const businessSizeSchema = z.enum(['under_5', 'over_5']);
 
+// 계약 형태 enum
+export const contractTypeSchema = z.enum(['regular', 'contract']);
+
 // 급여 유형 enum
 export const wageTypeSchema = z.enum(['hourly', 'monthly']);
 
@@ -50,9 +53,11 @@ export const contractFormSchema = z.object({
   workplaceId: z.string().nullable(),
   workplaceName: z.string().min(1, '사업장명을 입력해주세요'),
   workLocation: z.string().min(1, '근무 장소를 입력해주세요'),
-  // Step 2: 사업장 규모
+  // Step 2: 계약 형태
+  contractType: contractTypeSchema,
+  // Step 3: 사업장 규모
   businessSize: businessSizeSchema,
-  // Step 3: 근로자 정보
+  // Step 4: 근로자 정보
   workerName: z
     .string()
     .min(2, '이름은 2자 이상 입력해주세요')
@@ -103,6 +108,7 @@ export const contractFormSchema = z.object({
 export const createContractSchema = z.object({
   workplace_id: z.string().nullable(),
   workplace_name: z.string().nullable(),
+  contract_type: contractTypeSchema,
   worker_name: z
     .string()
     .min(2)
@@ -136,6 +142,7 @@ export function transformFormToDbSchema(formData: ContractFormInput): CreateCont
   return {
     workplace_id: formData.workplaceId,
     workplace_name: formData.workplaceName || null,
+    contract_type: formData.contractType,
     worker_name: formData.workerName,
     worker_phone: normalizePhone(formData.workerPhone),
     wage_type: formData.wageType,

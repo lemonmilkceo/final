@@ -48,6 +48,7 @@ interface PreviewContract {
   pay_day: number;
   payment_timing?: string;
   is_last_day_payment?: boolean;
+  contract_type?: 'regular' | 'contract';
   business_size: 'under_5' | 'over_5';
   status: ContractStatus;
   signatures?: {
@@ -158,6 +159,7 @@ export default function ContractPreview({
         workLocation: sourceData.workLocation,
         jobDescription: sourceData.jobDescription,
         payDay: sourceData.payDay,
+        contractType: sourceData.contractType || 'contract',
         businessSize: sourceData.businessSize,
       }
     : {
@@ -178,6 +180,7 @@ export default function ContractPreview({
         workLocation: contract?.work_location || '',
         jobDescription: contract?.job_description || '',
         payDay: contract?.pay_day || 10,
+        contractType: contract?.contract_type || 'contract',
         businessSize: contract?.business_size || 'under_5',
       };
 
@@ -363,8 +366,16 @@ export default function ContractPreview({
 
   const wageInfo = formatWage();
 
+  // 계약 형태 표시 텍스트
+  const formatContractType = () => {
+    return displayData.contractType === 'regular' 
+      ? '정규직 (4대보험)' 
+      : '계약직 (3.3%)';
+  };
+
   const contractItems = [
     { label: '사업장', value: displayData.workplaceName || '-' },
+    { label: '계약형태', value: formatContractType() },
     { label: '근로자', value: displayData.workerName },
     {
       label: wageInfo.label,

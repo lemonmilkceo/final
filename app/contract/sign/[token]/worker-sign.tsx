@@ -50,6 +50,7 @@ interface WorkerSignContract {
   pay_day: number;
   payment_timing?: string;
   is_last_day_payment?: boolean;
+  contract_type?: 'regular' | 'contract';
   signatures?: {
     id: string;
     signer_role: 'employer' | 'worker';
@@ -310,8 +311,16 @@ export default function WorkerSignPage({
     return `${timing} ${day}`;
   };
 
+  // 계약 형태 표시 텍스트
+  const formatContractType = () => {
+    return contract.contract_type === 'regular' 
+      ? '정규직 (4대보험)' 
+      : '계약직 (3.3%)';
+  };
+
   const contractItems = [
     { label: '사업장', value: (contract as { workplace_name?: string }).workplace_name || '-' },
+    { label: '계약형태', value: formatContractType() },
     { label: '근로자', value: contract.worker_name },
     { label: '급여', value: formatWage() },
     {

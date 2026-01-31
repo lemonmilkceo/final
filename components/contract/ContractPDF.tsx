@@ -9,6 +9,9 @@ interface ContractPDFProps {
     employerName?: string;
     workerName: string;
     
+    // 계약 형태
+    contractType?: 'regular' | 'contract';
+    
     // 급여 정보
     wageType: 'hourly' | 'monthly';
     hourlyWage?: number | null;
@@ -115,6 +118,13 @@ const ContractPDF = forwardRef<HTMLDivElement, ContractPDFProps>(
       return `${start} ~ ${end}`;
     };
 
+    // 계약 형태 표시
+    const formatContractType = () => {
+      return data.contractType === 'regular' 
+        ? '정규직 (4대보험)' 
+        : '계약직 (3.3%)';
+    };
+
     return (
       <div
         ref={ref}
@@ -150,6 +160,10 @@ const ContractPDF = forwardRef<HTMLDivElement, ContractPDFProps>(
               <tr>
                 <td style={labelCellStyle}>사업장명</td>
                 <td style={valueCellStyle}>{data.workplaceName || '-'}</td>
+              </tr>
+              <tr>
+                <td style={labelCellStyle}>계약형태</td>
+                <td style={valueCellStyle}>{formatContractType()}</td>
               </tr>
               <tr>
                 <td style={labelCellStyle}>사업주</td>

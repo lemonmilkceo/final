@@ -37,6 +37,7 @@ interface ContractDetailData {
   pay_day: number;
   payment_timing?: string;
   is_last_day_payment?: boolean;
+  contract_type?: 'regular' | 'contract';
   business_size?: string | null;
   status: ContractStatus;
   expires_at: string | null;
@@ -208,9 +209,17 @@ export default function WorkerContractDetail({
     }
   };
 
+  // 계약 형태 표시 텍스트
+  const formatContractType = () => {
+    return contract.contract_type === 'regular' 
+      ? '정규직 (4대보험)' 
+      : '계약직 (3.3%)';
+  };
+
   // 계약 상세 항목 (사업자 페이지와 동일)
   const contractItems = [
     { label: '사업장', value: contract.workplace_name || '-' },
+    { label: '계약형태', value: formatContractType() },
     { label: '사업자', value: contract.employer?.name || '-' },
     { label: '근로자', value: contract.worker_name },
     { label: '급여', value: formatWage() },

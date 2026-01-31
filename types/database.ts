@@ -106,6 +106,7 @@ export type Database = {
           break_minutes: number
           business_size: Database["public"]["Enums"]["business_size"]
           completed_at: string | null
+          contract_type: "regular" | "contract"
           created_at: string
           deleted_at: string | null
           employer_id: string
@@ -144,6 +145,7 @@ export type Database = {
           break_minutes: number
           business_size: Database["public"]["Enums"]["business_size"]
           completed_at?: string | null
+          contract_type?: "regular" | "contract"
           created_at?: string
           deleted_at?: string | null
           employer_id: string
@@ -182,6 +184,7 @@ export type Database = {
           break_minutes?: number
           business_size?: Database["public"]["Enums"]["business_size"]
           completed_at?: string | null
+          contract_type?: "regular" | "contract"
           created_at?: string
           deleted_at?: string | null
           employer_id?: string

@@ -4,6 +4,7 @@ import type { BusinessSize } from '@/types';
 
 export type WageType = 'hourly' | 'monthly';
 export type PaymentTiming = 'current_month' | 'next_month';
+export type ContractType = 'regular' | 'contract';
 
 export type BusinessType = 'restaurant' | 'cafe' | 'convenience_store' | 'retail' | 'beauty' | 'office' | 'pc_cafe' | 'startup' | null;
 
@@ -12,30 +13,32 @@ export interface ContractFormData {
   workplaceId: string | null;
   workplaceName: string;
   workLocation: string;
-  // Step 2: 사업장 규모
+  // Step 2: 계약 형태
+  contractType: ContractType;
+  // Step 3: 사업장 규모
   businessSize: BusinessSize | null;
-  // Step 3: 근로자 정보
+  // Step 4: 근로자 정보
   workerName: string;
   workerPhone: string;
-  // Step 4: 급여
+  // Step 5: 급여
   wageType: WageType;
   hourlyWage: number | null;
   monthlyWage: number | null;
   includesWeeklyAllowance: boolean;
-  // Step 5: 근무기간
+  // Step 6: 근무기간
   startDate: string;
   endDate: string | null;
   hasNoEndDate: boolean;
-  // Step 6: 근무요일
+  // Step 7: 근무요일
   workDays: string[];
   workDaysPerWeek: number | null;
   useWorkDaysPerWeek: boolean;
-  // Step 7: 근무시간
+  // Step 8: 근무시간
   workStartTime: string;
   workEndTime: string;
-  // Step 8: 휴게시간
+  // Step 9: 휴게시간
   breakMinutes: number;
-  // Step 9: 업무 내용 + 급여일
+  // Step 10: 업무 내용 + 급여일
   businessType: BusinessType;
   jobDescription: string;
   payDay: number;
@@ -53,37 +56,39 @@ interface ContractFormStore {
   reset: () => void;
 }
 
-const TOTAL_STEPS = 9;
+const TOTAL_STEPS = 10;
 
 const initialData: ContractFormData = {
   // Step 1: 사업장
   workplaceId: null,
   workplaceName: '',
   workLocation: '',
-  // Step 2: 사업장 규모
+  // Step 2: 계약 형태
+  contractType: 'contract', // 기본값: 계약직
+  // Step 3: 사업장 규모
   businessSize: null,
-  // Step 3: 근로자 정보
+  // Step 4: 근로자 정보
   workerName: '',
   workerPhone: '',
-  // Step 4: 급여
+  // Step 5: 급여
   wageType: 'hourly',
   hourlyWage: null,
   monthlyWage: null,
   includesWeeklyAllowance: false,
-  // Step 5: 근무기간
+  // Step 6: 근무기간
   startDate: '',
   endDate: null,
   hasNoEndDate: false,
-  // Step 6: 근무요일
+  // Step 7: 근무요일
   workDays: [],
   workDaysPerWeek: null,
   useWorkDaysPerWeek: false,
-  // Step 7: 근무시간
+  // Step 8: 근무시간
   workStartTime: '09:00',
   workEndTime: '18:00',
-  // Step 8: 휴게시간
+  // Step 9: 휴게시간
   breakMinutes: 30,
-  // Step 9: 업무 내용 + 급여일
+  // Step 10: 업무 내용 + 급여일
   businessType: null,
   jobDescription: '',
   payDay: 10,

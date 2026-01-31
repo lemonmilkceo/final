@@ -43,6 +43,7 @@ interface ContractData {
   payDay: number;
   paymentTiming: 'current_month' | 'next_month';
   isLastDayPayment: boolean;
+  contractType: 'regular' | 'contract';
   businessSize: 'under_5' | 'over_5';
   status: 'draft' | 'pending' | 'completed' | 'expired' | 'deleted';
   createdAt: string;
@@ -343,8 +344,16 @@ export default function ContractDetail({
     }
   };
 
+  // 계약 형태 표시 텍스트
+  const formatContractType = () => {
+    return contract.contractType === 'regular' 
+      ? '정규직 (4대보험)' 
+      : '계약직 (3.3%)';
+  };
+
   const contractItems = [
     { label: '사업장', value: contract.workplaceName || '-' },
+    { label: '계약형태', value: formatContractType() },
     { label: '근로자', value: contract.workerName },
     { label: '급여', value: formatWage() },
     {

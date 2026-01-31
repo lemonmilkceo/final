@@ -10,21 +10,23 @@ import {
 } from '@/stores/contractFormStore';
 // Step 1: 사업장 선택/등록
 import Step1Workplace from '@/components/contract/ContractForm/Step1Workplace';
-// Step 2: 사업장 규모
+// Step 2: 계약 형태
+import Step2ContractType from '@/components/contract/ContractForm/Step2ContractType';
+// Step 3: 사업장 규모
 import Step1BusinessSize from '@/components/contract/ContractForm/Step1BusinessSize';
-// Step 3: 근로자 이름
+// Step 4: 근로자 이름
 import Step2WorkerName from '@/components/contract/ContractForm/Step2WorkerName';
-// Step 4: 시급/월급
+// Step 5: 시급/월급
 import Step3Wage from '@/components/contract/ContractForm/Step3Wage';
-// Step 5: 근무기간
+// Step 6: 근무기간
 import Step4WorkPeriod from '@/components/contract/ContractForm/Step4WorkPeriod';
-// Step 6: 근무요일
+// Step 7: 근무요일
 import Step5WorkDays from '@/components/contract/ContractForm/Step5WorkDays';
-// Step 7: 근무시간
+// Step 8: 근무시간
 import Step6WorkTime from '@/components/contract/ContractForm/Step6WorkTime';
-// Step 8: 휴게시간
+// Step 9: 휴게시간
 import Step7BreakTime from '@/components/contract/ContractForm/Step7BreakTime';
-// Step 9: 업무내용 + 급여일
+// Step 10: 업무내용 + 급여일
 import Step9JobDescription from '@/components/contract/ContractForm/Step9JobDescription';
 import Step10PayDay from '@/components/contract/ContractForm/Step10PayDay';
 
@@ -61,20 +63,22 @@ export default function CreateContractPage() {
       case 1:
         return <Step1Workplace />;      // 사업장 선택/등록
       case 2:
-        return <Step1BusinessSize />;   // 사업장 규모
+        return <Step2ContractType />;   // 계약 형태
       case 3:
-        return <Step2WorkerName />;     // 근로자 이름
+        return <Step1BusinessSize />;   // 사업장 규모
       case 4:
-        return <Step3Wage />;           // 시급/월급
+        return <Step2WorkerName />;     // 근로자 이름
       case 5:
-        return <Step4WorkPeriod />;     // 근무기간
+        return <Step3Wage />;           // 시급/월급
       case 6:
-        return <Step5WorkDays />;       // 근무요일
+        return <Step4WorkPeriod />;     // 근무기간
       case 7:
-        return <Step6WorkTime />;       // 근무시간
+        return <Step5WorkDays />;       // 근무요일
       case 8:
-        return <Step7BreakTime />;      // 휴게시간
+        return <Step6WorkTime />;       // 근무시간
       case 9:
+        return <Step7BreakTime />;      // 휴게시간
+      case 10:
         return <Step10PayDay />;        // 급여일 + 업무내용
       default:
         return <Step1Workplace />;
