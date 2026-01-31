@@ -119,7 +119,7 @@ const CareerCertificatePDF = forwardRef<HTMLDivElement, CareerCertificatePDFProp
             marginBottom: '30px',
           }}
         >
-          📋 사인플리즈 계약 정보 기반 참고용 문서
+          📋 싸인해주세요 계약 정보 기반 참고용 문서
         </p>
 
         {/* 1. 인적사항 */}
@@ -211,7 +211,7 @@ const CareerCertificatePDF = forwardRef<HTMLDivElement, CareerCertificatePDFProp
         {/* 안내 문구 (증명 → 참고용) */}
         <section style={{ marginTop: '40px', textAlign: 'center' }}>
           <p style={{ fontSize: '12pt', lineHeight: '2', color: '#4B5563' }}>
-            위 내용은 사인플리즈에서 체결한 계약서 정보를 바탕으로 작성되었습니다.
+            위 내용은 싸인해주세요에서 체결한 계약서 정보를 바탕으로 작성되었습니다.
           </p>
         </section>
 
@@ -260,7 +260,7 @@ const CareerCertificatePDF = forwardRef<HTMLDivElement, CareerCertificatePDFProp
           }}
         >
           <p>
-            발급: 사인플리즈 (SignPlease) | 전자근로계약서 플랫폼
+            발급: 싸인해주세요 | 전자근로계약서 플랫폼
           </p>
           <p style={{ marginTop: '4px' }}>
             signplease.vercel.app
