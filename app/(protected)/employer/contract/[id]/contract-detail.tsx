@@ -577,13 +577,16 @@ export default function ContractDetail({
 
       {/* 하단 액션 버튼 */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-5 pt-3 pb-4 safe-bottom">
-        {/* 공유 옵션 */}
-        <div className="flex justify-center gap-4 mb-4">
+        {/* 공유 옵션 - completed 상태에서는 PDF, 공유, 삭제만 표시 */}
+        <div className={clsx(
+          "flex justify-center gap-4",
+          contract.status !== 'completed' && "mb-4"
+        )}>
           <button
             onClick={handleDownloadPDF}
             className="flex flex-col items-center gap-1"
           >
-            <span className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-lg">
+            <span className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-lg">
               📄
             </span>
             <span className="text-[11px] text-gray-500">PDF</span>
@@ -599,21 +602,24 @@ export default function ContractDetail({
             <span className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-lg">
               🔗
             </span>
-            <span className="text-[11px] text-gray-500">링크</span>
+            <span className="text-[11px] text-gray-500">공유</span>
           </button>
-          <button
-            onClick={handleOpenShareSheet}
-            disabled={!shareUrl || contract.status === 'completed'}
-            className={clsx(
-              'flex flex-col items-center gap-1',
-              (!shareUrl || contract.status === 'completed') && 'opacity-50'
-            )}
-          >
-            <span className="w-10 h-10 bg-[#FEE500] rounded-full flex items-center justify-center text-lg">
-              💬
-            </span>
-            <span className="text-[11px] text-gray-500">재전송</span>
-          </button>
+          {/* 재전송 버튼 - completed가 아닐 때만 표시 */}
+          {contract.status !== 'completed' && (
+            <button
+              onClick={handleOpenShareSheet}
+              disabled={!shareUrl}
+              className={clsx(
+                'flex flex-col items-center gap-1',
+                !shareUrl && 'opacity-50'
+              )}
+            >
+              <span className="w-10 h-10 bg-[#FEE500] rounded-full flex items-center justify-center text-lg">
+                💬
+              </span>
+              <span className="text-[11px] text-gray-500">재전송</span>
+            </button>
+          )}
           <button
             onClick={() => setIsDeleteSheetOpen(true)}
             disabled={contract.status === 'deleted'}
@@ -629,15 +635,10 @@ export default function ContractDetail({
           </button>
         </div>
 
-        {/* 메인 버튼 */}
+        {/* 메인 버튼 - pending 상태에서만 표시 */}
         {contract.status === 'pending' && !workerSigned && (
           <Button onClick={handleOpenShareSheet} disabled={!shareUrl}>
             근로자에게 다시 보내기 📤
-          </Button>
-        )}
-        {contract.status === 'completed' && (
-          <Button onClick={handleDownloadPDF} variant="secondary">
-            계약서 다운로드 📥
           </Button>
         )}
       </div>

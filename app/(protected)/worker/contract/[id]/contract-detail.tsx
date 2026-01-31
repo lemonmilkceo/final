@@ -374,9 +374,9 @@ export default function WorkerContractDetail({
 
       {/* 하단 액션 버튼 */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-5 pt-3 pb-4 safe-bottom">
-        {/* 완료된 계약서 - PDF 다운로드 옵션 */}
+        {/* 완료된 계약서 - 아이콘 버튼만 표시 (메인 버튼 제거) */}
         {isCompleted && (
-          <div className="flex justify-center gap-8 mb-4">
+          <div className="flex justify-center gap-8">
             <button
               onClick={isGuestMode ? handleGuestPDFClick : handleDownloadPDF}
               className={clsx(
@@ -384,10 +384,10 @@ export default function WorkerContractDetail({
                 isGuestMode && "opacity-50"
               )}
             >
-              <span className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-xl">
+              <span className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl">
                 📄
               </span>
-              <span className="text-[12px] text-gray-500">PDF</span>
+              <span className="text-[12px] text-gray-500">PDF 다운로드</span>
             </button>
           </div>
         )}
@@ -402,29 +402,11 @@ export default function WorkerContractDetail({
           </button>
         )}
 
-        {/* 완료된 계약서 - 메인 다운로드 버튼 */}
-        {isCompleted && (
-          <>
-            <button
-              onClick={isGuestMode ? handleGuestPDFClick : handleDownloadPDF}
-              className={clsx(
-                "w-full py-4 rounded-2xl font-semibold text-lg flex items-center justify-center gap-2",
-                isGuestMode 
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-gray-900 text-white"
-              )}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              계약서 PDF 다운로드
-            </button>
-            {isGuestMode && (
-              <p className="text-center text-[13px] text-gray-400 mt-2">
-                PDF 다운로드는 회원만 가능해요
-              </p>
-            )}
-          </>
+        {/* 게스트 모드 안내 */}
+        {isCompleted && isGuestMode && (
+          <p className="text-center text-[13px] text-gray-400 mt-3">
+            PDF 다운로드는 회원만 가능해요
+          </p>
         )}
       </div>
 
