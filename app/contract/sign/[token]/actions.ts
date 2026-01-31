@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { encryptData, hashSSN } from '@/lib/utils/encryption';
@@ -105,6 +106,13 @@ export async function signAsWorker(
     return { success: false, error: '서명하려면 로그인이 필요해요' };
   }
 
+  // 서명 시점 증적을 위한 IP, User-Agent 수집
+  const headersList = await headers();
+  const ipAddress = headersList.get('x-forwarded-for')?.split(',')[0]?.trim() 
+    || headersList.get('x-real-ip') 
+    || null;
+  const userAgent = headersList.get('user-agent') || null;
+
   try {
     // 근로자 정보 암호화 (새로 입력한 경우에만)
     let encryptedSsn: string | undefined;
@@ -138,13 +146,15 @@ export async function signAsWorker(
       }
     }
 
-    // 서명 레코드 생성 (Base64 Data URL 직접 저장)
+    // 서명 레코드 생성 (Base64 Data URL 직접 저장 + 증적 정보)
     const { error: signatureError } = await supabase.from('signatures').insert({
       contract_id: contract.id,
       user_id: user.id,
       signer_role: 'worker',
       signature_data: signatureImageData,
       signed_at: new Date().toISOString(),
+      ip_address: ipAddress,
+      user_agent: userAgent,
     });
 
     if (signatureError) {

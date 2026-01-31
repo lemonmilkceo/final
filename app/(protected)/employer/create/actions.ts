@@ -1,14 +1,13 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import {
   contractFormSchema,
   transformFormToDbSchema,
   type ContractFormInput,
 } from '@/lib/utils/validation';
-import { ROUTES } from '@/lib/constants/routes';
 import type { ActionResult } from '@/types';
 
 export async function createContract(
@@ -93,12 +92,21 @@ export async function createContract(
   let shareUrl: string | undefined;
   
   if (signatureData) {
+    // 서명 시점 증적을 위한 IP, User-Agent 수집
+    const headersList = await headers();
+    const ipAddress = headersList.get('x-forwarded-for')?.split(',')[0]?.trim() 
+      || headersList.get('x-real-ip') 
+      || null;
+    const userAgent = headersList.get('user-agent') || null;
+
     const { error: signatureError } = await supabase.from('signatures').insert({
       contract_id: contract.id,
       user_id: user.id,
       signer_role: 'employer',
       signature_data: signatureData,
       signed_at: new Date().toISOString(),
+      ip_address: ipAddress,
+      user_agent: userAgent,
     });
 
     if (signatureError) {

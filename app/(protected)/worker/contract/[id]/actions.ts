@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { createNotification } from '@/app/actions/notifications';
 import type { ActionResult } from '@/types';
@@ -20,6 +21,13 @@ export async function signContractAsWorker(
   if (authError || !user) {
     return { success: false, error: '로그인이 필요해요' };
   }
+
+  // 서명 시점 증적을 위한 IP, User-Agent 수집
+  const headersList = await headers();
+  const ipAddress = headersList.get('x-forwarded-for')?.split(',')[0]?.trim() 
+    || headersList.get('x-real-ip') 
+    || null;
+  const userAgent = headersList.get('user-agent') || null;
 
   // 계약서 조회 및 권한 확인 (알림을 위해 employer_id, worker_name도 조회)
   const { data: contract, error: contractError } = await supabase
@@ -52,13 +60,15 @@ export async function signContractAsWorker(
     return { success: false, error: '이미 서명하셨어요' };
   }
 
-  // 서명 레코드 생성
+  // 서명 레코드 생성 (증적 정보 포함)
   const { error: signatureError } = await supabase.from('signatures').insert({
     contract_id: contractId,
     user_id: user.id,
     signer_role: 'worker',
     signature_data: signatureImageData,
     signed_at: new Date().toISOString(),
+    ip_address: ipAddress,
+    user_agent: userAgent,
   });
 
   if (signatureError) {

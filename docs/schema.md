@@ -1,8 +1,8 @@
 # 📊 Database Schema Specification
 ## 싸인해주세요 (SignPlease)
 
-> **버전**: 1.20  
-> **최종 수정일**: 2026년 1월 28일  
+> **버전**: 1.23  
+> **최종 수정일**: 2026년 1월 31일  
 > **작성자**: Technical PO
 
 ---
@@ -2144,3 +2144,78 @@ export interface ContractsUpdate {
 ---
 
 > **Amendment 21 끝**
+
+---
+
+## 📝 Amendment 22: 서명 증적 정보 저장 구현 확인 (2026년 1월 31일)
+
+> **버전**: 1.23  
+> **변경 사유**: signatures 테이블의 ip_address, user_agent 컬럼 활용 확인
+
+### 22.1 개요
+
+`signatures` 테이블에는 이미 `ip_address`와 `user_agent` 컬럼이 정의되어 있었으나, 실제 코드에서 저장하지 않고 있었습니다. 이번 수정으로 모든 서명 시 해당 정보가 저장됩니다.
+
+### 22.2 기존 스키마 (변경 없음)
+
+```sql
+-- signatures 테이블 (이미 정의됨)
+CREATE TABLE public.signatures (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  contract_id uuid NOT NULL REFERENCES contracts(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  signer_role signer_role NOT NULL,
+  signature_data text NOT NULL,
+  signed_at timestamptz NOT NULL DEFAULT now(),
+  ip_address inet,      -- 이미 정의됨
+  user_agent text,      -- 이미 정의됨
+  UNIQUE(contract_id, signer_role)
+);
+```
+
+### 22.3 코드 수정 내용
+
+| 파일 | 변경 내용 |
+|------|----------|
+| `app/(protected)/employer/preview/[id]/actions.ts` | IP, User-Agent 저장 |
+| `app/(protected)/employer/create/actions.ts` | IP, User-Agent 저장 |
+| `app/(protected)/worker/contract/[id]/actions.ts` | IP, User-Agent 저장 |
+| `app/contract/sign/[token]/actions.ts` | IP, User-Agent 저장 |
+
+### 22.4 저장 로직
+
+```typescript
+import { headers } from 'next/headers';
+
+// 서명 시점 증적을 위한 IP, User-Agent 수집
+const headersList = await headers();
+const ipAddress = headersList.get('x-forwarded-for')?.split(',')[0]?.trim() 
+  || headersList.get('x-real-ip') 
+  || null;
+const userAgent = headersList.get('user-agent') || null;
+
+// 서명 저장
+await supabase.from('signatures').insert({
+  contract_id: contractId,
+  user_id: user.id,
+  signer_role: 'employer',
+  signature_data: signatureImageData,
+  signed_at: new Date().toISOString(),
+  ip_address: ipAddress,
+  user_agent: userAgent,
+});
+```
+
+### 22.5 법적 효력
+
+| 항목 | 설명 |
+|------|------|
+| `signed_at` | 서명 시점 (언제) |
+| `ip_address` | 서명 위치 (어디서) |
+| `user_agent` | 서명 기기 (어떤 기기로) |
+
+법적 분쟁 시 서명의 진위를 증명할 수 있는 증거 자료로 활용됩니다.
+
+---
+
+> **Amendment 22 끝**
