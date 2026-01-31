@@ -372,8 +372,8 @@ export default function WorkerContractDetail({
         )}
       </div>
 
-      {/* 하단 액션 버튼 */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-5 pt-3 pb-4 safe-bottom">
+      {/* 하단 액션 버튼 - BottomNav(z-40) 위에 표시되도록 z-50 */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-5 pt-3 pb-4 safe-bottom z-50">
         {/* 서명 대기 중 - 서명 버튼 */}
         {!workerSigned && contract.status === 'pending' && (
           <button
