@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import Header from '@/components/layout/Header';
+import PageHeader from '@/components/layout/PageHeader';
 import Card from '@/components/ui/Card';
 import EmptyState from '@/components/shared/EmptyState';
 import Toast from '@/components/ui/Toast';
@@ -148,11 +148,9 @@ export default function CareerList({
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <Header showNotification={false} showMenu={false} />
+      <PageHeader title="내 경력" />
 
       <div className="px-5 pt-4 pb-24">
-        {/* Title */}
-        <h1 className="text-[22px] font-bold text-gray-900 mb-4">내 경력</h1>
 
         {/* Guest Mode Banner */}
         {isGuestMode && (
