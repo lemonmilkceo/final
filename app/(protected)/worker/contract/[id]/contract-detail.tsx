@@ -12,8 +12,10 @@ import ContractPDF from '@/components/contract/ContractPDF';
 import GuestBanner from '@/components/shared/GuestBanner';
 import SignupPromptSheet from '@/components/shared/SignupPromptSheet';
 import { signContractAsWorker } from './actions';
+import { setResignationDate, clearResignationDate } from '@/app/actions/resignation';
 import { formatCurrency, formatDate, formatDday } from '@/lib/utils/format';
 import { generatePDF, getContractPDFFilename } from '@/lib/utils/pdf';
+import { validateResignationDate } from '@/lib/utils/career';
 import clsx from 'clsx';
 import type { ContractStatus } from '@/types';
 
@@ -27,6 +29,7 @@ interface ContractDetailData {
   includes_weekly_allowance: boolean;
   start_date: string;
   end_date: string | null;
+  resignation_date: string | null;
   work_days: string[] | null;
   work_days_per_week: number | null;
   work_start_time: string;
@@ -79,6 +82,14 @@ export default function WorkerContractDetail({
   
   // 게스트 모드 회원가입 유도 시트
   const [showSignupSheet, setShowSignupSheet] = useState(false);
+  
+  // 퇴사 처리 관련 상태
+  const [showResignationSheet, setShowResignationSheet] = useState(false);
+  const [resignationDateInput, setResignationDateInput] = useState(
+    contract.resignation_date || new Date().toISOString().split('T')[0]
+  );
+  const [isResignationLoading, setIsResignationLoading] = useState(false);
+  const [resignationError, setResignationError] = useState('');
 
   const workerSigned = contract.signatures.some(
     (s) => s.signer_role === 'worker' && s.signed_at
@@ -225,9 +236,18 @@ export default function WorkerContractDetail({
     { label: '급여', value: formatWage() },
     {
       label: '근무기간',
-      value: contract.end_date
-        ? `${formatDate(contract.start_date)} ~ ${formatDate(contract.end_date)}`
-        : `${formatDate(contract.start_date)} ~`,
+      value: (() => {
+        // 퇴사일이 있으면 퇴사일까지
+        if (contract.resignation_date) {
+          return `${formatDate(contract.start_date)} ~ ${formatDate(contract.resignation_date)} (퇴사)`;
+        }
+        // 계약 종료일이 있으면 종료일까지
+        if (contract.end_date) {
+          return `${formatDate(contract.start_date)} ~ ${formatDate(contract.end_date)}`;
+        }
+        // 무기한
+        return `${formatDate(contract.start_date)} ~`;
+      })(),
     },
     { label: '근무요일', value: formatWorkDays() },
     { label: '휴일', value: formatHolidays() },
@@ -255,6 +275,63 @@ export default function WorkerContractDetail({
   const handleGuestPDFClick = () => {
     setToastMessage('PDF 다운로드는 회원만 가능해요');
     setShowToast(true);
+  };
+
+  // 퇴사 처리
+  const handleResignation = async () => {
+    setResignationError('');
+    
+    // 유효성 검사
+    const validation = validateResignationDate(
+      new Date(resignationDateInput),
+      new Date(contract.start_date)
+    );
+    
+    if (!validation.valid) {
+      setResignationError(validation.message || '유효하지 않은 날짜예요');
+      return;
+    }
+    
+    setIsResignationLoading(true);
+    
+    try {
+      const result = await setResignationDate(contract.id, resignationDateInput);
+      
+      if (result.success) {
+        setShowResignationSheet(false);
+        setToastMessage('퇴사 처리가 완료됐어요');
+        setShowToast(true);
+        router.refresh();
+      } else {
+        setResignationError(result.error || '퇴사 처리에 실패했어요');
+      }
+    } catch {
+      setResignationError('알 수 없는 오류가 발생했어요');
+    } finally {
+      setIsResignationLoading(false);
+    }
+  };
+
+  // 퇴사 취소
+  const handleClearResignation = async () => {
+    setIsResignationLoading(true);
+    
+    try {
+      const result = await clearResignationDate(contract.id);
+      
+      if (result.success) {
+        setShowResignationSheet(false);
+        setToastMessage('퇴사가 취소됐어요');
+        setShowToast(true);
+        router.refresh();
+      } else {
+        setResignationError(result.error || '퇴사 취소에 실패했어요');
+      }
+    } catch {
+      setResignationError('알 수 없는 오류가 발생했어요');
+    } finally {
+      setIsResignationLoading(false);
+    }
   };
 
   return (
@@ -396,7 +473,7 @@ export default function WorkerContractDetail({
           </div>
         )}
 
-        {/* 완료된 계약서 - 아이콘 버튼만 표시 */}
+        {/* 완료된 계약서 - 아이콘 버튼 표시 */}
         {isCompleted && (
           <div className="flex justify-center gap-8">
             <button
@@ -411,6 +488,24 @@ export default function WorkerContractDetail({
               </span>
               <span className="text-[12px] text-gray-500">PDF 다운로드</span>
             </button>
+            
+            {/* 퇴사 처리 버튼 - 게스트 모드가 아닐 때만 */}
+            {!isGuestMode && (
+              <button
+                onClick={() => setShowResignationSheet(true)}
+                className="flex flex-col items-center gap-1"
+              >
+                <span className={clsx(
+                  "w-12 h-12 rounded-full flex items-center justify-center text-xl",
+                  contract.resignation_date ? "bg-green-100" : "bg-amber-100"
+                )}>
+                  {contract.resignation_date ? '✅' : '🚪'}
+                </span>
+                <span className="text-[12px] text-gray-500">
+                  {contract.resignation_date ? '퇴사 완료' : '퇴사 처리'}
+                </span>
+              </button>
+            )}
           </div>
         )}
 
@@ -556,6 +651,92 @@ export default function WorkerContractDetail({
         onClose={() => setShowSignupSheet(false)}
         feature="sign"
       />
+
+      {/* 퇴사 처리 시트 */}
+      <BottomSheet
+        isOpen={showResignationSheet}
+        onClose={() => {
+          setShowResignationSheet(false);
+          setResignationError('');
+        }}
+        title={contract.resignation_date ? '퇴사일 수정' : '퇴사 처리'}
+      >
+        <div className="space-y-4">
+          {/* 안내 문구 */}
+          <div className="bg-blue-50 rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <span className="text-xl">💡</span>
+              <div>
+                <p className="text-[14px] text-blue-800 font-medium">
+                  퇴사일은 근무이력서에 반영돼요
+                </p>
+                <p className="text-[13px] text-blue-600 mt-1">
+                  정확한 마지막 근무일을 입력해주세요
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* 날짜 입력 */}
+          <div>
+            <label className="block text-[14px] font-medium text-gray-700 mb-2">
+              마지막 근무일
+            </label>
+            <input
+              type="date"
+              value={resignationDateInput}
+              onChange={(e) => setResignationDateInput(e.target.value)}
+              min={contract.start_date}
+              max={new Date().toISOString().split('T')[0]}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-[15px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* 에러 메시지 */}
+          {resignationError && (
+            <div className="bg-red-50 rounded-xl p-3 flex items-center gap-2">
+              <span>⚠️</span>
+              <span className="text-[13px] text-red-600">{resignationError}</span>
+            </div>
+          )}
+
+          {/* 버튼 */}
+          <div className="space-y-3">
+            <button
+              onClick={handleResignation}
+              disabled={isResignationLoading}
+              className={clsx(
+                'w-full py-4 rounded-2xl font-semibold text-lg flex items-center justify-center gap-2',
+                isResignationLoading
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-500 text-white active:bg-blue-600'
+              )}
+            >
+              {isResignationLoading ? (
+                <>
+                  <LoadingSpinner variant="button" />
+                  처리 중...
+                </>
+              ) : contract.resignation_date ? (
+                '퇴사일 수정'
+              ) : (
+                '퇴사 처리 완료'
+              )}
+            </button>
+
+            {/* 퇴사 취소 버튼 (이미 퇴사 처리된 경우만) */}
+            {contract.resignation_date && (
+              <button
+                onClick={handleClearResignation}
+                disabled={isResignationLoading}
+                className="w-full py-3 rounded-xl text-[14px] text-gray-500 hover:bg-gray-100 transition-colors"
+              >
+                퇴사 취소
+              </button>
+            )}
+          </div>
+        </div>
+      </BottomSheet>
     </div>
   );
 }

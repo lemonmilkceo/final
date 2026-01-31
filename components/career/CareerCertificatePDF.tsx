@@ -8,6 +8,7 @@ interface CareerItem {
   jobDescription: string;
   startDate: string;
   endDate: string | null;
+  resignationDate?: string | null;
   durationDays: number;
 }
 
@@ -98,17 +99,27 @@ const CareerCertificatePDF = forwardRef<HTMLDivElement, CareerCertificatePDFProp
             letterSpacing: '12px',
           }}
         >
-          경 력 증 명 서
+          근 무 이 력 서
         </h1>
         <p
           style={{
             textAlign: 'center',
             fontSize: '10pt',
             color: '#6B7280',
+            marginBottom: '8px',
+          }}
+        >
+          Work History Summary
+        </p>
+        <p
+          style={{
+            textAlign: 'center',
+            fontSize: '9pt',
+            color: '#9CA3AF',
             marginBottom: '30px',
           }}
         >
-          Certificate of Employment
+          📋 사인플리즈 계약 정보 기반 참고용 문서
         </p>
 
         {/* 1. 인적사항 */}
@@ -197,10 +208,10 @@ const CareerCertificatePDF = forwardRef<HTMLDivElement, CareerCertificatePDFProp
           </div>
         </section>
 
-        {/* 증명 문구 */}
+        {/* 안내 문구 (증명 → 참고용) */}
         <section style={{ marginTop: '40px', textAlign: 'center' }}>
-          <p style={{ fontSize: '14pt', lineHeight: '2' }}>
-            위 사실을 증명합니다.
+          <p style={{ fontSize: '12pt', lineHeight: '2', color: '#4B5563' }}>
+            위 내용은 사인플리즈에서 체결한 계약서 정보를 바탕으로 작성되었습니다.
           </p>
         </section>
 
@@ -217,23 +228,23 @@ const CareerCertificatePDF = forwardRef<HTMLDivElement, CareerCertificatePDFProp
           </p>
         </section>
 
-        {/* 안내문 */}
+        {/* 안내문 (부드러운 면책) */}
         <section
           style={{
             marginTop: '30px',
-            padding: '12px',
-            backgroundColor: '#FEFCE8',
+            padding: '16px',
+            backgroundColor: '#F0F9FF',
             borderRadius: '8px',
             fontSize: '9pt',
-            color: '#854D0E',
-            lineHeight: '1.5',
+            color: '#0369A1',
+            lineHeight: '1.6',
           }}
         >
-          <p>
-            * 본 경력증명서는 싸인해주세요 서비스를 통해 체결된 전자근로계약서를 기반으로 발급되었습니다.
+          <p style={{ fontWeight: '500', marginBottom: '4px' }}>
+            💡 구직 활동 시 참고자료로 활용할 수 있어요.
           </p>
           <p>
-            * 각 경력의 상세 내용은 개별 근로계약서를 통해 확인할 수 있습니다.
+            공식 증명이 필요하면 해당 사업장에 요청해주세요.
           </p>
         </section>
 
@@ -249,7 +260,7 @@ const CareerCertificatePDF = forwardRef<HTMLDivElement, CareerCertificatePDFProp
           }}
         >
           <p>
-            본 문서는 싸인해주세요 서비스를 통해 자동 발급되었습니다.
+            발급: 사인플리즈 (SignPlease) | 전자근로계약서 플랫폼
           </p>
           <p style={{ marginTop: '4px' }}>
             signplease.vercel.app

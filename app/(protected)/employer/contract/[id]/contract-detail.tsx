@@ -33,6 +33,7 @@ interface ContractData {
   includesWeeklyAllowance: boolean;
   startDate: string;
   endDate: string | null;
+  resignationDate: string | null;
   workDays: string[] | null;
   workDaysPerWeek: number | null;
   workStartTime: string;
@@ -358,9 +359,18 @@ export default function ContractDetail({
     { label: '급여', value: formatWage() },
     {
       label: '근무기간',
-      value: contract.endDate
-        ? `${formatDate(contract.startDate)} ~ ${formatDate(contract.endDate)}`
-        : `${formatDate(contract.startDate)} ~`,
+      value: (() => {
+        // 퇴사일이 있으면 퇴사일까지 (근로자 입력)
+        if (contract.resignationDate) {
+          return `${formatDate(contract.startDate)} ~ ${formatDate(contract.resignationDate)} (퇴사)`;
+        }
+        // 계약 종료일이 있으면 종료일까지
+        if (contract.endDate) {
+          return `${formatDate(contract.startDate)} ~ ${formatDate(contract.endDate)}`;
+        }
+        // 무기한
+        return `${formatDate(contract.startDate)} ~`;
+      })(),
     },
     { label: '근무요일', value: formatWorkDays() },
     { label: '휴일', value: formatHolidays() },

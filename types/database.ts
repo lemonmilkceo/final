@@ -122,6 +122,7 @@ export type Database = {
           pay_day: number
           payment_timing: string
           pdf_url: string | null
+          resignation_date: string | null
           share_token: string
           start_date: string
           status: Database["public"]["Enums"]["contract_status"]
@@ -161,6 +162,7 @@ export type Database = {
           pay_day: number
           payment_timing?: string
           pdf_url?: string | null
+          resignation_date?: string | null
           share_token?: string
           start_date: string
           status?: Database["public"]["Enums"]["contract_status"]
@@ -200,6 +202,7 @@ export type Database = {
           pay_day?: number
           payment_timing?: string
           pdf_url?: string | null
+          resignation_date?: string | null
           share_token?: string
           start_date?: string
           status?: Database["public"]["Enums"]["contract_status"]

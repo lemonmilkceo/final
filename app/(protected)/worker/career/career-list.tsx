@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import PageHeader from '@/components/layout/PageHeader';
 import Card from '@/components/ui/Card';
 import EmptyState from '@/components/shared/EmptyState';
@@ -11,6 +12,14 @@ import CareerCertificatePDF from '@/components/career/CareerCertificatePDF';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { formatCurrency, formatDate } from '@/lib/utils/format';
 import { generatePDF } from '@/lib/utils/pdf';
+import { 
+  getEffectiveEndDate, 
+  getCareerStatus, 
+  getCareerStatusLabel,
+  calculateWorkDays,
+  formatWorkDuration,
+  type CareerStatus 
+} from '@/lib/utils/career';
 
 interface CareerContract {
   id: string;
@@ -20,6 +29,7 @@ interface CareerContract {
   monthly_wage?: number | null;
   start_date: string;
   end_date: string | null;
+  resignation_date: string | null;
   work_location: string;
   job_description: string;
   completed_at: string | null;
@@ -41,6 +51,7 @@ export default function CareerList({
   totalContracts,
   isGuestMode = false,
 }: CareerListProps) {
+  const router = useRouter();
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastVariant, setToastVariant] = useState<'success' | 'error' | 'info'>('info');
@@ -48,6 +59,20 @@ export default function CareerList({
   const [showPDFSheet, setShowPDFSheet] = useState(false);
   const [isPDFGenerating, setIsPDFGenerating] = useState(false);
   const pdfRef = useRef<HTMLDivElement>(null);
+
+  // 퇴사일 미입력 계약 체크 (무기한 계약이면서 퇴사일 없음)
+  const contractsNeedingResignation = contracts.filter(
+    (c) => !c.resignation_date && !c.end_date
+  );
+
+  // 카드 클릭 핸들러
+  const handleCardClick = (contractId: string) => {
+    if (isGuestMode) {
+      setShowSignupSheet(true);
+      return;
+    }
+    router.push(`/worker/contract/${contractId}`);
+  };
 
   const showToastMessage = (message: string, variant: 'success' | 'error' | 'info' = 'info') => {
     setToastMessage(message);
@@ -78,10 +103,10 @@ export default function CareerList({
     try {
       const workerName = contracts[0]?.worker_name || '근로자';
       const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
-      const filename = `경력증명서_${workerName}_${dateStr}.pdf`;
+      const filename = `근무이력서_${workerName}_${dateStr}.pdf`;
       
       await generatePDF(pdfRef.current, { filename });
-      showToastMessage('경력증명서가 다운로드되었어요', 'success');
+      showToastMessage('근무이력서가 다운로드되었어요', 'success');
       setShowPDFSheet(false);
     } catch (error) {
       console.error('PDF 생성 오류:', error);
@@ -94,18 +119,16 @@ export default function CareerList({
   // 경력 데이터 변환 (PDF용)
   const getPDFData = () => {
     const careers = contracts.map((contract) => {
-      const startDate = new Date(contract.start_date);
-      const endDate = contract.end_date ? new Date(contract.end_date) : new Date();
-      const durationDays = Math.ceil(
-        (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
-      );
+      const effectiveEnd = getEffectiveEndDate(contract);
+      const durationDays = calculateWorkDays(contract);
 
       return {
         id: contract.id,
         workplaceName: contract.employer?.name || contract.work_location || '미지정',
         jobDescription: contract.job_description || '업무 내용 미기재',
         startDate: contract.start_date,
-        endDate: contract.end_date,
+        endDate: effectiveEnd ? effectiveEnd.toISOString().split('T')[0] : null,
+        resignationDate: contract.resignation_date,
         durationDays: durationDays > 0 ? durationDays : 1,
       };
     });
@@ -121,28 +144,38 @@ export default function CareerList({
     };
   };
 
-  const formatPeriod = (startDate: string, endDate: string | null) => {
-    const start = formatDate(startDate);
-    const end = endDate ? formatDate(endDate) : '현재';
-    return `${start} ~ ${end}`;
+  // 기간 포맷 (퇴사일 우선)
+  const formatPeriod = (contract: CareerContract) => {
+    const start = formatDate(contract.start_date);
+    const effectiveEnd = getEffectiveEndDate(contract);
+    
+    if (!effectiveEnd) {
+      return `${start} ~ 현재`;
+    }
+    
+    return `${start} ~ ${formatDate(effectiveEnd.toISOString().split('T')[0])}`;
   };
 
-  const calculateDuration = (startDate: string, endDate: string | null) => {
-    const start = new Date(startDate);
-    const end = endDate ? new Date(endDate) : new Date();
-    const diff = Math.ceil(
-      (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
-    );
+  // 기간 계산 (퇴사일 우선)
+  const calculateDuration = (contract: CareerContract) => {
+    const days = calculateWorkDays(contract);
+    return formatWorkDuration(days);
+  };
 
-    if (diff < 30) {
-      return `${diff}일`;
+  // 상태 배지 스타일
+  const getStatusBadgeStyle = (status: CareerStatus) => {
+    switch (status) {
+      case 'ongoing':
+        return 'bg-green-50 text-green-600';
+      case 'resigned':
+        return 'bg-gray-100 text-gray-600';
+      case 'expired':
+        return 'bg-gray-100 text-gray-600';
+      case 'needs_input':
+        return 'bg-amber-50 text-amber-600';
+      default:
+        return 'bg-gray-100 text-gray-600';
     }
-    const months = Math.floor(diff / 30);
-    const days = diff % 30;
-    if (days === 0) {
-      return `${months}개월`;
-    }
-    return `${months}개월 ${days}일`;
   };
 
   return (
@@ -159,6 +192,23 @@ export default function CareerList({
             <p className="text-[14px] text-blue-700">
               샘플 데이터입니다. 로그인하면 실제 경력을 확인할 수 있어요.
             </p>
+          </div>
+        )}
+
+        {/* 퇴사일 미입력 안내 배너 */}
+        {!isGuestMode && contractsNeedingResignation.length > 0 && (
+          <div className="bg-amber-50 rounded-2xl p-4 mb-6">
+            <div className="flex items-start gap-3">
+              <span className="text-xl">💡</span>
+              <div>
+                <p className="text-[14px] font-medium text-amber-800">
+                  퇴사일을 입력하면 더 정확한 이력서를 받을 수 있어요
+                </p>
+                <p className="text-[13px] text-amber-600 mt-1">
+                  아래 근무지를 눌러 퇴사 처리를 진행해주세요
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -186,50 +236,63 @@ export default function CareerList({
             <h2 className="text-[16px] font-semibold text-gray-900">
               근무 이력
             </h2>
-            {contracts.map((contract) => (
-              <Card
-                key={contract.id}
-                variant="default"
-                className="border border-gray-100"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-lg">🏢</span>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[15px] font-semibold text-gray-900 truncate">
-                          {contract.employer?.name || contract.work_location}
-                        </p>
-                        <p className="text-[13px] text-gray-500 line-clamp-2">
-                          {contract.job_description}
-                        </p>
+            {contracts.map((contract) => {
+              const status = getCareerStatus(contract);
+              const statusLabel = getCareerStatusLabel(status);
+              
+              return (
+                <Card
+                  key={contract.id}
+                  variant="default"
+                  className="border border-gray-100 cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                  onClick={() => handleCardClick(contract.id)}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-lg">🏢</span>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[15px] font-semibold text-gray-900 truncate">
+                            {contract.employer?.name || contract.work_location}
+                          </p>
+                          <p className="text-[13px] text-gray-500 line-clamp-2">
+                            {contract.job_description}
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                          <p className="text-[13px] text-blue-500 font-medium whitespace-nowrap">
+                            {calculateDuration(contract)}
+                          </p>
+                          {/* 상태 배지 */}
+                          <span className={`text-[11px] px-2 py-0.5 rounded-full ${getStatusBadgeStyle(status)}`}>
+                            {statusLabel}
+                          </span>
+                        </div>
                       </div>
-                      <p className="text-[13px] text-blue-500 font-medium whitespace-nowrap flex-shrink-0">
-                        {calculateDuration(
-                          contract.start_date,
-                          contract.end_date
-                        )}
-                      </p>
-                    </div>
-                    <div className="mt-2 flex items-center gap-2 text-[12px] text-gray-400">
-                      <span>
-                        {formatPeriod(contract.start_date, contract.end_date)}
-                      </span>
-                      <span>•</span>
-                      <span>
-                        {contract.wage_type === 'monthly' && contract.monthly_wage
-                          ? `월 ${formatCurrency(contract.monthly_wage)}`
-                          : contract.hourly_wage
-                            ? `시급 ${formatCurrency(contract.hourly_wage)}`
-                            : '-'}
-                      </span>
+                      <div className="mt-2 flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-[12px] text-gray-400">
+                          <span>{formatPeriod(contract)}</span>
+                          <span>•</span>
+                          <span>
+                            {contract.wage_type === 'monthly' && contract.monthly_wage
+                              ? `월 ${formatCurrency(contract.monthly_wage)}`
+                              : contract.hourly_wage
+                                ? `시급 ${formatCurrency(contract.hourly_wage)}`
+                                : '-'}
+                          </span>
+                        </div>
+                        {/* 화살표 아이콘 */}
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              );
+            })}
           </div>
         ) : (
           <EmptyState
@@ -258,7 +321,7 @@ export default function CareerList({
                 d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            경력증명서 발급
+            근무이력서 발급
           </button>
         )}
       </div>
@@ -282,7 +345,7 @@ export default function CareerList({
       <BottomSheet
         isOpen={showPDFSheet}
         onClose={() => setShowPDFSheet(false)}
-        title="경력증명서 미리보기"
+        title="근무이력서 미리보기"
       >
         <div className="space-y-4">
           {/* PDF 미리보기 영역 */}
@@ -299,7 +362,7 @@ export default function CareerList({
           <div className="bg-blue-50 rounded-xl p-3 flex items-start gap-2">
             <span className="text-lg">💡</span>
             <p className="text-[13px] text-blue-700">
-              위 미리보기와 동일한 형식의 PDF 파일이 다운로드됩니다.
+              계약서 정보로 만든 근무이력서예요. 다운로드 후 구직 활동에 활용해보세요.
             </p>
           </div>
 

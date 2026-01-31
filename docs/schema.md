@@ -252,7 +252,8 @@ CREATE TABLE public.folders (
 | `hourly_wage` | `integer` | NO | - | 시급 (원) |
 | `includes_weekly_allowance` | `boolean` | NO | `false` | 주휴수당 포함 여부 |
 | `start_date` | `date` | NO | - | 근무 시작일 |
-| `end_date` | `date` | YES | NULL | 근무 종료일 (NULL: 무기한) |
+| `end_date` | `date` | YES | NULL | 근무 예정 종료일 (NULL: 무기한) |
+| `resignation_date` | `date` | YES | NULL | 실제 퇴사일 (근로자 입력) |
 | `work_days` | `text[]` | YES | NULL | 근무 요일 배열 ['월', '화', ...] |
 | `work_days_per_week` | `integer` | YES | NULL | 주 N일 (work_days가 NULL일 때) |
 | `work_start_time` | `time` | NO | - | 근무 시작 시간 |
@@ -301,6 +302,7 @@ CREATE TABLE public.contracts (
   includes_weekly_allowance boolean NOT NULL DEFAULT false,
   start_date date NOT NULL,
   end_date date,
+  resignation_date date,  -- 실제 퇴사일 (근로자 입력)
   work_days text[],
   work_days_per_week integer CHECK (work_days_per_week >= 1 AND work_days_per_week <= 7),
   work_start_time time NOT NULL,

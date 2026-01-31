@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { ROUTES } from '@/lib/constants/routes';
 import CareerList from './career-list';
+import { getEffectiveEndDate, calculateWorkDays } from '@/lib/utils/career';
 
 // 게스트 모드 체크 함수
 async function isGuestMode(): Promise<boolean> {
@@ -29,7 +30,8 @@ const GUEST_SAMPLE_CAREERS = [
     worker_name: '게스트',
     hourly_wage: 12000,
     start_date: new Date(Date.now() - 86400000 * 90).toISOString().split('T')[0], // 90일 전
-    end_date: new Date(Date.now() - 86400000 * 30).toISOString().split('T')[0], // 30일 전
+    end_date: null, // 무기한 계약
+    resignation_date: new Date(Date.now() - 86400000 * 30).toISOString().split('T')[0], // 30일 전 퇴사
     work_location: '서울 강남구 역삼동',
     job_description: '홀 서빙 및 고객 응대',
     completed_at: new Date(Date.now() - 86400000 * 30).toISOString(),
@@ -40,7 +42,8 @@ const GUEST_SAMPLE_CAREERS = [
     worker_name: '게스트',
     hourly_wage: 10500,
     start_date: new Date(Date.now() - 86400000 * 180).toISOString().split('T')[0], // 180일 전
-    end_date: new Date(Date.now() - 86400000 * 120).toISOString().split('T')[0], // 120일 전
+    end_date: new Date(Date.now() - 86400000 * 120).toISOString().split('T')[0], // 120일 전 종료
+    resignation_date: null, // 계약대로 만료
     work_location: '서울 강남구 논현동',
     job_description: '계산 및 상품 진열',
     completed_at: new Date(Date.now() - 86400000 * 120).toISOString(),
@@ -51,7 +54,8 @@ const GUEST_SAMPLE_CAREERS = [
     worker_name: '게스트',
     hourly_wage: 11000,
     start_date: new Date(Date.now() - 86400000 * 270).toISOString().split('T')[0], // 270일 전
-    end_date: new Date(Date.now() - 86400000 * 200).toISOString().split('T')[0], // 200일 전
+    end_date: null, // 무기한 계약
+    resignation_date: null, // 퇴사일 미입력 (진행 중으로 표시됨)
     work_location: '서울 서초구 서초동',
     job_description: '음료 제조 및 홀 정리',
     completed_at: new Date(Date.now() - 86400000 * 200).toISOString(),
@@ -97,6 +101,7 @@ export default async function CareerPage() {
       hourly_wage,
       start_date,
       end_date,
+      resignation_date,
       work_location,
       job_description,
       completed_at,
@@ -109,15 +114,15 @@ export default async function CareerPage() {
     .eq('status', 'completed')
     .order('start_date', { ascending: false });
 
-  // 총 근무 기간 계산
+  // 총 근무 기간 계산 (resignation_date 우선)
   let totalDays = 0;
   contracts?.forEach((contract) => {
-    const start = new Date(contract.start_date);
-    const end = contract.end_date ? new Date(contract.end_date) : new Date();
-    const diff = Math.ceil(
-      (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
-    );
-    totalDays += diff;
+    const days = calculateWorkDays({
+      start_date: contract.start_date,
+      end_date: contract.end_date,
+      resignation_date: contract.resignation_date,
+    });
+    totalDays += days;
   });
 
   return (
