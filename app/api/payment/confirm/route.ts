@@ -113,31 +113,43 @@ export async function GET(request: NextRequest) {
       })
       .eq('id', payment.id);
 
-    // 크레딧 지급
+    // 크레딧 지급 (병렬 처리)
+    const creditPromises = [];
+
     if (payment.credits_contract > 0) {
-      await supabase.rpc('add_credit', {
-        p_user_id: user.id,
-        p_credit_type: 'contract',
-        p_amount: payment.credits_contract,
-        p_description: `결제: ${payment.product_name}`,
-        p_reference_id: payment.id,
-      });
+      creditPromises.push(
+        supabase
+          .rpc('add_credit', {
+            p_user_id: user.id,
+            p_credit_type: 'contract',
+            p_amount: payment.credits_contract,
+            p_description: `결제: ${payment.product_name}`,
+            p_reference_id: payment.id,
+          })
+          .then()
+      );
     }
 
     if (payment.credits_ai_review > 0) {
-      await supabase.rpc('add_credit', {
-        p_user_id: user.id,
-        p_credit_type: 'ai_review',
-        p_amount: payment.credits_ai_review,
-        p_description: `결제: ${payment.product_name}`,
-        p_reference_id: payment.id,
-      });
+      creditPromises.push(
+        supabase
+          .rpc('add_credit', {
+            p_user_id: user.id,
+            p_credit_type: 'ai_review',
+            p_amount: payment.credits_ai_review,
+            p_description: `결제: ${payment.product_name}`,
+            p_reference_id: payment.id,
+          })
+          .then()
+      );
+    }
+
+    if (creditPromises.length > 0) {
+      await Promise.all(creditPromises);
     }
 
     // 성공 페이지로 리다이렉트
-    return NextResponse.redirect(
-      new URL('/pricing?success=true', request.url)
-    );
+    return NextResponse.redirect(new URL('/pricing?success=true', request.url));
   } catch (error) {
     console.error('Payment confirm error:', error);
     return NextResponse.redirect(

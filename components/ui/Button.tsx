@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef } from 'react';
+import { Ref } from 'react';
 
 type ButtonVariant = 'primary' | 'secondary' | 'kakao' | 'ghost';
 
@@ -9,6 +9,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
   fullWidth?: boolean;
   children: React.ReactNode;
+  ref?: Ref<HTMLButtonElement>;
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
@@ -18,45 +19,39 @@ const variantStyles: Record<ButtonVariant, string> = {
   ghost: 'btn-ghost',
 };
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  (
-    {
-      variant = 'primary',
-      loading = false,
-      fullWidth = true,
-      disabled,
-      className = '',
-      children,
-      ...props
-    },
-    ref
-  ) => {
-    const baseStyles = variantStyles[variant];
-    const widthStyles = fullWidth ? 'w-full' : 'w-auto';
+export function Button({
+  variant = 'primary',
+  loading = false,
+  fullWidth = true,
+  disabled,
+  className = '',
+  children,
+  ref,
+  ...props
+}: ButtonProps) {
+  const baseStyles = variantStyles[variant];
+  const widthStyles = fullWidth ? 'w-full' : 'w-auto';
 
-    return (
-      <button
-        ref={ref}
-        disabled={disabled || loading}
-        className={`${baseStyles} ${widthStyles} ${className} relative`}
-        {...props}
-      >
-        {loading ? (
-          <>
-            <span className="opacity-0">{children}</span>
-            <span className="absolute inset-0 flex items-center justify-center">
-              <LoadingSpinner />
-            </span>
-          </>
-        ) : (
-          children
-        )}
-      </button>
-    );
-  }
-);
-
-Button.displayName = 'Button';
+  return (
+    <button
+      ref={ref}
+      disabled={disabled || loading}
+      className={`${baseStyles} ${widthStyles} ${className} relative`}
+      {...props}
+    >
+      {loading ? (
+        <>
+          <span className="opacity-0">{children}</span>
+          <span className="absolute inset-0 flex items-center justify-center">
+            <LoadingSpinner />
+          </span>
+        </>
+      ) : (
+        children
+      )}
+    </button>
+  );
+}
 
 function LoadingSpinner() {
   return (

@@ -57,10 +57,7 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json(
-        { error: '로그인이 필요해요' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '로그인이 필요해요' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -78,13 +75,25 @@ export async function POST(request: NextRequest) {
     let isNewContract = false;
 
     if (contractId) {
-      // 기존 계약서 조회
-      const { data: dbContract, error: contractError } = await supabase
-        .from('contracts')
-        .select('*')
-        .eq('id', contractId)
-        .eq('employer_id', user.id)
-        .single();
+      // 기존 계약서 조회와 AI 리뷰 확인을 병렬로 처리
+      const [contractResult, reviewResult] = await Promise.all([
+        supabase
+          .from('contracts')
+          .select('*')
+          .eq('id', contractId)
+          .eq('employer_id', user.id)
+          .single(),
+        supabase
+          .from('ai_reviews')
+          .select('*')
+          .eq('contract_id', contractId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single(),
+      ]);
+
+      const { data: dbContract, error: contractError } = contractResult;
+      const { data: existingReview } = reviewResult;
 
       if (contractError || !dbContract) {
         return NextResponse.json(
@@ -94,15 +103,6 @@ export async function POST(request: NextRequest) {
       }
 
       contract = dbContract as ContractData;
-
-      // 기존 AI 리뷰 확인
-      const { data: existingReview } = await supabase
-        .from('ai_reviews')
-        .select('*')
-        .eq('contract_id', contractId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
 
       if (existingReview) {
         // 이미 리뷰가 있으면 기존 결과 반환 (크레딧 소모 안함)
@@ -123,7 +123,8 @@ export async function POST(request: NextRequest) {
         hourly_wage: contractData.hourlyWage || 0,
         monthly_wage: contractData.monthlyWage || null,
         wage_type: contractData.wageType || 'hourly',
-        includes_weekly_allowance: contractData.includesWeeklyAllowance || false,
+        includes_weekly_allowance:
+          contractData.includesWeeklyAllowance || false,
         work_days_per_week: contractData.workDaysPerWeek || null,
         work_days: contractData.workDays || null,
         work_start_time: contractData.workStartTime || '09:00',
@@ -158,19 +159,21 @@ export async function POST(request: NextRequest) {
       overall_status: basicReview.overall_status,
       items: basicReview.items.map((item) => ({
         ...item,
-        suggestion: item.suggestion || (aiSuggestions ? extractSuggestion(aiSuggestions, item.category) : null),
+        suggestion:
+          item.suggestion ||
+          (aiSuggestions
+            ? extractSuggestion(aiSuggestions, item.category)
+            : null),
       })),
     };
 
     // 기존 계약서인 경우에만 결과 저장
     if (contractId && !isNewContract) {
-      const { error: saveError } = await supabase
-        .from('ai_reviews')
-        .insert({
-          contract_id: contractId,
-          requested_by: user.id,
-          result: JSON.parse(JSON.stringify(reviewResult)),
-        });
+      const { error: saveError } = await supabase.from('ai_reviews').insert({
+        contract_id: contractId,
+        requested_by: user.id,
+        result: JSON.parse(JSON.stringify(reviewResult)),
+      });
 
       if (saveError) {
         console.error('Review save error:', saveError);
@@ -202,28 +205,32 @@ function performBasicReview(contract: ContractData): ReviewResult {
 
   // 1. 최저시급 검토
   const isMonthlyWage = contract.wage_type === 'monthly';
-  
+
   if (isMonthlyWage) {
     // 월급제일 경우: 월급 금액과 근무시간으로 시급 환산하여 검토
     const monthlyWage = contract.monthly_wage || 0;
-    
+
     // 근무시간 계산
-    const [startHour, startMin] = contract.work_start_time.split(':').map(Number);
+    const [startHour, startMin] = contract.work_start_time
+      .split(':')
+      .map(Number);
     const [endHour, endMin] = contract.work_end_time.split(':').map(Number);
-    let workMinutes = (endHour * 60 + endMin) - (startHour * 60 + startMin);
+    let workMinutes = endHour * 60 + endMin - (startHour * 60 + startMin);
     if (workMinutes < 0) workMinutes += 24 * 60;
     const dailyWorkHours = (workMinutes - contract.break_minutes) / 60;
-    
+
     // 주 근무일수
-    const workDaysPerWeek = contract.work_days?.length || contract.work_days_per_week || 5;
-    
+    const workDaysPerWeek =
+      contract.work_days?.length || contract.work_days_per_week || 5;
+
     // 월 근무시간 계산 (주 근무시간 × 4.345주)
     const weeklyWorkHours = dailyWorkHours * workDaysPerWeek;
     const monthlyWorkHours = weeklyWorkHours * 4.345;
-    
+
     // 환산 시급 계산
-    const calculatedHourlyWage = monthlyWorkHours > 0 ? Math.round(monthlyWage / monthlyWorkHours) : 0;
-    
+    const calculatedHourlyWage =
+      monthlyWorkHours > 0 ? Math.round(monthlyWage / monthlyWorkHours) : 0;
+
     if (calculatedHourlyWage < MINIMUM_WAGE) {
       items.push({
         category: 'minimum_wage',
@@ -267,13 +274,14 @@ function performBasicReview(contract: ContractData): ReviewResult {
   }
 
   // 2. 휴게시간 검토
-  const workDays = contract.work_days?.length || contract.work_days_per_week || 0;
+  const workDays =
+    contract.work_days?.length || contract.work_days_per_week || 0;
   const [startHour, startMin] = contract.work_start_time.split(':').map(Number);
   const [endHour, endMin] = contract.work_end_time.split(':').map(Number);
-  
-  let workMinutes = (endHour * 60 + endMin) - (startHour * 60 + startMin);
+
+  let workMinutes = endHour * 60 + endMin - (startHour * 60 + startMin);
   if (workMinutes < 0) workMinutes += 24 * 60; // 야간 근무
-  
+
   const workHours = workMinutes / 60;
   const requiredBreak = workHours >= 8 ? 60 : workHours >= 4 ? 30 : 0;
 
@@ -301,9 +309,9 @@ function performBasicReview(contract: ContractData): ReviewResult {
   const dailyWorkHours = (workMinutes - contract.break_minutes) / 60;
   const weeklyWorkHours = dailyWorkHours * workDays;
   const isWeeklyAllowanceRequired = weeklyWorkHours >= 15;
-  
+
   const isMonthlyWageType = contract.wage_type === 'monthly';
-  
+
   if (isMonthlyWageType) {
     // 월급제: 주휴수당 포함 시급으로 환산하여 최저시급 검토
     // 주휴수당 = 주 근무시간의 약 20% (8시간/40시간)
@@ -311,10 +319,11 @@ function performBasicReview(contract: ContractData): ReviewResult {
     const monthlyWorkHours = weeklyWorkHours * 4.345;
     // 주휴수당 포함 총 시간 = 근무시간 × 1.2 (주휴 8시간/40시간 = 20%)
     const totalHoursWithWeeklyAllowance = monthlyWorkHours * 1.2;
-    const effectiveHourlyWithWeekly = totalHoursWithWeeklyAllowance > 0 
-      ? Math.round(monthlyWage / totalHoursWithWeeklyAllowance) 
-      : 0;
-    
+    const effectiveHourlyWithWeekly =
+      totalHoursWithWeeklyAllowance > 0
+        ? Math.round(monthlyWage / totalHoursWithWeeklyAllowance)
+        : 0;
+
     if (isWeeklyAllowanceRequired && effectiveHourlyWithWeekly < MINIMUM_WAGE) {
       items.push({
         category: 'weekly_allowance',
@@ -349,7 +358,8 @@ function performBasicReview(contract: ContractData): ReviewResult {
         status: 'warning',
         title: '주휴수당 미포함',
         description: `주 ${weeklyWorkHours.toFixed(1)}시간 근무 시 주휴수당이 발생해요. 현재 시급에 포함되어 있지 않아요.`,
-        suggestion: '주휴수당 포함 시급으로 설정하거나, 별도 지급 계획을 세우세요.',
+        suggestion:
+          '주휴수당 포함 시급으로 설정하거나, 별도 지급 계획을 세우세요.',
       });
       hasWarning = true;
     } else if (contract.includes_weekly_allowance) {
@@ -404,12 +414,15 @@ function performBasicReview(contract: ContractData): ReviewResult {
   return { overall_status, items };
 }
 
-async function getAISuggestions(openai: OpenAI, contract: ContractData): Promise<string> {
+async function getAISuggestions(
+  openai: OpenAI,
+  contract: ContractData
+): Promise<string> {
   const isMonthlyWage = contract.wage_type === 'monthly';
-  const wageInfo = isMonthlyWage 
-    ? `월급: ${(contract.monthly_wage || 0).toLocaleString()}원` 
+  const wageInfo = isMonthlyWage
+    ? `월급: ${(contract.monthly_wage || 0).toLocaleString()}원`
     : `시급: ${contract.hourly_wage.toLocaleString()}원`;
-    
+
   const prompt = `
 당신은 한국 노동법 전문 노무사입니다. 다음 근로계약서 내용을 검토하고 개선 제안을 해주세요.
 
@@ -439,7 +452,10 @@ async function getAISuggestions(openai: OpenAI, contract: ContractData): Promise
   return response.choices[0]?.message?.content || '';
 }
 
-function extractSuggestion(aiResponse: string, _category: string): string | null {
+function extractSuggestion(
+  aiResponse: string,
+  _category: string
+): string | null {
   // AI 응답에서 카테고리별 제안 추출 (간단한 구현)
   // 실제로는 더 정교한 파싱이 필요할 수 있음
   return aiResponse.length > 0 ? aiResponse : null;
