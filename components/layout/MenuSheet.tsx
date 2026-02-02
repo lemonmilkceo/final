@@ -109,8 +109,8 @@ const MenuSheet: React.FC<MenuSheetProps> = ({
   const oppositeRole = userRole === 'employer' ? 'worker' : 'employer';
   const oppositeRoleLabel = userRole === 'employer' ? '알바생' : '사장님';
   const oppositeRoleDescription = userRole === 'employer' 
-    ? '다른 곳에서 일하고 있나요?' 
-    : '직접 계약서를 작성하세요';
+    ? '다른 곳에서도 일해요' 
+    : '계약서 작성하기';
 
   // 사업자용 메뉴
   const employerMenuItems: MenuItem[] = [
