@@ -3,7 +3,6 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGuestStore } from '@/stores/guestStore';
-import Image from 'next/image';
 import { signInWithKakao } from '@/app/(public)/login/actions';
 
 export default function GuestRoleSelectPage() {
@@ -35,13 +34,6 @@ export default function GuestRoleSelectPage() {
       {/* Content */}
       <div className="flex-1 flex flex-col items-center justify-center px-8">
         <div className="mb-8 text-center">
-          <Image
-            src="/images/logo.png"
-            alt="싸인해주세요"
-            width={64}
-            height={64}
-            className="mx-auto mb-4"
-          />
           <h1 className="text-[24px] font-bold text-gray-900 mb-2">
             둘러보기
           </h1>
