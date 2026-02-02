@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import PageHeader from '@/components/layout/PageHeader';
 import BottomSheet from '@/components/ui/BottomSheet';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import {
   useContractFormStore,
   TOTAL_FORM_STEPS,
 } from '@/stores/contractFormStore';
+import { getContractForEdit } from './actions';
 // Step 1: 사업장 선택/등록
 import Step1Workplace from '@/components/contract/ContractForm/Step1Workplace';
 // Step 2: 계약 형태
@@ -32,8 +34,65 @@ import Step10PayDay from '@/components/contract/ContractForm/Step10PayDay';
 
 export default function CreateContractPage() {
   const router = useRouter();
-  const { step, prevStep, reset } = useContractFormStore();
+  const searchParams = useSearchParams();
+  const editContractId = searchParams.get('edit');
+  
+  const { step, prevStep, reset, loadContractData, isEditMode, editingContractId } = useContractFormStore();
   const [isExitSheetOpen, setIsExitSheetOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  // edit 모드일 때 계약서 데이터 로드
+  useEffect(() => {
+    const loadEditData = async () => {
+      if (!editContractId) return;
+      
+      // 이미 같은 계약서를 수정 중이면 스킵
+      if (isEditMode && editingContractId === editContractId) return;
+      
+      setIsLoading(true);
+      setLoadError(null);
+      
+      const result = await getContractForEdit(editContractId);
+      
+      if (result.success && result.data) {
+        const data = result.data;
+        loadContractData(editContractId, {
+          workplaceId: data.workplaceId,
+          workplaceName: data.workplaceName || '',
+          workLocation: data.workLocation,
+          contractType: data.contractType,
+          businessSize: data.businessSize,
+          workerName: data.workerName,
+          workerPhone: data.workerPhone,
+          wageType: data.wageType,
+          hourlyWage: data.hourlyWage,
+          monthlyWage: data.monthlyWage,
+          includesWeeklyAllowance: data.includesWeeklyAllowance,
+          startDate: data.startDate,
+          endDate: data.endDate,
+          hasNoEndDate: !data.endDate,
+          workDays: data.workDays || [],
+          workDaysPerWeek: data.workDaysPerWeek,
+          useWorkDaysPerWeek: !!data.workDaysPerWeek && (!data.workDays || data.workDays.length === 0),
+          workStartTime: data.workStartTime,
+          workEndTime: data.workEndTime,
+          breakMinutes: data.breakMinutes,
+          businessType: data.businessType as 'restaurant' | 'cafe' | 'convenience_store' | 'retail' | 'beauty' | 'office' | 'pc_cafe' | 'startup' | null,
+          jobDescription: data.jobDescription || '',
+          payDay: data.payDay,
+          paymentTiming: data.paymentTiming,
+          isLastDayPayment: data.isLastDayPayment,
+        });
+      } else {
+        setLoadError(result.error || '계약서를 불러올 수 없어요');
+      }
+      
+      setIsLoading(false);
+    };
+    
+    loadEditData();
+  }, [editContractId, isEditMode, editingContractId, loadContractData]);
 
   const handleBack = () => {
     if (step === 1) {
@@ -108,10 +167,40 @@ export default function CreateContractPage() {
     </button>
   );
 
+  // 로딩 중
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center">
+        <LoadingSpinner />
+        <p className="mt-4 text-gray-500">계약서를 불러오는 중...</p>
+      </div>
+    );
+  }
+
+  // 에러 발생
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6">
+        <div className="text-center">
+          <p className="text-6xl mb-4">😢</p>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">계약서를 불러올 수 없어요</h2>
+          <p className="text-gray-500 mb-6">{loadError}</p>
+          <button
+            onClick={() => router.push('/employer')}
+            className="px-6 py-3 bg-blue-500 text-white rounded-xl font-medium"
+          >
+            홈으로 돌아가기
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <PageHeader
         onBack={handleBack}
+        title={isEditMode ? '계약서 수정' : undefined}
         progress={{ current: step, total: TOTAL_FORM_STEPS }}
         rightElement={HomeButton}
       />

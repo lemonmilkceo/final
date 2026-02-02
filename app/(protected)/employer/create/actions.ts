@@ -169,3 +169,323 @@ export async function saveContractDraft(
 
   return { success: true, data: { contractId: contract.id } };
 }
+
+/**
+ * 계약서 수정 (completed 상태도 7일 이내면 수정 가능)
+ * - 기존 서명 삭제
+ * - 계약서 내용 업데이트
+ * - 새로운 사장 서명 저장
+ * - 상태를 pending으로 변경
+ * - 크레딧 차감 없음 (이미 차감됨)
+ */
+export async function updateContract(
+  contractId: string,
+  formData: ContractFormInput,
+  signatureData: string
+): Promise<ActionResult<{ contractId: string; shareUrl?: string }>> {
+  const supabase = await createClient();
+
+  // 인증 확인
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return { success: false, error: '로그인이 필요해요' };
+  }
+
+  // 기존 계약서 조회 및 권한 확인
+  const { data: existingContract, error: fetchError } = await supabase
+    .from('contracts')
+    .select('id, employer_id, worker_id, worker_name, status, completed_at')
+    .eq('id', contractId)
+    .single();
+
+  if (fetchError || !existingContract) {
+    return { success: false, error: '계약서를 찾을 수 없어요' };
+  }
+
+  // 권한 확인
+  if (existingContract.employer_id !== user.id) {
+    return { success: false, error: '수정 권한이 없어요' };
+  }
+
+  // 수정 가능 여부 확인
+  const canEdit = checkEditableStatus(existingContract.status, existingContract.completed_at);
+  if (!canEdit.editable) {
+    return { success: false, error: canEdit.reason || '수정할 수 없는 계약서예요' };
+  }
+
+  // 유효성 검사
+  const validation = contractFormSchema.safeParse(formData);
+  if (!validation.success) {
+    const firstError = validation.error.issues[0];
+    return {
+      success: false,
+      error: firstError?.message || '입력 내용을 확인해주세요',
+    };
+  }
+
+  // 1. 기존 서명 삭제
+  const { error: deleteSignatureError } = await supabase
+    .from('signatures')
+    .delete()
+    .eq('contract_id', contractId);
+
+  if (deleteSignatureError) {
+    console.error('Signature delete error:', deleteSignatureError);
+    return { success: false, error: '기존 서명 삭제에 실패했어요' };
+  }
+
+  // 2. 계약서 업데이트
+  const contractData = transformFormToDbSchema(validation.data);
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7); // 7일 후 만료
+
+  const { error: updateError } = await supabase
+    .from('contracts')
+    .update({
+      ...contractData,
+      status: 'pending',
+      expires_at: expiresAt.toISOString(),
+      completed_at: null, // 완료 시간 초기화
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', contractId);
+
+  if (updateError) {
+    console.error('Contract update error:', updateError);
+    return { success: false, error: '계약서 수정에 실패했어요' };
+  }
+
+  // 3. 새 사장 서명 저장
+  const headersList = await headers();
+  const ipAddress = headersList.get('x-forwarded-for')?.split(',')[0]?.trim() 
+    || headersList.get('x-real-ip') 
+    || null;
+  const userAgent = headersList.get('user-agent') || null;
+
+  const { error: signatureError } = await supabase.from('signatures').insert({
+    contract_id: contractId,
+    user_id: user.id,
+    signer_role: 'employer',
+    signature_data: signatureData,
+    signed_at: new Date().toISOString(),
+    ip_address: ipAddress,
+    user_agent: userAgent,
+  });
+
+  if (signatureError) {
+    console.error('Signature insert error:', signatureError);
+  }
+
+  // 4. 공유 토큰 생성/갱신
+  const shareToken = crypto.randomUUID().replace(/-/g, '').slice(0, 16);
+  
+  const { error: tokenError } = await supabase
+    .from('contracts')
+    .update({ share_token: shareToken })
+    .eq('id', contractId);
+
+  let shareUrl: string | undefined;
+  if (!tokenError) {
+    shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/s/${shareToken}`;
+  }
+
+  // 5. 근로자에게 알림 발송 (worker_id가 있는 경우)
+  if (existingContract.worker_id) {
+    // 사업자 이름 조회
+    const { data: employerProfile } = await supabase
+      .from('profiles')
+      .select('name')
+      .eq('id', user.id)
+      .single();
+
+    const employerName = employerProfile?.name || '사장님';
+
+    await supabase.from('notifications').insert({
+      user_id: existingContract.worker_id,
+      type: 'contract_modified',
+      title: '📝 계약서가 수정됐어요',
+      body: `${employerName}님이 근로계약서를 수정했어요. 다시 서명해주세요.`,
+      data: { contractId },
+      is_read: false,
+    });
+  }
+
+  // 캐시 무효화
+  revalidatePath('/employer');
+  revalidatePath(`/employer/contract/${contractId}`);
+
+  return { success: true, data: { contractId, shareUrl } };
+}
+
+/**
+ * 계약서 수정 가능 여부 확인
+ */
+function checkEditableStatus(
+  status: string,
+  completedAt: string | null
+): { editable: boolean; reason?: string; daysLeft?: number } {
+  // draft, pending 상태는 항상 수정 가능
+  if (status === 'draft' || status === 'pending') {
+    return { editable: true };
+  }
+
+  // completed 상태는 7일 이내만 수정 가능
+  if (status === 'completed' && completedAt) {
+    const completedDate = new Date(completedAt);
+    const now = new Date();
+    const diffMs = now.getTime() - completedDate.getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    const daysLeft = Math.ceil(7 - diffDays);
+
+    if (diffDays <= 7) {
+      return { editable: true, daysLeft };
+    } else {
+      return { 
+        editable: false, 
+        reason: '체결 완료 후 7일이 지나 수정할 수 없어요' 
+      };
+    }
+  }
+
+  // expired, deleted 상태는 수정 불가
+  return { 
+    editable: false, 
+    reason: '수정할 수 없는 상태예요' 
+  };
+}
+
+/**
+ * 계약서 수정 가능 여부 조회 (프론트엔드용)
+ */
+export async function checkContractEditable(
+  contractId: string
+): Promise<ActionResult<{ editable: boolean; reason?: string; daysLeft?: number }>> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return { success: false, error: '로그인이 필요해요' };
+  }
+
+  const { data: contract, error: fetchError } = await supabase
+    .from('contracts')
+    .select('id, employer_id, status, completed_at')
+    .eq('id', contractId)
+    .single();
+
+  if (fetchError || !contract) {
+    return { success: false, error: '계약서를 찾을 수 없어요' };
+  }
+
+  if (contract.employer_id !== user.id) {
+    return { success: false, error: '권한이 없어요' };
+  }
+
+  const result = checkEditableStatus(contract.status, contract.completed_at);
+  return { success: true, data: result };
+}
+
+/**
+ * 수정할 계약서 데이터 조회
+ */
+export async function getContractForEdit(
+  contractId: string
+): Promise<ActionResult<{
+  id: string;
+  workplaceId: string | null;
+  workplaceName: string | null;
+  workLocation: string;
+  contractType: 'regular' | 'contract';
+  businessSize: 'under_5' | 'over_5';
+  workerName: string;
+  workerPhone: string;
+  wageType: 'hourly' | 'monthly';
+  hourlyWage: number | null;
+  monthlyWage: number | null;
+  includesWeeklyAllowance: boolean;
+  startDate: string;
+  endDate: string | null;
+  workDays: string[] | null;
+  workDaysPerWeek: number | null;
+  workStartTime: string;
+  workEndTime: string;
+  breakMinutes: number;
+  businessType: string | null;
+  jobDescription: string | null;
+  payDay: number;
+  paymentTiming: 'current_month' | 'next_month';
+  isLastDayPayment: boolean;
+  status: string;
+  completedAt: string | null;
+}>> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return { success: false, error: '로그인이 필요해요' };
+  }
+
+  const { data: contract, error: fetchError } = await supabase
+    .from('contracts')
+    .select('*')
+    .eq('id', contractId)
+    .single();
+
+  if (fetchError || !contract) {
+    return { success: false, error: '계약서를 찾을 수 없어요' };
+  }
+
+  if (contract.employer_id !== user.id) {
+    return { success: false, error: '수정 권한이 없어요' };
+  }
+
+  // 수정 가능 여부 확인
+  const editCheck = checkEditableStatus(contract.status, contract.completed_at);
+  if (!editCheck.editable) {
+    return { success: false, error: editCheck.reason || '수정할 수 없는 계약서예요' };
+  }
+
+  return {
+    success: true,
+    data: {
+      id: contract.id,
+      workplaceId: contract.workplace_id,
+      workplaceName: contract.workplace_name,
+      workLocation: contract.work_location,
+      contractType: contract.contract_type,
+      businessSize: contract.business_size,
+      workerName: contract.worker_name,
+      workerPhone: contract.worker_phone || '',
+      wageType: contract.wage_type as 'hourly' | 'monthly',
+      hourlyWage: contract.hourly_wage,
+      monthlyWage: contract.monthly_wage,
+      includesWeeklyAllowance: contract.includes_weekly_allowance,
+      startDate: contract.start_date,
+      endDate: contract.end_date,
+      workDays: contract.work_days,
+      workDaysPerWeek: contract.work_days_per_week,
+      workStartTime: contract.work_start_time,
+      workEndTime: contract.work_end_time,
+      breakMinutes: contract.break_minutes,
+      businessType: null, // business_type은 DB에 저장되지 않음
+      jobDescription: contract.job_description,
+      payDay: contract.pay_day,
+      paymentTiming: contract.payment_timing as 'current_month' | 'next_month',
+      isLastDayPayment: contract.is_last_day_payment,
+      status: contract.status,
+      completedAt: contract.completed_at,
+    },
+  };
+}

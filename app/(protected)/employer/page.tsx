@@ -29,6 +29,7 @@ const GUEST_SAMPLE_CONTRACTS = [
     hourly_wage: 10360,
     status: 'completed' as const,
     created_at: new Date(Date.now() - 7 * 86400000).toISOString(),
+    completed_at: new Date(Date.now() - 5 * 86400000).toISOString(), // 5일 전 완료 (수정 가능)
     folder_id: null,
     signatures: [
       { signer_role: 'employer' as const, signed_at: new Date(Date.now() - 6 * 86400000).toISOString() },
@@ -42,6 +43,7 @@ const GUEST_SAMPLE_CONTRACTS = [
     hourly_wage: 11000,
     status: 'pending' as const,
     created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+    completed_at: null,
     folder_id: null,
     signatures: [{ signer_role: 'employer' as const, signed_at: new Date(Date.now() - 2 * 86400000).toISOString() }],
   },
@@ -52,6 +54,7 @@ const GUEST_SAMPLE_CONTRACTS = [
     hourly_wage: 12000,
     status: 'draft' as const,
     created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
+    completed_at: null,
     folder_id: null,
     signatures: [],
   },
@@ -62,6 +65,7 @@ const GUEST_SAMPLE_CONTRACTS = [
     hourly_wage: 10800,
     status: 'completed' as const,
     created_at: new Date(Date.now() - 14 * 86400000).toISOString(),
+    completed_at: new Date(Date.now() - 12 * 86400000).toISOString(), // 12일 전 완료 (수정 불가)
     folder_id: null,
     signatures: [
       { signer_role: 'employer' as const, signed_at: new Date(Date.now() - 13 * 86400000).toISOString() },
@@ -75,6 +79,7 @@ const GUEST_SAMPLE_CONTRACTS = [
     hourly_wage: 11500,
     status: 'pending' as const,
     created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
+    completed_at: null,
     folder_id: null,
     signatures: [{ signer_role: 'employer' as const, signed_at: new Date(Date.now() - 3 * 86400000).toISOString() }],
   },
@@ -140,6 +145,7 @@ export default async function EmployerDashboardPage() {
       hourly_wage,
       status,
       created_at,
+      completed_at,
       folder_id,
       signatures (
         signer_role,

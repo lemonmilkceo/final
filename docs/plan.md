@@ -1,7 +1,7 @@
 # 📋 Development Plan
 ## 싸인해주세요 (SignPlease)
 
-> **버전**: 1.26  
+> **버전**: 1.27  
 > **최종 수정일**: 2026년 1월 31일  
 > **목적**: AI 개발자(Cursor)가 실패 없이 따라갈 수 있는 원자 단위 작업 계획서
 
@@ -3142,6 +3142,162 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 > **Amendment 26 끝**
+
+---
+
+## Amendment 27: 체결완료 계약서 7일 수정 기능
+> **날짜**: 2026년 1월 31일
+
+### 개요
+체결 완료된 계약서도 7일 이내에는 사장님이 수정할 수 있도록 기능 추가.
+수정 시 기존 서명이 무효화되고, 근로자에게 다시 서명을 받아야 함.
+
+---
+
+### A27.1 DB 변경사항
+
+- [x] **Task A27.1.1**: signatures DELETE 정책 추가 ✅
+  - Migration: `add_signatures_delete_policy`
+  - 사업자가 자신의 계약서 서명을 삭제할 수 있도록 허용
+
+- [x] **Task A27.1.2**: notification_type ENUM에 'contract_modified' 추가 ✅
+  - Migration: `add_contract_modified_notification_type`
+  - 계약서 수정 알림 타입
+
+---
+
+### A27.2 Server Action 구현
+
+- [x] **Task A27.2.1**: updateContract 함수 구현 ✅
+  - `app/(protected)/employer/create/actions.ts`
+  - 수정 가능 여부 확인 (draft/pending/completed 7일 이내)
+  - 기존 서명 삭제
+  - 계약서 내용 업데이트
+  - 상태를 pending으로 변경
+  - 새 사장 서명 저장
+  - 공유 토큰 갱신
+  - 크레딧 차감 없음
+
+- [x] **Task A27.2.2**: getContractForEdit 함수 구현 ✅
+  - `app/(protected)/employer/create/actions.ts`
+  - 수정할 계약서 데이터 조회
+  - 수정 가능 여부 확인
+
+- [x] **Task A27.2.3**: checkContractEditable 함수 구현 ✅
+  - `app/(protected)/employer/create/actions.ts`
+  - 프론트엔드용 수정 가능 여부 조회
+
+---
+
+### A27.3 Zustand Store 수정
+
+- [x] **Task A27.3.1**: contractFormStore에 edit 모드 추가 ✅
+  - `stores/contractFormStore.ts`
+  - `editingContractId`, `isEditMode` 상태 추가
+  - `loadContractData` 함수 추가
+
+---
+
+### A27.4 프론트엔드 UI
+
+- [x] **Task A27.4.1**: ContractCard 수정 버튼 조건 변경 ✅
+  - `components/contract/ContractCard.tsx`
+  - completed 상태도 7일 이내면 수정 버튼 표시
+  - 남은 일수 표시 (D-N)
+  - 주황색 버튼으로 구분
+
+- [x] **Task A27.4.2**: 계약서 상세 페이지에 수정 버튼 추가 ✅
+  - `app/(protected)/employer/contract/[id]/contract-detail.tsx`
+  - 하단 액션 영역에 ✏️ 수정 버튼 추가
+  - 수정 가능 여부에 따라 표시
+
+- [x] **Task A27.4.3**: 수정 경고 팝업 구현 ✅
+  - `app/(protected)/employer/contract/[id]/contract-detail.tsx`
+  - 체결완료 계약서 수정 시 경고 표시
+  - "서명이 무효화됩니다" 안내
+
+- [x] **Task A27.4.4**: create 페이지 edit 모드 구현 ✅
+  - `app/(protected)/employer/create/page.tsx`
+  - URL 파라미터 `?edit=contractId`로 edit 모드 진입
+  - 기존 계약서 데이터 로드
+
+- [x] **Task A27.4.5**: preview 페이지 edit 모드 처리 ✅
+  - `app/(protected)/employer/preview/[id]/contract-preview.tsx`
+  - edit 모드일 때 updateContract 호출
+
+---
+
+### A27.5 알림 발송
+
+- [x] **Task A27.5.1**: 계약서 수정됨 알림 ✅
+  - 수정 시 근로자에게 알림 발송
+  - "📝 계약서가 수정됐어요" 알림
+
+---
+
+## 📊 Amendment 27 완료 요약
+
+| Task | 상태 | 설명 |
+|------|------|------|
+| A27.1.1 | ✅ | DB: signatures DELETE 정책 추가 |
+| A27.1.2 | ✅ | DB: notification_type ENUM 추가 |
+| A27.2.1 | ✅ | updateContract 함수 구현 |
+| A27.2.2 | ✅ | getContractForEdit 함수 구현 |
+| A27.2.3 | ✅ | checkContractEditable 함수 구현 |
+| A27.3.1 | ✅ | contractFormStore edit 모드 추가 |
+| A27.4.1 | ✅ | ContractCard 수정 버튼 조건 변경 |
+| A27.4.2 | ✅ | 계약서 상세 수정 버튼 추가 |
+| A27.4.3 | ✅ | 수정 경고 팝업 구현 |
+| A27.4.4 | ✅ | create 페이지 edit 모드 |
+| A27.4.5 | ✅ | preview 페이지 edit 모드 |
+| A27.5.1 | ✅ | 계약서 수정됨 알림 발송 |
+
+---
+
+### 📌 수정된 파일
+
+| 파일 | 변경 내용 |
+|------|----------|
+| `app/(protected)/employer/create/actions.ts` | updateContract, getContractForEdit, checkContractEditable 추가 |
+| `app/(protected)/employer/create/page.tsx` | edit 모드 처리 추가 |
+| `app/(protected)/employer/preview/[id]/contract-preview.tsx` | edit 모드 updateContract 호출 |
+| `app/(protected)/employer/contract/[id]/contract-detail.tsx` | 수정 버튼, 경고 팝업 추가 |
+| `components/contract/ContractCard.tsx` | 수정 버튼 조건 변경 (completed 7일 이내) |
+| `stores/contractFormStore.ts` | editingContractId, isEditMode, loadContractData 추가 |
+| `app/actions/notifications.ts` | contract_modified 타입 추가 |
+| `types/database.ts` | notification_type에 contract_modified 추가 |
+| `app/(protected)/employer/page.tsx` | completed_at 필드 조회 추가 |
+
+---
+
+### 📌 수정 정책 정리
+
+| 계약서 상태 | 수정 가능 여부 | 조건 |
+|------------|--------------|------|
+| draft | ✅ 가능 | 항상 |
+| pending | ✅ 가능 | 항상 |
+| completed | ✅ 가능 | 완료 후 7일 이내 |
+| completed | ❌ 불가 | 완료 후 7일 초과 |
+| expired | ❌ 불가 | - |
+| deleted | ❌ 불가 | - |
+
+---
+
+### 📌 수정 시 동작
+
+1. 기존 서명 (사장+근로자) 모두 삭제
+2. 계약서 내용 업데이트
+3. 상태를 `pending`으로 변경
+4. `completed_at` 초기화
+5. `expires_at` 새로 설정 (7일 후)
+6. 새 사장 서명 저장
+7. 공유 토큰 갱신
+8. 근로자에게 알림 발송 (worker_id가 있는 경우)
+9. **크레딧 차감 없음** (최초 생성 시 이미 차감됨)
+
+---
+
+> **Amendment 27 끝**
 
 ---
 

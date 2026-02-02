@@ -12,7 +12,7 @@ import SignupPromptSheet from '@/components/shared/SignupPromptSheet';
 import GuestBanner from '@/components/shared/GuestBanner';
 import ContractPDF from '@/components/contract/ContractPDF';
 import { useContractFormStore } from '@/stores/contractFormStore';
-import { createContract } from '@/app/(protected)/employer/create/actions';
+import { createContract, updateContract } from '@/app/(protected)/employer/create/actions';
 import { signContract, sendContract } from './actions';
 import { formatCurrency } from '@/lib/utils/format';
 import { getContractShareUrl } from '@/lib/utils/share';
@@ -75,7 +75,7 @@ export default function ContractPreview({
   employerName,
 }: ContractPreviewProps) {
   const router = useRouter();
-  const { data: formData, reset } = useContractFormStore();
+  const { data: formData, reset, isEditMode, editingContractId } = useContractFormStore();
   const [isSignatureSheetOpen, setIsSignatureSheetOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -219,6 +219,60 @@ export default function ContractPreview({
     // 게스트 모드에서는 회원가입 안내 팝업 표시
     if (isGuestMode) {
       setIsSignupPromptOpen(true);
+      return;
+    }
+
+    // 수정 모드일 때
+    if (isEditMode && editingContractId) {
+      // 서명이 없으면 서명 먼저 요청
+      if (!signatureData) {
+        setToastMessage('서명을 먼저 해주세요 ✍️');
+        setShowToast(true);
+        setIsSignatureSheetOpen(true);
+        return;
+      }
+
+      // 계약서 수정 (기존 서명 삭제 + 새 서명)
+      setIsLoading(true);
+      setError('');
+
+      try {
+        const result = await updateContract(
+          editingContractId,
+          {
+            ...formData,
+            hourlyWage: formData.hourlyWage || 0,
+            businessSize: formData.businessSize || 'under_5',
+          },
+          signatureData
+        );
+
+        if (result.success && result.data) {
+          // 현재 폼 데이터를 저장해두고 스토어 초기화
+          setSavedContractData({ ...formData });
+          reset(); // 스토어 초기화
+          
+          // 저장 완료 상태 설정
+          setIsSaveCompleted(true);
+          
+          // 공유 URL이 있으면 바로 공유 시트 열기
+          if (result.data.shareUrl) {
+            setShareUrl(result.data.shareUrl);
+            setIsShareSheetOpen(true);
+            setToastMessage('계약서가 수정됐어요! 근로자에게 다시 서명을 받으세요 ✏️');
+            setShowToast(true);
+          } else {
+            // 공유 URL 없으면 계약서 페이지로 이동
+            router.push(`/employer/contract/${result.data.contractId}`);
+          }
+        } else {
+          setError(result.error || '계약서 수정에 실패했어요');
+        }
+      } catch {
+        setError('알 수 없는 오류가 발생했어요');
+      } finally {
+        setIsLoading(false);
+      }
       return;
     }
 

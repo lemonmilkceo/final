@@ -69,6 +69,44 @@ interface ContractDetailProps {
   isGuestMode?: boolean;
 }
 
+// 수정 가능 여부 계산
+function getEditableInfo(status: string, completedAt: string | null): { 
+  editable: boolean; 
+  isCompletedEdit: boolean;
+  daysLeft: number | null;
+  reason?: string;
+} {
+  if (status === 'draft' || status === 'pending') {
+    return { editable: true, isCompletedEdit: false, daysLeft: null };
+  }
+
+  if (status === 'completed' && completedAt) {
+    const completedDate = new Date(completedAt);
+    const now = new Date();
+    const diffMs = now.getTime() - completedDate.getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    const daysLeft = Math.ceil(7 - diffDays);
+
+    if (diffDays <= 7) {
+      return { editable: true, isCompletedEdit: true, daysLeft };
+    } else {
+      return { 
+        editable: false, 
+        isCompletedEdit: false,
+        daysLeft: null,
+        reason: '체결 완료 후 7일이 지나 수정할 수 없어요' 
+      };
+    }
+  }
+
+  return { 
+    editable: false, 
+    isCompletedEdit: false,
+    daysLeft: null,
+    reason: '수정할 수 없는 상태예요' 
+  };
+}
+
 export default function ContractDetail({
   contract,
   aiReview,
@@ -78,10 +116,14 @@ export default function ContractDetail({
   const router = useRouter();
   const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
   const [isShareSheetOpen, setIsShareSheetOpen] = useState(false);
+  const [isEditWarningOpen, setIsEditWarningOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastVariant, setToastVariant] = useState<'success' | 'error'>('success');
+  
+  // 수정 가능 여부 계산
+  const editableInfo = getEditableInfo(contract.status, contract.completedAt);
   
   // 민감정보 표시 상태
   const [sensitiveInfo, setSensitiveInfo] = useState<{
@@ -171,6 +213,30 @@ export default function ContractDetail({
   const workerSigned = contract.signatures.find(
     (s) => s.signer_role === 'worker' && s.signed_at
   );
+
+  // 수정 버튼 클릭 핸들러
+  const handleEditClick = () => {
+    if (isGuestMode) {
+      setToastMessage('게스트 모드에서는 수정할 수 없어요');
+      setToastVariant('error');
+      setShowToast(true);
+      return;
+    }
+
+    // completed 상태면 경고 팝업 표시
+    if (editableInfo.isCompletedEdit) {
+      setIsEditWarningOpen(true);
+    } else {
+      // draft/pending 상태면 바로 수정 페이지로 이동
+      router.push(`/employer/create?edit=${contract.id}`);
+    }
+  };
+
+  // 수정 확인 후 수정 페이지로 이동
+  const handleConfirmEdit = () => {
+    setIsEditWarningOpen(false);
+    router.push(`/employer/create?edit=${contract.id}`);
+  };
 
   const getStatusBadge = () => {
     switch (contract.status) {
@@ -587,10 +653,10 @@ export default function ContractDetail({
 
       {/* 하단 액션 버튼 */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-5 pt-3 pb-4 safe-bottom">
-        {/* 공유 옵션 - completed 상태에서는 PDF, 공유, 삭제만 표시 */}
+        {/* 공유 옵션 */}
         <div className={clsx(
           "flex justify-center gap-4",
-          contract.status !== 'completed' && "mb-4"
+          (contract.status !== 'completed' || editableInfo.editable) && "mb-4"
         )}>
           <button
             onClick={handleDownloadPDF}
@@ -614,6 +680,26 @@ export default function ContractDetail({
             </span>
             <span className="text-[11px] text-gray-500">공유</span>
           </button>
+          {/* 수정 버튼 - 수정 가능한 상태에서만 표시 */}
+          {editableInfo.editable && (
+            <button
+              onClick={handleEditClick}
+              className="flex flex-col items-center gap-1"
+            >
+              <span className={clsx(
+                'w-10 h-10 rounded-full flex items-center justify-center text-lg',
+                editableInfo.isCompletedEdit ? 'bg-orange-100' : 'bg-violet-100'
+              )}>
+                ✏️
+              </span>
+              <span className="text-[11px] text-gray-500">
+                {editableInfo.isCompletedEdit && editableInfo.daysLeft 
+                  ? `수정 (D-${editableInfo.daysLeft})`
+                  : '수정'
+                }
+              </span>
+            </button>
+          )}
           {/* 재전송 버튼 - completed가 아닐 때만 표시 */}
           {contract.status !== 'completed' && (
             <button
@@ -664,6 +750,18 @@ export default function ContractDetail({
         onConfirm={handleDelete}
         confirmVariant="error"
         isConfirmLoading={isDeleting}
+      />
+
+      {/* 수정 경고 시트 (체결완료 계약서 수정 시) */}
+      <ConfirmSheet
+        isOpen={isEditWarningOpen}
+        onClose={() => setIsEditWarningOpen(false)}
+        title="체결완료된 계약서를 수정할까요?"
+        description={`수정 시 기존 서명(사장님, 근로자)이 모두 무효화되고, 근로자에게 다시 서명을 받아야 해요.\n\n수정 가능 기간: ${editableInfo.daysLeft ? `D-${editableInfo.daysLeft}` : '7일'} 남음`}
+        confirmLabel="수정하기"
+        cancelLabel="취소"
+        onConfirm={handleConfirmEdit}
+        confirmVariant="primary"
       />
 
       {/* 공유 링크 시트 */}

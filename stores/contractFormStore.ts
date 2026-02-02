@@ -49,10 +49,13 @@ export interface ContractFormData {
 interface ContractFormStore {
   step: number;
   data: ContractFormData;
+  editingContractId: string | null; // 수정 중인 계약서 ID
+  isEditMode: boolean;
   setStep: (step: number) => void;
   nextStep: () => void;
   prevStep: () => void;
   updateData: (updates: Partial<ContractFormData>) => void;
+  loadContractData: (contractId: string, contractData: Partial<ContractFormData>) => void;
   reset: () => void;
 }
 
@@ -101,13 +104,22 @@ export const useContractFormStore = create<ContractFormStore>()(
     (set) => ({
       step: 1,
       data: initialData,
+      editingContractId: null,
+      isEditMode: false,
       setStep: (step) => set({ step: Math.min(Math.max(step, 1), TOTAL_STEPS) }),
       nextStep: () =>
         set((state) => ({ step: Math.min(state.step + 1, TOTAL_STEPS) })),
       prevStep: () => set((state) => ({ step: Math.max(state.step - 1, 1) })),
       updateData: (updates) =>
         set((state) => ({ data: { ...state.data, ...updates } })),
-      reset: () => set({ step: 1, data: initialData }),
+      loadContractData: (contractId, contractData) =>
+        set({
+          step: 1,
+          editingContractId: contractId,
+          isEditMode: true,
+          data: { ...initialData, ...contractData },
+        }),
+      reset: () => set({ step: 1, data: initialData, editingContractId: null, isEditMode: false }),
     }),
     {
       name: 'contract-form-storage',

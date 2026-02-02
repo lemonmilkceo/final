@@ -15,6 +15,7 @@ interface ContractCardData {
   monthly_wage?: number | null;
   status: ContractStatus;
   created_at: string;
+  completed_at?: string | null;
   folder_id: string | null;
   signatures: {
     signer_role: 'employer' | 'worker';
@@ -91,6 +92,27 @@ const getStatusBadge = (status: ContractStatus) => {
   }
 };
 
+// completed 상태 + 7일 이내인지 확인
+const isCompletedWithin7Days = (completedAt: string | null | undefined): boolean => {
+  if (!completedAt) return false;
+  const completedDate = new Date(completedAt);
+  const now = new Date();
+  const diffMs = now.getTime() - completedDate.getTime();
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+  return diffDays <= 7;
+};
+
+// 수정 가능 남은 일수 계산
+const getDaysLeftForEdit = (completedAt: string | null | undefined): number | null => {
+  if (!completedAt) return null;
+  const completedDate = new Date(completedAt);
+  const now = new Date();
+  const diffMs = now.getTime() - completedDate.getTime();
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+  const daysLeft = Math.ceil(7 - diffDays);
+  return daysLeft > 0 ? daysLeft : null;
+};
+
 const ContractCard: React.FC<ContractCardProps> = ({
   contract,
   basePath = '/employer/contract',
@@ -107,7 +129,15 @@ const ContractCard: React.FC<ContractCardProps> = ({
   const statusBadge = isDeleted
     ? { label: '삭제됨', className: 'bg-red-50 text-red-500 border border-red-200' }
     : getStatusBadge(contract.status);
-  const canEdit = !isDeleted && (contract.status === 'draft' || contract.status === 'pending');
+  
+  // 수정 가능 조건: draft, pending, 또는 completed 후 7일 이내
+  const isCompletedEditable = contract.status === 'completed' && isCompletedWithin7Days(contract.completed_at);
+  const canEdit = !isDeleted && (
+    contract.status === 'draft' || 
+    contract.status === 'pending' ||
+    isCompletedEditable
+  );
+  const daysLeft = isCompletedEditable ? getDaysLeftForEdit(contract.completed_at) : null;
 
   const handleClick = () => {
     if (isEditMode) {
@@ -192,13 +222,18 @@ const ContractCard: React.FC<ContractCardProps> = ({
             {statusBadge.label}
           </span>
 
-          {/* 수정 버튼 (draft, pending만) */}
+          {/* 수정 버튼 (draft, pending, completed 7일 이내) */}
           {!isEditMode && canEdit && (
             <button
               onClick={handleEdit}
-              className="px-3 py-1.5 bg-blue-500 text-white text-[12px] font-medium rounded-full active:bg-blue-600"
+              className={clsx(
+                'px-3 py-1.5 text-white text-[12px] font-medium rounded-full',
+                isCompletedEditable
+                  ? 'bg-orange-500 active:bg-orange-600'
+                  : 'bg-blue-500 active:bg-blue-600'
+              )}
             >
-              수정
+              {isCompletedEditable && daysLeft ? `수정 (D-${daysLeft})` : '수정'}
             </button>
           )}
 
