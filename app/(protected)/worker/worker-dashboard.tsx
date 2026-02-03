@@ -439,7 +439,7 @@ export default function WorkerDashboard({
           <div className="mb-6">
             <p className="text-[15px] text-gray-500">안녕하세요,</p>
             <h1 className="text-[26px] font-bold text-gray-900">
-              {profile.name}님 👋
+              {profile.name === '알바생' ? '알바생' : `${profile.name}님`} 👋
             </h1>
           </div>
         )}

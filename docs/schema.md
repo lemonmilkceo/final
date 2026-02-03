@@ -143,17 +143,18 @@ CREATE TYPE public.business_size AS ENUM ('under_5', 'over_5');
 
 사용자 프로필 정보를 저장합니다.
 
-| Column       | Type          | Nullable | Default | Description                                   |
-| ------------ | ------------- | -------- | ------- | --------------------------------------------- |
-| `id`         | `uuid`        | NO       | -       | PK, FK → auth.users.id                        |
-| `role`       | `user_role`   | YES      | NULL    | 사용자 역할 (선택 전 NULL)                    |
-| `name`       | `text`        | YES      | NULL    | 사용자 이름 (카카오/Apple OAuth에서 가져옴)   |
-| `phone`      | `text`        | YES      | NULL    | 전화번호                                      |
-| `avatar_url` | `text`        | YES      | NULL    | 프로필 이미지 URL                             |
-| `created_at` | `timestamptz` | NO       | `now()` | 생성일시                                      |
-| `updated_at` | `timestamptz` | NO       | `now()` | 수정일시                                      |
+| Column       | Type          | Nullable | Default | Description                                 |
+| ------------ | ------------- | -------- | ------- | ------------------------------------------- |
+| `id`         | `uuid`        | NO       | -       | PK, FK → auth.users.id                      |
+| `role`       | `user_role`   | YES      | NULL    | 사용자 역할 (선택 전 NULL)                  |
+| `name`       | `text`        | YES      | NULL    | 사용자 이름 (카카오/Apple OAuth에서 가져옴) |
+| `phone`      | `text`        | YES      | NULL    | 전화번호                                    |
+| `avatar_url` | `text`        | YES      | NULL    | 프로필 이미지 URL                           |
+| `created_at` | `timestamptz` | NO       | `now()` | 생성일시                                    |
+| `updated_at` | `timestamptz` | NO       | `now()` | 수정일시                                    |
 
 **OAuth Provider별 이름 처리**:
+
 - **카카오**: `user_metadata.name` 또는 `user_metadata.full_name` (문자열)
 - **Apple**: `user_metadata.name` 객체 형태 `{ firstName, lastName }` - 첫 로그인 시에만 제공
 
