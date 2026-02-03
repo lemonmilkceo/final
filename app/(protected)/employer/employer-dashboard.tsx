@@ -15,12 +15,17 @@ import FolderTabs, { type TabType } from '@/components/folder/FolderTabs';
 import Toast from '@/components/ui/Toast';
 import BottomSheet from '@/components/ui/BottomSheet';
 import ConfirmSheet from '@/components/ui/ConfirmSheet';
+import NamePromptSheet from '@/components/profile/NamePromptSheet';
 import { ROUTES } from '@/lib/constants/routes';
-import { getNotifications, getUnreadNotificationCount } from '@/app/actions/notifications';
-import { 
-  createFolder, 
-  updateFolder, 
-  deleteFolder, 
+import { updateProfile } from '@/app/(protected)/profile/actions';
+import {
+  getNotifications,
+  getUnreadNotificationCount,
+} from '@/app/actions/notifications';
+import {
+  createFolder,
+  updateFolder,
+  deleteFolder,
   moveContractToFolder,
   deleteContracts,
   restoreContracts,
@@ -52,7 +57,11 @@ interface DashboardContract {
 
 interface Notification {
   id: string;
-  type: 'contract_sent' | 'contract_signed' | 'contract_expired_soon' | 'contract_expired';
+  type:
+    | 'contract_sent'
+    | 'contract_signed'
+    | 'contract_expired_soon'
+    | 'contract_expired';
   title: string;
   body: string;
   is_read: boolean;
@@ -94,58 +103,102 @@ export default function EmployerDashboard({
   isGuestMode = false,
 }: EmployerDashboardProps) {
   const router = useRouter();
-  
+
   // UI 상태
   const [isMenuSheetOpen, setIsMenuSheetOpen] = useState(false);
   const [isNotificationSheetOpen, setIsNotificationSheetOpen] = useState(false);
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
   const [isMoveFolderSheetOpen, setIsMoveFolderSheetOpen] = useState(false);
-  
+
   // 폴더 탭 상태
   const [selectedTab, setSelectedTab] = useState<TabType>('all');
-  
+
   // 편집 모드 상태
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sortType, setSortType] = useState<SortType>('latest');
-  
+
   // 확인 다이얼로그
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [isPermanentDeleteConfirmOpen, setIsPermanentDeleteConfirmOpen] = useState(false);
-  
+  const [isPermanentDeleteConfirmOpen, setIsPermanentDeleteConfirmOpen] =
+    useState(false);
+
   // 알림
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  
+
   // Toast
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const [toastVariant, setToastVariant] = useState<'success' | 'error'>('success');
+  const [toastVariant, setToastVariant] = useState<'success' | 'error'>(
+    'success'
+  );
 
   // 임시저장 복귀 모달
   const [isDraftSheetOpen, setIsDraftSheetOpen] = useState(false);
-  
+
+  // 이름 입력 바텀시트
+  const [isNamePromptOpen, setIsNamePromptOpen] = useState(false);
+
   // 로딩 상태
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // 임시저장된 계약서 데이터 확인
-  const { data: draftData, step: draftStep, reset: resetDraft } = useContractFormStore();
-  
+  const {
+    data: draftData,
+    step: draftStep,
+    reset: resetDraft,
+  } = useContractFormStore();
+
   // Hydration 완료 여부
   const [isHydrated, setIsHydrated] = useState(false);
-  
+
   // Hydration 완료 후 상태 확인
   useEffect(() => {
     setIsHydrated(true);
   }, []);
-  
+
+  // 이름 입력 프롬프트 표시 (이름이 없는 경우)
+  useEffect(() => {
+    if (!isGuestMode && isHydrated) {
+      const isDefaultName = profile.name === '사장님' || profile.name === '알바생' || !profile.name;
+      const isDismissed = localStorage.getItem('namePromptDismissed') === 'true';
+      
+      if (isDefaultName && !isDismissed) {
+        // 약간의 딜레이 후 표시 (대시보드 로드 후)
+        const timer = setTimeout(() => {
+          setIsNamePromptOpen(true);
+        }, 500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isGuestMode, isHydrated, profile.name]);
+
   // 임시저장 데이터가 있는지 확인 (hydration 후에만)
-  const hasDraft = isHydrated && (draftStep > 1 || draftData.workerName.trim() !== '');
+  const hasDraft =
+    isHydrated && (draftStep > 1 || draftData.workerName.trim() !== '');
 
   const showToastMessage = (message: string, variant: 'success' | 'error') => {
     setToastMessage(message);
     setToastVariant(variant);
     setShowToast(true);
+  };
+
+  // 이름 저장 핸들러
+  const handleSaveName = async (name: string) => {
+    const result = await updateProfile({ name });
+    if (result.success) {
+      showToastMessage('이름이 저장되었어요', 'success');
+      // 페이지 새로고침으로 프로필 업데이트 반영
+      router.refresh();
+    } else {
+      throw new Error(result.error);
+    }
+  };
+
+  // 이름 입력 스킵 핸들러
+  const handleDismissNamePrompt = () => {
+    localStorage.setItem('namePromptDismissed', 'true');
   };
 
   // 폴더 탭 표시 조건: 폴더가 있거나 휴지통에 계약서가 있을 때
@@ -170,7 +223,7 @@ export default function EmployerDashboard({
       (c) => c.status === 'draft' || c.status === 'pending'
     );
   }, [filteredContracts, selectedTab]);
-  
+
   // 완료
   const completedContracts = useMemo(() => {
     if (selectedTab === 'trash') return [];
@@ -181,9 +234,14 @@ export default function EmployerDashboard({
   const sortedInProgress = useMemo(() => {
     const sorted = [...inProgressContracts];
     if (sortType === 'latest') {
-      sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      sorted.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
     } else {
-      sorted.sort((a, b) => (a.work_location || '').localeCompare(b.work_location || ''));
+      sorted.sort((a, b) =>
+        (a.work_location || '').localeCompare(b.work_location || '')
+      );
     }
     return sorted;
   }, [inProgressContracts, sortType]);
@@ -191,9 +249,14 @@ export default function EmployerDashboard({
   const sortedCompleted = useMemo(() => {
     const sorted = [...completedContracts];
     if (sortType === 'latest') {
-      sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      sorted.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
     } else {
-      sorted.sort((a, b) => (a.work_location || '').localeCompare(b.work_location || ''));
+      sorted.sort((a, b) =>
+        (a.work_location || '').localeCompare(b.work_location || '')
+      );
     }
     return sorted;
   }, [completedContracts, sortType]);
@@ -201,9 +264,10 @@ export default function EmployerDashboard({
   // 휴지통 계약서 (삭제일 기준 정렬)
   const sortedDeletedContracts = useMemo(() => {
     if (selectedTab !== 'trash') return [];
-    return [...deletedContracts].sort((a, b) => 
-      new Date(b.deleted_at || b.created_at).getTime() - 
-      new Date(a.deleted_at || a.created_at).getTime()
+    return [...deletedContracts].sort(
+      (a, b) =>
+        new Date(b.deleted_at || b.created_at).getTime() -
+        new Date(a.deleted_at || a.created_at).getTime()
     );
   }, [deletedContracts, selectedTab]);
 
@@ -294,13 +358,13 @@ export default function EmployerDashboard({
     if (isGuestMode) {
       return { success: false, error: '게스트 모드에서는 이동할 수 없어요' };
     }
-    
+
     const results = await Promise.all(
       Array.from(selectedIds).map((contractId) =>
         moveContractToFolder(contractId, folderId)
       )
     );
-    
+
     const allSuccess = results.every((r) => r.success);
     if (allSuccess) {
       setSelectedIds(new Set());
@@ -316,12 +380,15 @@ export default function EmployerDashboard({
       showToastMessage('게스트 모드에서는 삭제할 수 없어요', 'error');
       return;
     }
-    
+
     setIsLoading(true);
     try {
       const result = await deleteContracts(Array.from(selectedIds));
       if (result.success) {
-        showToastMessage(`${selectedIds.size}개 계약서가 휴지통으로 이동했어요`, 'success');
+        showToastMessage(
+          `${selectedIds.size}개 계약서가 휴지통으로 이동했어요`,
+          'success'
+        );
         setSelectedIds(new Set());
         setIsEditMode(false);
       } else {
@@ -341,12 +408,15 @@ export default function EmployerDashboard({
       showToastMessage('게스트 모드에서는 복구할 수 없어요', 'error');
       return;
     }
-    
+
     setIsLoading(true);
     try {
       const result = await restoreContracts(Array.from(selectedIds));
       if (result.success) {
-        showToastMessage(`${selectedIds.size}개 계약서가 복구됐어요`, 'success');
+        showToastMessage(
+          `${selectedIds.size}개 계약서가 복구됐어요`,
+          'success'
+        );
         setSelectedIds(new Set());
         setIsEditMode(false);
       } else {
@@ -365,12 +435,15 @@ export default function EmployerDashboard({
       showToastMessage('게스트 모드에서는 삭제할 수 없어요', 'error');
       return;
     }
-    
+
     setIsLoading(true);
     try {
       const result = await permanentDeleteContracts(Array.from(selectedIds));
       if (result.success) {
-        showToastMessage(`${selectedIds.size}개 계약서가 영구 삭제됐어요`, 'success');
+        showToastMessage(
+          `${selectedIds.size}개 계약서가 영구 삭제됐어요`,
+          'success'
+        );
         setSelectedIds(new Set());
         setIsEditMode(false);
       } else {
@@ -390,7 +463,11 @@ export default function EmployerDashboard({
     return result;
   };
 
-  const handleUpdateFolder = async (id: string, name: string, color: string) => {
+  const handleUpdateFolder = async (
+    id: string,
+    name: string,
+    color: string
+  ) => {
     return await updateFolder(id, name, color);
   };
 
@@ -425,8 +502,18 @@ export default function EmployerDashboard({
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <button onClick={toggleEditMode} className="text-gray-500">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
               <span className="text-[17px] font-bold text-gray-900">
@@ -440,7 +527,7 @@ export default function EmployerDashboard({
               전체 선택
             </button>
           </div>
-          
+
           {/* 액션 바 - 휴지통 vs 일반 */}
           <div className="flex gap-2">
             {isTrashMode ? (
@@ -456,14 +543,27 @@ export default function EmployerDashboard({
                       : 'border-gray-200 text-gray-400'
                   )}
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                    />
                   </svg>
                   복구
                 </button>
-                
+
                 <button
-                  onClick={() => selectedIds.size > 0 && setIsPermanentDeleteConfirmOpen(true)}
+                  onClick={() =>
+                    selectedIds.size > 0 &&
+                    setIsPermanentDeleteConfirmOpen(true)
+                  }
                   disabled={selectedIds.size === 0 || isLoading}
                   className={clsx(
                     'flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-medium border',
@@ -472,8 +572,18 @@ export default function EmployerDashboard({
                       : 'border-gray-200 text-gray-400'
                   )}
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
                   </svg>
                   영구 삭제
                 </button>
@@ -482,20 +592,34 @@ export default function EmployerDashboard({
               // 일반 액션
               <>
                 <button
-                  onClick={() => setSortType(sortType === 'latest' ? 'location' : 'latest')}
+                  onClick={() =>
+                    setSortType(sortType === 'latest' ? 'location' : 'latest')
+                  }
                   className={clsx(
                     'flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-medium border',
                     'bg-blue-500 text-white border-blue-500'
                   )}
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                    />
                   </svg>
                   {sortType === 'latest' ? '최신순' : '가게별'}
                 </button>
-                
+
                 <button
-                  onClick={() => selectedIds.size > 0 && setIsMoveFolderSheetOpen(true)}
+                  onClick={() =>
+                    selectedIds.size > 0 && setIsMoveFolderSheetOpen(true)
+                  }
                   disabled={selectedIds.size === 0}
                   className={clsx(
                     'flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-medium border',
@@ -504,14 +628,26 @@ export default function EmployerDashboard({
                       : 'border-gray-200 text-gray-400'
                   )}
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                    />
                   </svg>
                   이동
                 </button>
-                
+
                 <button
-                  onClick={() => selectedIds.size > 0 && setIsDeleteConfirmOpen(true)}
+                  onClick={() =>
+                    selectedIds.size > 0 && setIsDeleteConfirmOpen(true)
+                  }
                   disabled={selectedIds.size === 0 || isLoading}
                   className={clsx(
                     'flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-medium border',
@@ -520,8 +656,18 @@ export default function EmployerDashboard({
                       : 'border-gray-200 text-gray-400'
                   )}
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
                   </svg>
                   삭제
                 </button>
@@ -534,14 +680,26 @@ export default function EmployerDashboard({
         <header className="bg-white px-5 sticky top-0 z-40 safe-top">
           <div className="h-14 flex items-center justify-between">
             <div className="w-10" />
-            <span className="text-[17px] font-bold text-gray-900">싸인해주세요</span>
+            <span className="text-[17px] font-bold text-gray-900">
+              싸인해주세요
+            </span>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsNotificationSheetOpen(true)}
                 className="relative w-10 h-10 flex items-center justify-center"
               >
-                <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                <svg
+                  className="w-6 h-6 text-gray-700"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                  />
                 </svg>
                 {unreadCount > 0 && (
                   <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full text-[11px] text-white flex items-center justify-center font-medium">
@@ -553,8 +711,18 @@ export default function EmployerDashboard({
                 onClick={() => setIsMenuSheetOpen(true)}
                 className="w-10 h-10 flex items-center justify-center"
               >
-                <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                <svg
+                  className="w-6 h-6 text-gray-700"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
                 </svg>
               </button>
             </div>
@@ -585,9 +753,9 @@ export default function EmployerDashboard({
             <h1 className="text-[26px] font-bold text-gray-900">
               {profile.name === '사장님' ? '사장님' : `${profile.name}님`} 👋
             </h1>
-            
+
             <div className="flex flex-wrap gap-2 mt-3">
-              <Link 
+              <Link
                 href="/pricing"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-full border border-cyan-200/50 hover:from-cyan-100 hover:to-blue-100 transition-colors"
               >
@@ -630,11 +798,22 @@ export default function EmployerDashboard({
                   작성 중인 계약서가 있어요
                 </p>
                 <p className="text-[13px] text-amber-600 truncate">
-                  {draftData.workerName ? `${draftData.workerName}님` : ''} {draftStep}단계까지 작성됨
+                  {draftData.workerName ? `${draftData.workerName}님` : ''}{' '}
+                  {draftStep}단계까지 작성됨
                 </p>
               </div>
-              <svg className="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <svg
+                className="w-5 h-5 text-amber-600 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </div>
           </button>
@@ -646,8 +825,18 @@ export default function EmployerDashboard({
             onClick={handleCreateContract}
             className="w-full py-4 bg-blue-500 text-white text-[16px] font-bold rounded-2xl flex items-center justify-center gap-2 active:bg-blue-600 mb-6"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
             </svg>
             새 계약서 작성
           </button>
@@ -656,7 +845,9 @@ export default function EmployerDashboard({
         {/* 전체 계약서 헤더 */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <h2 className="text-[18px] font-bold text-gray-900">{currentTabTitle}</h2>
+            <h2 className="text-[18px] font-bold text-gray-900">
+              {currentTabTitle}
+            </h2>
             {!isEditMode && !isTrashMode && (
               <span className="text-[14px] text-gray-400">(최신순)</span>
             )}
@@ -688,65 +879,95 @@ export default function EmployerDashboard({
           ) : (
             <EmptyState
               icon={
-                <svg className="w-full h-full text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                <svg
+                  className="w-full h-full text-gray-200"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
                 </svg>
               }
               title="휴지통이 비어있어요"
               description="삭제한 계약서가 여기에 표시됩니다"
             />
           )
-        ) : (
-          // 일반 계약서 리스트
-          filteredContracts.length > 0 ? (
-            <div className="space-y-6">
-              {sortedInProgress.length > 0 && (
-                <div>
-                  <h3 className="text-[14px] font-semibold text-gray-500 mb-3">진행 중</h3>
-                  <div className="space-y-3">
-                    {sortedInProgress.map((contract) => (
-                      <ContractCard
-                        key={contract.id}
-                        contract={contract}
-                        isEditMode={isEditMode}
-                        isSelected={selectedIds.has(contract.id)}
-                        onSelect={toggleSelect}
-                        onEdit={handleEditContract}
-                      />
-                    ))}
-                  </div>
+        ) : // 일반 계약서 리스트
+        filteredContracts.length > 0 ? (
+          <div className="space-y-6">
+            {sortedInProgress.length > 0 && (
+              <div>
+                <h3 className="text-[14px] font-semibold text-gray-500 mb-3">
+                  진행 중
+                </h3>
+                <div className="space-y-3">
+                  {sortedInProgress.map((contract) => (
+                    <ContractCard
+                      key={contract.id}
+                      contract={contract}
+                      isEditMode={isEditMode}
+                      isSelected={selectedIds.has(contract.id)}
+                      onSelect={toggleSelect}
+                      onEdit={handleEditContract}
+                    />
+                  ))}
                 </div>
-              )}
+              </div>
+            )}
 
-              {sortedCompleted.length > 0 && (
-                <div>
-                  <h3 className="text-[14px] font-semibold text-gray-500 mb-3">완료</h3>
-                  <div className="space-y-3">
-                    {sortedCompleted.map((contract) => (
-                      <ContractCard
-                        key={contract.id}
-                        contract={contract}
-                        isEditMode={isEditMode}
-                        isSelected={selectedIds.has(contract.id)}
-                        onSelect={toggleSelect}
-                        onEdit={handleEditContract}
-                      />
-                    ))}
-                  </div>
+            {sortedCompleted.length > 0 && (
+              <div>
+                <h3 className="text-[14px] font-semibold text-gray-500 mb-3">
+                  완료
+                </h3>
+                <div className="space-y-3">
+                  {sortedCompleted.map((contract) => (
+                    <ContractCard
+                      key={contract.id}
+                      contract={contract}
+                      isEditMode={isEditMode}
+                      isSelected={selectedIds.has(contract.id)}
+                      onSelect={toggleSelect}
+                      onEdit={handleEditContract}
+                    />
+                  ))}
                 </div>
-              )}
-            </div>
-          ) : (
-            <EmptyState
-              icon={
-                <svg className="w-full h-full text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              }
-              title={selectedTab === 'all' ? '아직 계약서가 없어요' : '이 폴더에 계약서가 없어요'}
-              description={selectedTab === 'all' ? '첫 번째 계약서를 작성해보세요' : '계약서를 이 폴더로 이동해보세요'}
-            />
-          )
+              </div>
+            )}
+          </div>
+        ) : (
+          <EmptyState
+            icon={
+              <svg
+                className="w-full h-full text-gray-200"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            }
+            title={
+              selectedTab === 'all'
+                ? '아직 계약서가 없어요'
+                : '이 폴더에 계약서가 없어요'
+            }
+            description={
+              selectedTab === 'all'
+                ? '첫 번째 계약서를 작성해보세요'
+                : '계약서를 이 폴더로 이동해보세요'
+            }
+          />
         )}
       </div>
 
@@ -803,7 +1024,9 @@ export default function EmployerDashboard({
               <span className="text-2xl">📝</span>
               <div>
                 <p className="text-[15px] font-medium text-amber-800 mb-1">
-                  {draftData.workerName ? `${draftData.workerName}님 계약서` : '임시저장된 계약서'}
+                  {draftData.workerName
+                    ? `${draftData.workerName}님 계약서`
+                    : '임시저장된 계약서'}
                 </p>
                 <p className="text-[14px] text-amber-700">
                   {draftStep}단계까지 작성했어요
@@ -857,6 +1080,14 @@ export default function EmployerDashboard({
         variant={toastVariant}
         isVisible={showToast}
         onClose={() => setShowToast(false)}
+      />
+
+      {/* Name Prompt Sheet */}
+      <NamePromptSheet
+        isOpen={isNamePromptOpen}
+        onClose={() => setIsNamePromptOpen(false)}
+        onSave={handleSaveName}
+        onDismiss={handleDismissNamePrompt}
       />
     </div>
   );
