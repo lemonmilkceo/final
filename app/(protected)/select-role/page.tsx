@@ -27,7 +27,7 @@ export default async function SelectRolePage() {
   // OAuth Provider에서 가져온 이름
   const getUserName = (): string | null => {
     const metadata = user.user_metadata;
-    
+
     // 카카오: name 또는 full_name (문자열)
     if (typeof metadata?.name === 'string' && metadata.name) {
       return metadata.name;
@@ -35,30 +35,36 @@ export default async function SelectRolePage() {
     if (typeof metadata?.full_name === 'string' && metadata.full_name) {
       return metadata.full_name;
     }
-    
+
     // Apple: name 객체 { firstName, lastName }
     if (metadata?.name && typeof metadata.name === 'object') {
-      const appleNameObj = metadata.name as { firstName?: string; lastName?: string };
+      const appleNameObj = metadata.name as {
+        firstName?: string;
+        lastName?: string;
+      };
       const firstName = appleNameObj.firstName || '';
       const lastName = appleNameObj.lastName || '';
       const fullName = `${lastName}${firstName}`.trim();
       if (fullName) return fullName;
     }
-    
+
     // Apple 대체: full_name 객체
     if (metadata?.full_name && typeof metadata.full_name === 'object') {
-      const nameObj = metadata.full_name as { firstName?: string; lastName?: string };
+      const nameObj = metadata.full_name as {
+        firstName?: string;
+        lastName?: string;
+      };
       const firstName = nameObj.firstName || '';
       const lastName = nameObj.lastName || '';
       const fullName = `${lastName}${firstName}`.trim();
       if (fullName) return fullName;
     }
-    
+
     // DB 프로필에서 가져오기
     if (profile?.name) {
       return profile.name;
     }
-    
+
     return null;
   };
 
