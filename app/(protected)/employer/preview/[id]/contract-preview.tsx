@@ -12,7 +12,10 @@ import SignupPromptSheet from '@/components/shared/SignupPromptSheet';
 import GuestBanner from '@/components/shared/GuestBanner';
 import ContractPDF from '@/components/contract/ContractPDF';
 import { useContractFormStore } from '@/stores/contractFormStore';
-import { createContract, updateContract } from '@/app/(protected)/employer/create/actions';
+import {
+  createContract,
+  updateContract,
+} from '@/app/(protected)/employer/create/actions';
 import { signContract, sendContract } from './actions';
 import { formatCurrency } from '@/lib/utils/format';
 import { getContractShareUrl } from '@/lib/utils/share';
@@ -75,7 +78,12 @@ export default function ContractPreview({
   employerName,
 }: ContractPreviewProps) {
   const router = useRouter();
-  const { data: formData, reset, isEditMode, editingContractId } = useContractFormStore();
+  const {
+    data: formData,
+    reset,
+    isEditMode,
+    editingContractId,
+  } = useContractFormStore();
   const [isSignatureSheetOpen, setIsSignatureSheetOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -83,17 +91,17 @@ export default function ContractPreview({
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
-  
+
   // Zustand hydration 처리
   const [isHydrated, setIsHydrated] = useState(false);
-  
+
   useEffect(() => {
     setIsHydrated(true);
   }, []);
-  
+
   // 카카오 SDK 초기화
   const [isKakaoReady, setIsKakaoReady] = useState(false);
-  
+
   // AI Review 상태
   const [isAIReviewLoading, setIsAIReviewLoading] = useState(false);
   const [isAIReviewSheetOpen, setIsAIReviewSheetOpen] = useState(false);
@@ -101,26 +109,28 @@ export default function ContractPreview({
     overall_status: 'pass' | 'warning' | 'fail';
     items: ReviewItem[];
   } | null>(null);
-  
+
   // Share token (from shareUrl) - 준비 중 기능에서 사용 예정
   // const shareToken = shareUrl?.split('/').pop() || '';
-  
+
   // 회원가입 안내 팝업
   const [isSignupPromptOpen, setIsSignupPromptOpen] = useState(false);
-  
+
   // 공유 링크 시트
   const [isShareSheetOpen, setIsShareSheetOpen] = useState(false);
-  
+
   // 저장 완료 상태 (공유 링크 복사 후)
   const [isSaveCompleted, setIsSaveCompleted] = useState(false);
-  
+
   // PDF 생성 관련
   const pdfRef = useRef<HTMLDivElement>(null);
   const [isPDFGenerating, setIsPDFGenerating] = useState(false);
   const [showPDFSheet, setShowPDFSheet] = useState(false);
-  
+
   // 저장된 계약서 데이터 (저장 후 표시용)
-  const [savedContractData, setSavedContractData] = useState<typeof formData | null>(null);
+  const [savedContractData, setSavedContractData] = useState<
+    typeof formData | null
+  >(null);
 
   // 카카오 SDK 초기화
   useEffect(() => {
@@ -129,7 +139,7 @@ export default function ContractPreview({
       const initialized = initKakao();
       setIsKakaoReady(initialized);
     }, 1000);
-    
+
     return () => clearTimeout(timer);
   }, []);
 
@@ -163,7 +173,8 @@ export default function ContractPreview({
         businessSize: sourceData.businessSize,
       }
     : {
-        workplaceName: (contract as { workplace_name?: string })?.workplace_name || '',
+        workplaceName:
+          (contract as { workplace_name?: string })?.workplace_name || '',
         workerName: contract?.worker_name || '',
         wageType: (contract as { wage_type?: string })?.wage_type || 'hourly',
         hourlyWage: contract?.hourly_wage || 0,
@@ -197,21 +208,27 @@ export default function ContractPreview({
   // 휴일(주휴일) 계산
   const formatHolidays = () => {
     const allDays = ['월', '화', '수', '목', '금', '토', '일'];
-    
-    if (!displayData.useWorkDaysPerWeek && displayData.workDays && displayData.workDays.length > 0) {
+
+    if (
+      !displayData.useWorkDaysPerWeek &&
+      displayData.workDays &&
+      displayData.workDays.length > 0
+    ) {
       // 특정 요일 선택 시: 선택 안 한 요일이 휴일
-      const holidays = allDays.filter(day => !displayData.workDays?.includes(day));
+      const holidays = allDays.filter(
+        (day) => !displayData.workDays?.includes(day)
+      );
       if (holidays.length === 0) return '없음';
       return holidays.join(', ');
     }
-    
+
     if (displayData.useWorkDaysPerWeek && displayData.workDaysPerWeek) {
       // 주 N일 선택 시: 7 - N일이 휴일
       const holidayCount = 7 - displayData.workDaysPerWeek;
       if (holidayCount <= 0) return '없음';
       return `주 ${holidayCount}일`;
     }
-    
+
     return '-';
   };
 
@@ -251,15 +268,17 @@ export default function ContractPreview({
           // 현재 폼 데이터를 저장해두고 스토어 초기화
           setSavedContractData({ ...formData });
           reset(); // 스토어 초기화
-          
+
           // 저장 완료 상태 설정
           setIsSaveCompleted(true);
-          
+
           // 공유 URL이 있으면 바로 공유 시트 열기
           if (result.data.shareUrl) {
             setShareUrl(result.data.shareUrl);
             setIsShareSheetOpen(true);
-            setToastMessage('계약서가 수정됐어요! 근로자에게 다시 서명을 받으세요 ✏️');
+            setToastMessage(
+              '계약서가 수정됐어요! 근로자에게 다시 서명을 받으세요 ✏️'
+            );
             setShowToast(true);
           } else {
             // 공유 URL 없으면 계약서 페이지로 이동
@@ -303,10 +322,10 @@ export default function ContractPreview({
           // 현재 폼 데이터를 저장해두고 스토어 초기화
           setSavedContractData({ ...formData });
           reset(); // 스토어 초기화
-          
+
           // 저장 완료 상태 설정
           setIsSaveCompleted(true);
-          
+
           // 공유 URL이 있으면 바로 공유 시트 열기
           if (result.data.shareUrl) {
             setShareUrl(result.data.shareUrl);
@@ -349,7 +368,7 @@ export default function ContractPreview({
       setIsSignatureSheetOpen(false);
       setToastMessage('서명이 저장됐어요! ✍️');
       setShowToast(true);
-      
+
       // 게스트 모드에서는 회원가입 안내 팝업 표시
       if (isGuestMode) {
         setTimeout(() => {
@@ -412,18 +431,25 @@ export default function ContractPreview({
   // 급여 표시 포맷
   const formatWage = () => {
     const isMonthly = displayData.wageType === 'monthly';
-    const wageAmount = isMonthly ? displayData.monthlyWage : displayData.hourlyWage;
+    const wageAmount = isMonthly
+      ? displayData.monthlyWage
+      : displayData.hourlyWage;
     const wageLabel = isMonthly ? '월급' : '시급';
-    const weeklyAllowanceText = displayData.includesWeeklyAllowance ? ' (주휴수당 포함)' : '';
-    return { label: wageLabel, value: `${formatCurrency(wageAmount)}${weeklyAllowanceText}` };
+    const weeklyAllowanceText = displayData.includesWeeklyAllowance
+      ? ' (주휴수당 포함)'
+      : '';
+    return {
+      label: wageLabel,
+      value: `${formatCurrency(wageAmount)}${weeklyAllowanceText}`,
+    };
   };
 
   const wageInfo = formatWage();
 
   // 계약 형태 표시 텍스트
   const formatContractType = () => {
-    return displayData.contractType === 'regular' 
-      ? '정규직 (4대보험)' 
+    return displayData.contractType === 'regular'
+      ? '정규직 (4대보험)'
       : '계약직 (3.3%)';
   };
 
@@ -450,16 +476,22 @@ export default function ContractPreview({
     { label: '휴게시간', value: `${displayData.breakMinutes}분` },
     { label: '근무장소', value: displayData.workLocation },
     { label: '업무내용', value: displayData.jobDescription || '(업종 기반)' },
-    { label: '급여일', value: displayData.payDay === 0 ? '매월 말일' : `매월 ${displayData.payDay}일` },
+    {
+      label: '급여일',
+      value:
+        displayData.payDay === 0 ? '매월 말일' : `매월 ${displayData.payDay}일`,
+    },
     {
       label: '사업장 규모',
       value: displayData.businessSize === 'under_5' ? '5인 미만' : '5인 이상',
     },
     // 5인 이상 사업장만 표시
-    ...(displayData.businessSize === 'over_5' ? [
-      { label: '연차휴가', value: '근로기준법 제60조에 따라 부여' },
-      { label: '가산수당', value: '연장·야간·휴일 근로 시 50% 이상 가산' },
-    ] : []),
+    ...(displayData.businessSize === 'over_5'
+      ? [
+          { label: '연차휴가', value: '근로기준법 제60조에 따라 부여' },
+          { label: '가산수당', value: '연장·야간·휴일 근로 시 50% 이상 가산' },
+        ]
+      : []),
   ];
 
   // AI 검토 요청
@@ -469,9 +501,7 @@ export default function ContractPreview({
 
     try {
       // 새 계약서면 formData로, 저장된 계약서면 contractId로 요청
-      const requestBody = isNew
-        ? { contractData: formData }
-        : { contractId };
+      const requestBody = isNew ? { contractData: formData } : { contractId };
 
       const response = await fetch('/api/ai-review', {
         method: 'POST',
@@ -576,7 +606,9 @@ export default function ContractPreview({
     });
 
     if (!success) {
-      setToastMessage('카카오톡 공유에 실패했어요. 링크를 복사해서 보내주세요.');
+      setToastMessage(
+        '카카오톡 공유에 실패했어요. 링크를 복사해서 보내주세요.'
+      );
       setShowToast(true);
     }
   };
@@ -597,7 +629,7 @@ export default function ContractPreview({
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
       <PageHeader title="계약서 미리보기" />
-      
+
       {/* 게스트 모드 배너 */}
       {isGuestMode && <GuestBanner />}
 
@@ -637,7 +669,7 @@ export default function ContractPreview({
               /* 새 계약서에서 서명한 경우 (아직 저장 안됨) */
               <div className="w-full h-24 border-2 border-blue-500 rounded-xl flex flex-col items-center justify-center bg-blue-50">
                 <span className="text-blue-600 font-medium">✍️ 서명 완료</span>
-                <button 
+                <button
                   onClick={() => setIsSignatureSheetOpen(true)}
                   className="text-[12px] text-blue-400 mt-1"
                 >
@@ -671,28 +703,31 @@ export default function ContractPreview({
           {/* Shimmer Effect */}
           {!isAIReviewLoading && (
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div 
+              <div
                 className="absolute inset-0 animate-shimmer"
                 style={{
-                  background: 'linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.15), transparent)',
+                  background:
+                    'linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.15), transparent)',
                 }}
               />
             </div>
           )}
-          
+
           <div className="relative flex items-center justify-between">
             <div className="flex items-center gap-3">
               {/* Icon Box */}
-              <div className={clsx(
-                'w-10 h-10 rounded-xl flex items-center justify-center',
-                'bg-gradient-to-br from-amber-400 to-orange-500',
-                'shadow-sm'
-              )}>
+              <div
+                className={clsx(
+                  'w-10 h-10 rounded-xl flex items-center justify-center',
+                  'bg-gradient-to-br from-amber-400 to-orange-500',
+                  'shadow-sm'
+                )}
+              >
                 <span className="text-xl">
                   {isAIReviewLoading ? '⏳' : '⚖️'}
                 </span>
               </div>
-              
+
               <div>
                 <div className="flex items-center gap-2">
                   <p className="text-[15px] font-bold text-amber-900">
@@ -760,7 +795,7 @@ export default function ContractPreview({
                 근로자가 서명하면 알림을 보내드릴게요
               </p>
             </div>
-            
+
             {/* Share Options - PDF, 링크, 카카오톡 버튼 */}
             <div className="flex justify-center gap-6">
               <button
@@ -822,7 +857,7 @@ export default function ContractPreview({
                 <span className="text-[12px] text-gray-500">카카오톡</span>
               </button>
             </div>
-            
+
             {/* 홈으로 돌아가기 버튼 */}
             <button
               onClick={() => router.push('/employer')}
@@ -852,7 +887,11 @@ export default function ContractPreview({
               ) : isGuestMode ? (
                 '체험 완료하기 🎉'
               ) : isNew ? (
-                signatureData ? '저장하고 공유하기 📤' : '서명하고 저장하기 ✍️'
+                signatureData ? (
+                  '저장하고 공유하기 📤'
+                ) : (
+                  '서명하고 저장하기 ✍️'
+                )
               ) : employerSigned ? (
                 '근로자에게 보내기 📤'
               ) : (
@@ -930,19 +969,25 @@ export default function ContractPreview({
         <div className="space-y-4">
           {/* PDF 미리보기 영역 */}
           <div className="bg-gray-50 rounded-2xl p-4 max-h-[50vh] overflow-auto">
-            <div className="transform scale-[0.4] origin-top-left" style={{ width: '250%' }}>
+            <div
+              className="transform scale-[0.4] origin-top-left"
+              style={{ width: '250%' }}
+            >
               <ContractPDF
                 ref={pdfRef}
                 data={{
                   workplaceName: displayData.workplaceName,
                   employerName,
                   workerName: displayData.workerName,
-                  wageType: (sourceData.wageType || 'hourly') as 'hourly' | 'monthly',
+                  wageType: (sourceData.wageType || 'hourly') as
+                    | 'hourly'
+                    | 'monthly',
                   hourlyWage: displayData.hourlyWage,
                   monthlyWage: sourceData.monthlyWage,
                   includesWeeklyAllowance: displayData.includesWeeklyAllowance,
                   payDay: displayData.payDay,
-                  paymentTiming: (sourceData.paymentTiming || 'current_month') as 'current_month' | 'next_month',
+                  paymentTiming: (sourceData.paymentTiming ||
+                    'current_month') as 'current_month' | 'next_month',
                   isLastDayPayment: sourceData.isLastDayPayment || false,
                   startDate: displayData.startDate,
                   endDate: displayData.endDate,
@@ -953,22 +998,40 @@ export default function ContractPreview({
                   breakMinutes: displayData.breakMinutes,
                   workLocation: displayData.workLocation,
                   jobDescription: displayData.jobDescription,
-                  businessSize: displayData.businessSize as 'under_5' | 'over_5',
-                  employerSignature: contract?.signatures?.find(s => s.signer_role === 'employer')
+                  businessSize: displayData.businessSize as
+                    | 'under_5'
+                    | 'over_5',
+                  employerSignature: contract?.signatures?.find(
+                    (s) => s.signer_role === 'employer'
+                  )
                     ? {
-                        signatureData: contract.signatures.find(s => s.signer_role === 'employer')?.signature_data,
-                        signedAt: contract.signatures.find(s => s.signer_role === 'employer')?.signed_at || undefined,
+                        signatureData: contract.signatures.find(
+                          (s) => s.signer_role === 'employer'
+                        )?.signature_data,
+                        signedAt:
+                          contract.signatures.find(
+                            (s) => s.signer_role === 'employer'
+                          )?.signed_at || undefined,
                       }
                     : signatureData
                       ? { signatureData, signedAt: new Date().toISOString() }
                       : undefined,
-                  workerSignature: contract?.signatures?.find(s => s.signer_role === 'worker')
+                  workerSignature: contract?.signatures?.find(
+                    (s) => s.signer_role === 'worker'
+                  )
                     ? {
-                        signatureData: contract.signatures.find(s => s.signer_role === 'worker')?.signature_data,
-                        signedAt: contract.signatures.find(s => s.signer_role === 'worker')?.signed_at || undefined,
+                        signatureData: contract.signatures.find(
+                          (s) => s.signer_role === 'worker'
+                        )?.signature_data,
+                        signedAt:
+                          contract.signatures.find(
+                            (s) => s.signer_role === 'worker'
+                          )?.signed_at || undefined,
                       }
                     : undefined,
-                  createdAt: contract?.status ? new Date().toISOString() : new Date().toISOString(),
+                  createdAt: contract?.status
+                    ? new Date().toISOString()
+                    : new Date().toISOString(),
                 }}
               />
             </div>
@@ -1000,8 +1063,18 @@ export default function ContractPreview({
               </>
             ) : (
               <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
                 </svg>
                 PDF 다운로드
               </>
@@ -1060,7 +1133,9 @@ export default function ContractPreview({
                   if (shareUrl) {
                     // URL만 단독으로 복사 (앞뒤 공백 없이)
                     await navigator.clipboard.writeText(shareUrl.trim());
-                    setToastMessage('링크가 복사됐어요! 카카오톡에 붙여넣기 하세요 📋');
+                    setToastMessage(
+                      '링크가 복사됐어요! 카카오톡에 붙여넣기 하세요 📋'
+                    );
                     setShowToast(true);
                   }
                 }}

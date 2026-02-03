@@ -6,7 +6,16 @@ export type WageType = 'hourly' | 'monthly';
 export type PaymentTiming = 'current_month' | 'next_month';
 export type ContractType = 'regular' | 'contract';
 
-export type BusinessType = 'restaurant' | 'cafe' | 'convenience_store' | 'retail' | 'beauty' | 'office' | 'pc_cafe' | 'startup' | null;
+export type BusinessType =
+  | 'restaurant'
+  | 'cafe'
+  | 'convenience_store'
+  | 'retail'
+  | 'beauty'
+  | 'office'
+  | 'pc_cafe'
+  | 'startup'
+  | null;
 
 export interface ContractFormData {
   // Step 1: 사업장 선택
@@ -55,7 +64,10 @@ interface ContractFormStore {
   nextStep: () => void;
   prevStep: () => void;
   updateData: (updates: Partial<ContractFormData>) => void;
-  loadContractData: (contractId: string, contractData: Partial<ContractFormData>) => void;
+  loadContractData: (
+    contractId: string,
+    contractData: Partial<ContractFormData>
+  ) => void;
   reset: () => void;
 }
 
@@ -106,7 +118,8 @@ export const useContractFormStore = create<ContractFormStore>()(
       data: initialData,
       editingContractId: null,
       isEditMode: false,
-      setStep: (step) => set({ step: Math.min(Math.max(step, 1), TOTAL_STEPS) }),
+      setStep: (step) =>
+        set({ step: Math.min(Math.max(step, 1), TOTAL_STEPS) }),
       nextStep: () =>
         set((state) => ({ step: Math.min(state.step + 1, TOTAL_STEPS) })),
       prevStep: () => set((state) => ({ step: Math.max(state.step - 1, 1) })),
@@ -119,7 +132,13 @@ export const useContractFormStore = create<ContractFormStore>()(
           isEditMode: true,
           data: { ...initialData, ...contractData },
         }),
-      reset: () => set({ step: 1, data: initialData, editingContractId: null, isEditMode: false }),
+      reset: () =>
+        set({
+          step: 1,
+          data: initialData,
+          editingContractId: null,
+          isEditMode: false,
+        }),
     }),
     {
       name: 'contract-form-storage',

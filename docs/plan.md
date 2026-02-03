@@ -1,4 +1,5 @@
 # 📋 Development Plan
+
 ## 싸인해주세요 (SignPlease)
 
 > **버전**: 1.27  
@@ -10,12 +11,14 @@
 ## 📌 계획서 사용 가이드
 
 ### Task 실행 규칙
+
 1. **한 번에 하나의 Task만 실행** - 완료 후 체크(✅) 표시
 2. **참조 문서 확인 필수** - 각 Task에 명시된 참조 문서를 반드시 확인
 3. **의존성 순서 준수** - `Depends on` 필드가 있는 경우 선행 Task 완료 확인
 4. **테스트 후 진행** - 각 Task 완료 후 동작 확인
 
 ### 참조 문서 약어
+
 - `PRD`: `docs/PRD.md` - 기능 요구사항
 - `Schema`: `docs/schema.md` - 데이터베이스 구조
 - `Rules`: `docs/rules.md` - 기술 규칙 및 코딩 컨벤션
@@ -25,24 +28,28 @@
 ---
 
 ## Phase 1: Foundation (프로젝트 기반 설정)
+
 > 예상 시간: 10시간 | 우선순위: P0
 
 ### Epic 1.1: 프로젝트 초기화
 
 #### Story 1.1.1: Next.js 프로젝트 세팅
+
 > 예상 시간: 2시간
 
 - [x] **Task 1.1.1.1**: Next.js 14 프로젝트 생성 ✅
+
   ```bash
   # 실행할 명령어
   npx create-next-app@latest signplease --typescript --tailwind --eslint --app --src-dir=false --import-alias="@/*"
   ```
+
   - 참조: `Rules` 섹션 1 (프로젝트 구조)
 
 - [x] **Task 1.1.1.2**: `tailwind.config.ts` 커스텀 설정 작성 ✅
   - 참조: `UI` 섹션 0 (Design System), `Rules` 섹션 1
   - 작업 내용:
-    - 컬러 팔레트 추가 (--primary, --gray-*, --success, --warning, --error, --kakao)
+    - 컬러 팔레트 추가 (--primary, --gray-\*, --success, --warning, --error, --kakao)
     - Typography 스케일 설정
     - 커스텀 애니메이션 추가 (fade-in, fade-in-up, slide-up, bounce-slow)
     - Safe area 유틸리티 클래스
@@ -67,9 +74,11 @@
 ---
 
 #### Story 1.1.2: Supabase 연동 설정
+
 > 예상 시간: 3시간
 
 - [x] **Task 1.1.2.1**: Supabase 패키지 설치 ✅
+
   ```bash
   npm install @supabase/supabase-js @supabase/ssr
   ```
@@ -93,9 +102,11 @@
 ---
 
 #### Story 1.1.3: 데이터베이스 마이그레이션
+
 > 예상 시간: 4시간
 
 - [x] **Task 1.1.3.1**: Supabase CLI 설치 및 프로젝트 링크 ✅ (MCP로 직접 적용)
+
   ```bash
   npm install -g supabase
   supabase login
@@ -164,16 +175,20 @@
 ---
 
 #### Story 1.1.4: 필수 패키지 및 유틸리티 설정
+
 > 예상 시간: 1시간
 
 - [x] **Task 1.1.4.1**: 상태 관리 패키지 설치 및 Provider 설정 ✅
+
   ```bash
   npm install zustand @tanstack/react-query
   ```
+
   - `app/providers.tsx` 생성 (QueryClientProvider)
   - `app/layout.tsx`에 Provider 래핑
 
 - [x] **Task 1.1.4.2**: 유효성 검사 및 유틸리티 패키지 설치 ✅
+
   ```bash
   npm install zod date-fns nanoid
   ```
@@ -194,15 +209,17 @@
 ---
 
 ## Phase 2: Authentication (인증 시스템)
+
 > 예상 시간: 10시간 | 우선순위: P0
 
 ### Epic 2.1: 카카오 OAuth 인증
 
 #### Story 2.1.1: OAuth 기본 설정
+
 > 예상 시간: 2시간
 
 - [x] **Task 2.1.1.1**: 카카오 개발자 콘솔 앱 생성 및 설정 ✅
-  - 작업 내용: 
+  - 작업 내용:
     - 카카오 개발자 콘솔에서 앱 생성
     - 플랫폼 등록 (웹)
     - Redirect URI 설정
@@ -219,6 +236,7 @@
 ---
 
 #### Story 2.1.2: 로그인/회원가입 UI 구현
+
 > 예상 시간: 3시간
 
 - [x] **Task 2.1.2.1**: `app/(public)/layout.tsx` 공개 라우트 레이아웃 생성 ✅
@@ -242,6 +260,7 @@
 ---
 
 #### Story 2.1.3: OAuth 로직 구현
+
 > 예상 시간: 2시간
 
 - [x] **Task 2.1.3.1**: `app/(public)/login/actions.ts` Server Action 작성 ✅
@@ -261,6 +280,7 @@
 ---
 
 #### Story 2.1.4: 역할 선택 구현
+
 > 예상 시간: 2시간
 
 - [x] **Task 2.1.4.1**: `app/(protected)/layout.tsx` 보호된 라우트 레이아웃 생성 ✅
@@ -282,11 +302,13 @@
 ---
 
 ## Phase 3: Core UI Components (공통 컴포넌트)
+
 > 예상 시간: 12시간 | 우선순위: P0
 
 ### Epic 3.1: Design System 컴포넌트
 
 #### Story 3.1.1: 기본 UI 컴포넌트 (Part 1)
+
 > 예상 시간: 3시간
 
 - [x] **Task 3.1.1.1**: `components/ui/Input.tsx` 입력 필드 컴포넌트 생성 ✅
@@ -311,6 +333,7 @@
 ---
 
 #### Story 3.1.2: 기본 UI 컴포넌트 (Part 2)
+
 > 예상 시간: 3시간
 
 - [x] **Task 3.1.2.1**: `components/ui/BottomSheet.tsx` 바텀시트 컴포넌트 생성 ✅
@@ -338,6 +361,7 @@
 ---
 
 #### Story 3.1.3: 레이아웃 컴포넌트
+
 > 예상 시간: 3시간
 
 - [x] **Task 3.1.3.1**: `components/layout/Header.tsx` 헤더 컴포넌트 생성 ✅
@@ -363,6 +387,7 @@
 ---
 
 #### Story 3.1.4: 스플래시 & 온보딩 화면
+
 > 예상 시간: 3시간
 
 - [x] **Task 3.1.4.1**: `app/page.tsx` 스플래시 화면 UI 구현 ✅
@@ -386,11 +411,13 @@
 ---
 
 ## Phase 4: Employer Features (사업자 기능)
+
 > 예상 시간: 34시간 | 우선순위: P0
 
 ### Epic 4.1: 사업자 대시보드
 
 #### Story 4.1.1: 대시보드 레이아웃 및 데이터 로드
+
 > 예상 시간: 4시간
 
 - [x] **Task 4.1.1.1**: `app/(protected)/employer/layout.tsx` 사업자 레이아웃 생성 ✅
@@ -417,6 +444,7 @@
 ### Epic 4.2: 계약서 작성 Funnel
 
 #### Story 4.2.1: Funnel 기본 구조 및 상태 관리
+
 > 예상 시간: 2시간
 
 - [x] **Task 4.2.1.1**: `stores/contractFormStore.ts` Zustand 스토어 생성 ✅
@@ -437,6 +465,7 @@
 ---
 
 #### Story 4.2.2: Step 1-5 UI 구현
+
 > 예상 시간: 3시간
 
 - [x] **Task 4.2.2.1**: `components/contract/ContractForm/Step1BusinessSize.tsx` 구현 ✅
@@ -468,6 +497,7 @@
 ---
 
 #### Story 4.2.3: Step 6-10 UI 구현
+
 > 예상 시간: 2시간
 
 - [x] **Task 4.2.3.1**: `components/contract/ContractForm/Step6WorkTime.tsx` 구현 ✅
@@ -498,6 +528,7 @@
 ---
 
 #### Story 4.2.4: 계약서 생성 로직
+
 > 예상 시간: 2시간
 
 - [x] **Task 4.2.4.1**: `lib/utils/validation.ts` 계약서 유효성 검사 스키마 작성 ✅
@@ -521,6 +552,7 @@
 ### Epic 4.3: 계약서 미리보기 & 서명
 
 #### Story 4.3.1: 미리보기 화면
+
 > 예상 시간: 3시간
 
 - [x] **Task 4.3.1.1**: `app/(protected)/employer/preview/[id]/page.tsx` Server Component 구현 ✅
@@ -540,6 +572,7 @@
 ---
 
 #### Story 4.3.2: 서명 기능
+
 > 예상 시간: 3시간
 
 - [x] **Task 4.3.2.1**: `components/contract/SignatureCanvas.tsx` 서명 캔버스 컴포넌트 구현 ✅
@@ -566,9 +599,11 @@
 ### Epic 4.4: AI 노무사 검토
 
 #### Story 4.4.1: AI 검토 기능
+
 > 예상 시간: 4시간
 
 - [x] **Task 4.4.1.1**: OpenAI 패키지 설치 ✅
+
   ```bash
   npm install openai
   ```
@@ -597,6 +632,7 @@
 ### Epic 4.5: 계약서 공유
 
 #### Story 4.5.1: 공유 기능 구현
+
 > 예상 시간: 4시간
 
 - [x] **Task 4.5.1.1**: `lib/kakao.ts` 카카오 SDK 초기화 및 공유 유틸 작성 ✅
@@ -611,6 +647,7 @@
   - Clipboard API 사용
 
 - [x] **Task 4.5.1.4**: PDF 생성 패키지 설치 및 설정 ✅
+
   ```bash
   npm install @react-pdf/renderer
   ```
@@ -630,6 +667,7 @@
 ### Epic 4.6: 계약서 상세 & 관리
 
 #### Story 4.6.1: 계약서 상세 화면
+
 > 예상 시간: 2시간
 
 - [x] **Task 4.6.1.1**: `app/(protected)/employer/contract/[id]/page.tsx` Server Component 구현 ✅
@@ -645,6 +683,7 @@
 ---
 
 #### Story 4.6.2: 계약서 삭제 및 재전송
+
 > 예상 시간: 1시간
 
 - [x] **Task 4.6.2.1**: 계약서 삭제 Server Action 구현 ✅
@@ -660,6 +699,7 @@
 ### Epic 4.7: 폴더 관리
 
 #### Story 4.7.1: 폴더 CRUD
+
 > 예상 시간: 3시간
 
 - [x] **Task 4.7.1.1**: 폴더 목록 및 생성 UI 구현 ✅
@@ -677,11 +717,13 @@
 ---
 
 ## Phase 5: Worker Features (근로자 기능)
+
 > 예상 시간: 16시간 | 우선순위: P0
 
 ### Epic 5.1: 근로자 온보딩
 
 #### Story 5.1.1: 민감정보 입력 UI
+
 > 예상 시간: 3시간
 
 - [x] **Task 5.1.1.1**: `app/(protected)/worker/onboarding/page.tsx` 온보딩 레이아웃 구현 ✅
@@ -707,6 +749,7 @@
 ---
 
 #### Story 5.1.2: 민감정보 저장 로직
+
 > 예상 시간: 2시간
 
 - [x] **Task 5.1.2.1**: `lib/utils/encryption.ts` 암호화 유틸 구현 ✅
@@ -727,6 +770,7 @@
 ### Epic 5.2: 근로자 대시보드
 
 #### Story 5.2.1: 대시보드 구현
+
 > 예상 시간: 3시간
 
 - [x] **Task 5.2.1.1**: `app/(protected)/worker/layout.tsx` 근로자 레이아웃 생성 ✅
@@ -748,6 +792,7 @@
 ### Epic 5.3: 계약서 확인 & 서명
 
 #### Story 5.3.1: 계약서 확인 화면
+
 > 예상 시간: 3시간
 
 - [x] **Task 5.3.1.1**: 계약서 공유 링크 접근 라우트 구현 ✅
@@ -768,6 +813,7 @@
 ---
 
 #### Story 5.3.2: 용어 설명 및 서명
+
 > 예상 시간: 2시간
 
 - [ ] **Task 5.3.2.1**: `components/shared/TermTooltip.tsx` 용어 설명 컴포넌트 구현
@@ -790,6 +836,7 @@
 ### Epic 5.4: 경력 관리
 
 #### Story 5.4.1: 경력 목록 및 증명서
+
 > 예상 시간: 3시간
 
 - [x] **Task 5.4.1.1**: `app/(protected)/worker/career/page.tsx` Server Component 구현 ✅
@@ -809,14 +856,17 @@
 ---
 
 ## Phase 6: Payment System (결제 시스템)
+
 > 예상 시간: 9시간 | 우선순위: P1
 
 ### Epic 6.1: 결제 UI 및 로직
 
 #### Story 6.1.1: 결제 화면 UI
+
 > 예상 시간: 3시간
 
 - [x] **Task 6.1.1.1**: 토스페이먼츠 SDK 설치 ✅
+
   ```bash
   npm install @tosspayments/tosspayments-sdk
   ```
@@ -834,6 +884,7 @@
 ---
 
 #### Story 6.1.2: 토스페이먼츠 연동
+
 > 예상 시간: 4시간
 
 - [x] **Task 6.1.2.1**: `app/api/payment/prepare/route.ts` 결제 준비 API 구현 ✅
@@ -858,6 +909,7 @@
 ---
 
 #### Story 6.1.3: 결제 내역
+
 > 예상 시간: 2시간
 
 - [x] **Task 6.1.3.1**: `app/(protected)/payment-history/page.tsx` Server Component 구현 ✅
@@ -870,11 +922,13 @@
 ---
 
 ## Phase 7: Chat Feature (채팅 기능)
+
 > 예상 시간: 7시간 | 우선순위: P2
 
 ### Epic 7.1: 채팅 구현
 
 #### Story 7.1.1: 채팅 목록
+
 > 예상 시간: 3시간
 
 - [x] **Task 7.1.1.1**: `app/(protected)/employer/chat/page.tsx` 사업자 채팅 목록 구현 ✅
@@ -890,6 +944,7 @@
 ---
 
 #### Story 7.1.2: 채팅방 상세
+
 > 예상 시간: 4시간
 
 - [x] **Task 7.1.2.1**: 채팅방 UI 구현 ✅
@@ -912,11 +967,13 @@
 ---
 
 ## Phase 8: Notification System (알림 시스템)
+
 > 예상 시간: 7시간 | 우선순위: P2
 
 ### Epic 8.1: 알림 구현
 
 #### Story 8.1.1: 인앱 알림
+
 > 예상 시간: 3시간
 
 - [x] **Task 8.1.1.1**: 알림 목록 BottomSheet UI 구현 ✅
@@ -935,6 +992,7 @@
 ---
 
 #### Story 8.1.2: 카카오 알림톡
+
 > 예상 시간: 4시간
 
 - [ ] **Task 8.1.2.1**: 알림톡 서비스 선택 및 설정
@@ -954,11 +1012,13 @@
 ---
 
 ## Phase 9: Guest Mode (게스트 모드)
+
 > 예상 시간: 7시간 | 우선순위: P2
 
 ### Epic 9.1: 게스트 모드 구현
 
 #### Story 9.1.1: 게스트 기본 설정
+
 > 예상 시간: 3시간
 
 - [x] **Task 9.1.1.1**: `stores/guestStore.ts` 게스트 스토어 구현 ✅
@@ -978,6 +1038,7 @@
 ---
 
 #### Story 9.1.2: 샘플 데이터 및 제한 처리
+
 > 예상 시간: 4시간
 
 - [x] **Task 9.1.2.1**: `lib/constants/sampleData.ts` 샘플 데이터 정의 ✅
@@ -1001,14 +1062,17 @@
 ---
 
 ## Phase 10: Testing & Deployment (테스트 및 배포)
+
 > 예상 시간: 13시간 | 우선순위: P3
 
 ### Epic 10.1: 테스트
 
 #### Story 10.1.1: 테스트 환경 설정
+
 > 예상 시간: 2시간
 
 - [x] **Task 10.1.1.1**: Vitest 설치 및 설정 ✅
+
   ```bash
   npm install -D vitest @vitejs/plugin-react jsdom @testing-library/react
   ```
@@ -1024,6 +1088,7 @@
 ---
 
 #### Story 10.1.2: 테스트 작성
+
 > 예상 시간: 6시간
 
 - [x] **Task 10.1.2.1**: 유틸 함수 단위 테스트 작성 ✅
@@ -1043,6 +1108,7 @@
 ### Epic 10.2: 배포
 
 #### Story 10.2.1: 배포 설정
+
 > 예상 시간: 3시간
 
 - [ ] **Task 10.2.1.1**: Vercel 프로젝트 생성 및 연결
@@ -1061,11 +1127,13 @@
 ---
 
 #### Story 10.2.2: 모니터링
+
 > 예상 시간: 2시간
 
 - [ ] **Task 10.2.2.1**: Vercel Analytics 활성화
 
 - [ ] **Task 10.2.2.2**: Sentry 설치 및 설정
+
   ```bash
   npx @sentry/wizard@latest -i nextjs
   ```
@@ -1076,25 +1144,26 @@
 
 ## 📊 전체 일정 요약
 
-| Phase | 예상 시간 | 우선순위 | 완료 기준 |
-|-------|----------|----------|----------|
-| Phase 1: Foundation | 10시간 | P0 | DB 마이그레이션 완료, 타입 생성 완료 |
-| Phase 2: Authentication | 10시간 | P0 | 카카오 로그인/로그아웃 동작 |
-| Phase 3: Core UI | 12시간 | P0 | 모든 기본 컴포넌트 구현 |
-| Phase 4: Employer | 34시간 | P0 | 계약서 작성 → 서명 → 공유 플로우 완성 |
-| Phase 5: Worker | 16시간 | P0 | 계약서 확인 → 서명 플로우 완성 |
-| Phase 6: Payment | 9시간 | P1 | 크레딧 구매 동작 |
-| Phase 7: Chat | 7시간 | P2 | 실시간 채팅 동작 |
-| Phase 8: Notification | 7시간 | P2 | 알림톡 발송 동작 |
-| Phase 9: Guest Mode | 7시간 | P2 | 게스트 체험 모드 동작 |
-| Phase 10: Testing | 13시간 | P3 | 주요 플로우 테스트 통과 |
-| **Total** | **125시간** | - | 약 3-4주 (풀타임 기준) |
+| Phase                   | 예상 시간   | 우선순위 | 완료 기준                             |
+| ----------------------- | ----------- | -------- | ------------------------------------- |
+| Phase 1: Foundation     | 10시간      | P0       | DB 마이그레이션 완료, 타입 생성 완료  |
+| Phase 2: Authentication | 10시간      | P0       | 카카오 로그인/로그아웃 동작           |
+| Phase 3: Core UI        | 12시간      | P0       | 모든 기본 컴포넌트 구현               |
+| Phase 4: Employer       | 34시간      | P0       | 계약서 작성 → 서명 → 공유 플로우 완성 |
+| Phase 5: Worker         | 16시간      | P0       | 계약서 확인 → 서명 플로우 완성        |
+| Phase 6: Payment        | 9시간       | P1       | 크레딧 구매 동작                      |
+| Phase 7: Chat           | 7시간       | P2       | 실시간 채팅 동작                      |
+| Phase 8: Notification   | 7시간       | P2       | 알림톡 발송 동작                      |
+| Phase 9: Guest Mode     | 7시간       | P2       | 게스트 체험 모드 동작                 |
+| Phase 10: Testing       | 13시간      | P3       | 주요 플로우 테스트 통과               |
+| **Total**               | **125시간** | -        | 약 3-4주 (풀타임 기준)                |
 
 ---
 
 ## 🚀 MVP 우선순위
 
 ### Week 1-2: MVP 필수 (P0)
+
 1. Phase 1: Foundation
 2. Phase 2: Authentication
 3. Phase 3: Core UI Components
@@ -1102,10 +1171,12 @@
 5. Phase 5: Epic 5.1-5.3 (온보딩, 대시보드, 서명)
 
 ### Week 2-3: 핵심 기능 (P1)
+
 6. Phase 4: Epic 4.4-4.6 (AI 검토, 공유, 관리)
 7. Phase 6: Payment
 
 ### Week 3-4: 부가 기능 (P2)
+
 8. Phase 4: Epic 4.7 (폴더)
 9. Phase 5: Epic 5.4 (경력)
 10. Phase 7: Chat
@@ -1113,6 +1184,7 @@
 12. Phase 9: Guest Mode
 
 ### Week 4+: 안정화 (P3)
+
 13. Phase 10: Testing & Deployment
 
 ---
@@ -1128,9 +1200,11 @@
 ---
 
 ### Epic A1.1: 헤더 네비게이션 개선
+
 > 예상 시간: 4시간
 
 #### Story A1.1.1: 헤더 컴포넌트 수정
+
 > 예상 시간: 1시간
 
 - [ ] **Task A1.1.1.1**: `components/layout/Header.tsx` 수정
@@ -1148,6 +1222,7 @@
 ---
 
 #### Story A1.1.2: 메뉴 시트 컴포넌트 구현
+
 > 예상 시간: 2시간
 
 - [ ] **Task A1.1.2.1**: `components/layout/MenuSheet.tsx` 신규 생성
@@ -1170,6 +1245,7 @@
 ---
 
 #### Story A1.1.3: 메뉴 시트 연동
+
 > 예상 시간: 1시간
 
 - [ ] **Task A1.1.3.1**: `app/(protected)/employer/layout.tsx` 수정
@@ -1184,9 +1260,11 @@
 ---
 
 ### Epic A1.2: 대시보드 레이아웃 변경
+
 > 예상 시간: 5시간
 
 #### Story A1.2.1: 사업자 대시보드 재구성
+
 > 예상 시간: 3시간
 
 - [ ] **Task A1.2.1.1**: `components/shared/CreditCard.tsx` 신규 생성
@@ -1212,6 +1290,7 @@
 ---
 
 #### Story A1.2.2: 근로자 대시보드 재구성
+
 > 예상 시간: 2시간
 
 - [ ] **Task A1.2.2.1**: `app/(protected)/worker/worker-dashboard.tsx` 수정
@@ -1226,9 +1305,11 @@
 ---
 
 ### Epic A1.3: 프로필 페이지 구현
+
 > 예상 시간: 3시간
 
 #### Story A1.3.1: 프로필 페이지 UI
+
 > 예상 시간: 2시간
 
 - [ ] **Task A1.3.1.1**: `app/(protected)/profile/page.tsx` 신규 생성
@@ -1245,6 +1326,7 @@
 ---
 
 #### Story A1.3.2: 프로필 수정 기능
+
 > 예상 시간: 1시간
 
 - [ ] **Task A1.3.2.1**: `app/(protected)/profile/actions.ts` Server Actions 구현
@@ -1258,9 +1340,11 @@
 ---
 
 ### Epic A1.4: 법적 문서 페이지 (선택)
+
 > 예상 시간: 2시간 | 우선순위: P2
 
 #### Story A1.4.1: 이용약관 및 개인정보처리방침
+
 > 예상 시간: 2시간
 
 - [ ] **Task A1.4.1.1**: `app/(public)/terms/page.tsx` 생성
@@ -1275,35 +1359,39 @@
 
 ## 📊 Amendment 1 일정 요약
 
-| Epic | 예상 시간 | 우선순위 | 완료 기준 |
-|------|----------|----------|----------|
-| A1.1: 헤더 네비게이션 개선 | 4시간 | P0 | 햄버거 메뉴 클릭 시 사이드시트 열림 |
-| A1.2: 대시보드 레이아웃 변경 | 5시간 | P0 | 탭 제거, 섹션 기반 UI 동작 |
-| A1.3: 프로필 페이지 구현 | 3시간 | P0 | 프로필 조회/수정/역할변경 동작 |
-| A1.4: 법적 문서 페이지 | 2시간 | P2 | (선택) 약관 페이지 표시 |
-| **Total** | **14시간** | - | 약 2일 (풀타임 기준) |
+| Epic                         | 예상 시간  | 우선순위 | 완료 기준                           |
+| ---------------------------- | ---------- | -------- | ----------------------------------- |
+| A1.1: 헤더 네비게이션 개선   | 4시간      | P0       | 햄버거 메뉴 클릭 시 사이드시트 열림 |
+| A1.2: 대시보드 레이아웃 변경 | 5시간      | P0       | 탭 제거, 섹션 기반 UI 동작          |
+| A1.3: 프로필 페이지 구현     | 3시간      | P0       | 프로필 조회/수정/역할변경 동작      |
+| A1.4: 법적 문서 페이지       | 2시간      | P2       | (선택) 약관 페이지 표시             |
+| **Total**                    | **14시간** | -        | 약 2일 (풀타임 기준)                |
 
 ---
 
 ## 🚀 Amendment 1 실행 순서
 
 ### 1단계: 헤더 및 메뉴 시트 (4시간)
+
 1. Task A1.1.1.1: Header 컴포넌트 수정
 2. Task A1.1.2.1: MenuSheet 컴포넌트 생성
 3. Task A1.1.2.2: Tailwind 애니메이션 추가
 4. Task A1.1.3.1, A1.1.3.2: 레이아웃에 연동
 
 ### 2단계: 대시보드 재구성 (5시간)
+
 1. Task A1.2.1.1: CreditCard 컴포넌트 생성
 2. Task A1.2.1.2, A1.2.1.3: 사업자 대시보드 UI 변경
 3. Task A1.2.1.4: 데이터 페칭 수정
 4. Task A1.2.2.1, A1.2.2.2: 근로자 대시보드 변경
 
 ### 3단계: 프로필 페이지 (3시간)
+
 1. Task A1.3.1.1, A1.3.1.2: 프로필 페이지 UI
 2. Task A1.3.2.1, A1.3.2.2: 프로필 수정 기능
 
 ### 4단계 (선택): 법적 문서 (2시간)
+
 1. Task A1.4.1.1, A1.4.1.2: 약관 페이지
 
 ---
@@ -1322,9 +1410,11 @@
 ---
 
 ### Epic A2.1: 환영 메시지 개선
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 #### Story A2.1.1: 역할 선택 페이지 닉네임 표시
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 - [x] **Task A2.1.1.1**: `app/(protected)/select-role/page.tsx` 수정
@@ -1338,9 +1428,11 @@
 ---
 
 ### Epic A2.2: 게스트 모드 지원
+
 > 예상 시간: 2시간 | **상태: ✅ 완료**
 
 #### Story A2.2.1: 쿠키 기반 게스트 저장소
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 - [x] **Task A2.2.1.1**: `stores/guestStore.ts` 수정
@@ -1351,6 +1443,7 @@
 ---
 
 #### Story A2.2.2: Protected Layout 게스트 체크
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 - [x] **Task A2.2.2.1**: `app/(protected)/layout.tsx` 수정
@@ -1368,6 +1461,7 @@
 ---
 
 #### Story A2.2.3: 게스트용 샘플 데이터
+
 > 예상 시간: 1시간 | **상태: ✅ 완료**
 
 - [x] **Task A2.2.3.1**: `app/(protected)/employer/page.tsx` 수정
@@ -1388,17 +1482,17 @@
 
 ## 📊 Amendment 2 완료 요약
 
-| Task | 상태 | 설명 |
-|------|------|------|
-| A2.1.1.1 | ✅ | 역할 선택 페이지 닉네임 전달 |
-| A2.1.1.2 | ✅ | 환영 메시지 표시 |
-| A2.2.1.1 | ✅ | 쿠키 기반 guestStore |
-| A2.2.2.1 | ✅ | protected layout 게스트 체크 |
-| A2.2.2.2 | ✅ | employer layout 게스트 체크 |
-| A2.2.2.3 | ✅ | worker layout 게스트 체크 |
-| A2.2.3.1 | ✅ | employer 샘플 데이터 |
-| A2.2.3.2 | ✅ | worker 샘플 데이터 |
-| A2.2.3.3 | ✅ | guest 페이지 수정 |
+| Task     | 상태 | 설명                         |
+| -------- | ---- | ---------------------------- |
+| A2.1.1.1 | ✅   | 역할 선택 페이지 닉네임 전달 |
+| A2.1.1.2 | ✅   | 환영 메시지 표시             |
+| A2.2.1.1 | ✅   | 쿠키 기반 guestStore         |
+| A2.2.2.1 | ✅   | protected layout 게스트 체크 |
+| A2.2.2.2 | ✅   | employer layout 게스트 체크  |
+| A2.2.2.3 | ✅   | worker layout 게스트 체크    |
+| A2.2.3.1 | ✅   | employer 샘플 데이터         |
+| A2.2.3.2 | ✅   | worker 샘플 데이터           |
+| A2.2.3.3 | ✅   | guest 페이지 수정            |
 
 ---
 
@@ -1416,9 +1510,11 @@
 ---
 
 ### Epic A3.1: 폴더 관리 모달
+
 > 예상 시간: 1시간 | **상태: ✅ 완료**
 
 #### Story A3.1.1: FolderModal 컴포넌트 생성
+
 > 예상 시간: 1시간 | **상태: ✅ 완료**
 
 - [x] **Task A3.1.1.1**: `components/folder/FolderModal.tsx` 생성
@@ -1437,9 +1533,11 @@
 ---
 
 ### Epic A3.2: 헤더 닉네임 표시
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 #### Story A3.2.1: Header 컴포넌트 수정
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 - [x] **Task A3.2.1.1**: `components/layout/Header.tsx` 수정
@@ -1452,9 +1550,11 @@
 ---
 
 ### Epic A3.3: 게스트 모드 계약서 상세
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 #### Story A3.3.1: 샘플 계약서 상세 데이터
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 - [x] **Task A3.3.1.1**: `lib/constants/sampleData.ts` 확장
@@ -1473,26 +1573,29 @@
 
 ## 📊 Amendment 3 완료 요약
 
-| Task | 상태 | 설명 |
-|------|------|------|
-| A3.1.1.1 | ✅ | FolderModal 컴포넌트 생성 |
-| A3.1.1.2 | ✅ | 대시보드에 모달 연동 |
-| A3.1.1.3 | ✅ | Server Actions 수정 |
-| A3.2.1.1 | ✅ | Header에 userName prop |
-| A3.2.1.2 | ✅ | 대시보드에서 닉네임 전달 |
-| A3.3.1.1 | ✅ | 샘플 상세 데이터 추가 |
-| A3.3.1.2 | ✅ | 상세 페이지 게스트 지원 |
-| A3.3.1.3 | ✅ | contract-detail 게스트 모드 |
+| Task     | 상태 | 설명                        |
+| -------- | ---- | --------------------------- |
+| A3.1.1.1 | ✅   | FolderModal 컴포넌트 생성   |
+| A3.1.1.2 | ✅   | 대시보드에 모달 연동        |
+| A3.1.1.3 | ✅   | Server Actions 수정         |
+| A3.2.1.1 | ✅   | Header에 userName prop      |
+| A3.2.1.2 | ✅   | 대시보드에서 닉네임 전달    |
+| A3.3.1.1 | ✅   | 샘플 상세 데이터 추가       |
+| A3.3.1.2 | ✅   | 상세 페이지 게스트 지원     |
+| A3.3.1.3 | ✅   | contract-detail 게스트 모드 |
 
 ---
 
 ### 📌 향후 작업 (Backlog)
 
 #### DB 마이그레이션 필요
+
 ```sql
 ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ```
+
 마이그레이션 적용 후 코드에서 주석 해제 필요:
+
 - `folders/actions.ts`: createFolder, updateFolder의 color 저장
 - `employer/page.tsx`: folders.color 조회
 
@@ -1512,9 +1615,11 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A4.1: 대시보드 레이아웃 재구성
+
 > 예상 시간: 2시간 | **상태: ✅ 완료**
 
 #### Story A4.1.1: 헤더 및 레이아웃 변경
+
 - [x] **Task A4.1.1.1**: 헤더 분리 ("환영합니다" + 알림 + 메뉴)
 - [x] **Task A4.1.1.2**: 닉네임 큰 글씨로 분리 (h1)
 - [x] **Task A4.1.1.3**: 크레딧 뱃지 추가 (🎟️ N건 남음)
@@ -1524,9 +1629,11 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A4.2: ContractCard 재디자인
+
 > 예상 시간: 1시간 | **상태: ✅ 완료**
 
 #### Story A4.2.1: 카드 UI 변경
+
 - [x] **Task A4.2.1.1**: work_location 표시 (시급 대신)
 - [x] **Task A4.2.1.2**: 상태별 뱃지 (임시저장/서명 대기/완료)
 - [x] **Task A4.2.1.3**: 수정 버튼 (draft, pending만)
@@ -1535,23 +1642,28 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A4.3: 편집 모드 구현
+
 > 예상 시간: 2시간 | **상태: ✅ 완료**
 
 #### Story A4.3.1: 편집 모드 UI
+
 - [x] **Task A4.3.1.1**: EditModeHeader (선택 카운트, 전체 선택, 닫기)
 - [x] **Task A4.3.1.2**: ActionBar (정렬, 이동, 삭제 버튼)
 - [x] **Task A4.3.1.3**: 다중 선택 상태 관리 (selectedIds Set)
 
 #### Story A4.3.2: 정렬 기능
+
 - [x] **Task A4.3.2.1**: 최신순 정렬 (created_at DESC)
 - [x] **Task A4.3.2.2**: 가게별 정렬 (work_location ASC)
 
 ---
 
 ### Epic A4.4: 폴더 이동 기능
+
 > 예상 시간: 1.5시간 | **상태: ✅ 완료**
 
 #### Story A4.4.1: MoveFolderSheet 컴포넌트
+
 - [x] **Task A4.4.1.1**: `components/folder/MoveFolderSheet.tsx` 생성
 - [x] **Task A4.4.1.2**: 폴더 목록 표시
 - [x] **Task A4.4.1.3**: 새 폴더 만들기 모드
@@ -1560,6 +1672,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A4.5: 데이터 수정
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 - [x] **Task A4.5.1**: contracts 쿼리에 work_location 추가
@@ -1569,13 +1682,13 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ## 📊 Amendment 4 완료 요약
 
-| 기능 | 상태 | 설명 |
-|------|------|------|
-| 대시보드 레이아웃 | ✅ | 헤더, 닉네임, 크레딧, 버튼 재구성 |
-| ContractCard | ✅ | 근무지, 상태 뱃지, 수정 버튼, 체크박스 |
-| 편집 모드 | ✅ | 다중 선택, 정렬, 이동, 삭제 |
-| 폴더 이동 | ✅ | MoveFolderSheet, 새 폴더 생성 |
-| 정렬 | ✅ | 최신순, 가게별 |
+| 기능              | 상태 | 설명                                   |
+| ----------------- | ---- | -------------------------------------- |
+| 대시보드 레이아웃 | ✅   | 헤더, 닉네임, 크레딧, 버튼 재구성      |
+| ContractCard      | ✅   | 근무지, 상태 뱃지, 수정 버튼, 체크박스 |
+| 편집 모드         | ✅   | 다중 선택, 정렬, 이동, 삭제            |
+| 폴더 이동         | ✅   | MoveFolderSheet, 새 폴더 생성          |
+| 정렬              | ✅   | 최신순, 가게별                         |
 
 ---
 
@@ -1593,6 +1706,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A5.1: Step1BusinessSize 리디자인
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 - [x] **Task A5.1.1**: 질문/설명 텍스트 변경
@@ -1605,13 +1719,13 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ## 📊 Amendment 5 완료 요약
 
-| Task | 상태 | 설명 |
-|------|------|------|
-| A5.1.1 | ✅ | 질문: "사장님, 가게에 직원이 몇 명인가요?" |
-| A5.1.2 | ✅ | 옵션 설명: "소규모 가게", "중소규모 이상" |
-| A5.1.3 | ✅ | 건물/사람 SVG 아이콘 |
-| A5.1.4 | ✅ | 선택 시 파란 배경 + 흰색 아이콘 |
-| A5.1.5 | ✅ | 초록/노랑 안내 박스 |
+| Task   | 상태 | 설명                                       |
+| ------ | ---- | ------------------------------------------ |
+| A5.1.1 | ✅   | 질문: "사장님, 가게에 직원이 몇 명인가요?" |
+| A5.1.2 | ✅   | 옵션 설명: "소규모 가게", "중소규모 이상"  |
+| A5.1.3 | ✅   | 건물/사람 SVG 아이콘                       |
+| A5.1.4 | ✅   | 선택 시 파란 배경 + 흰색 아이콘            |
+| A5.1.5 | ✅   | 초록/노랑 안내 박스                        |
 
 ---
 
@@ -1629,6 +1743,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A6.1: Step3Wage UI 전면 리디자인
+
 > 예상 시간: 1시간 | **상태: ✅ 완료**
 
 - [x] **Task A6.1.1**: contractFormStore에 wageType, monthlyWage 필드 추가
@@ -1641,6 +1756,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A6.2: 최저시급 업데이트
+
 > 예상 시간: 15분 | **상태: ✅ 완료**
 
 - [x] **Task A6.2.1**: lib/utils/validation.ts - MINIMUM_WAGE_2026 = 10360
@@ -1651,6 +1767,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A6.3: 스키마 문서화 (DB 마이그레이션 대기)
+
 > 예상 시간: 10분 | **상태: ✅ 완료**
 
 - [x] **Task A6.3.1**: schema.md에 wage_type, monthly_wage 컬럼 문서화
@@ -1660,16 +1777,16 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ## 📊 Amendment 6 완료 요약
 
-| Task | 상태 | 설명 |
-|------|------|------|
-| A6.1.1 | ✅ | wageType: 'hourly' \| 'monthly' 추가 |
-| A6.1.2 | ✅ | 시급/월급 2열 카드 선택 |
-| A6.1.3 | ✅ | 시급 입력 (둥근 박스 + 최저시급 안내) |
-| A6.1.4 | ✅ | 월급 입력 필드 |
-| A6.1.5 | ✅ | 주휴수당 카드형 체크박스 |
-| A6.1.6 | ✅ | 체크 시 "12,432원 이상이어야 해요" 안내 |
-| A6.2.1~4 | ✅ | 최저시급 10,030 → 10,360원 |
-| A6.3.1 | ✅ | 스키마 문서화 완료 |
+| Task     | 상태 | 설명                                    |
+| -------- | ---- | --------------------------------------- |
+| A6.1.1   | ✅   | wageType: 'hourly' \| 'monthly' 추가    |
+| A6.1.2   | ✅   | 시급/월급 2열 카드 선택                 |
+| A6.1.3   | ✅   | 시급 입력 (둥근 박스 + 최저시급 안내)   |
+| A6.1.4   | ✅   | 월급 입력 필드                          |
+| A6.1.5   | ✅   | 주휴수당 카드형 체크박스                |
+| A6.1.6   | ✅   | 체크 시 "12,432원 이상이어야 해요" 안내 |
+| A6.2.1~4 | ✅   | 최저시급 10,030 → 10,360원              |
+| A6.3.1   | ✅   | 스키마 문서화 완료                      |
 
 ---
 
@@ -1687,6 +1804,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A7.1: Step5WorkDays UI 전면 리디자인
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 - [x] **Task A7.1.1**: 질문 텍스트 변경 ("근무일을 어떻게 정할까요?")
@@ -1700,14 +1818,14 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ## 📊 Amendment 7 완료 요약
 
-| Task | 상태 | 설명 |
-|------|------|------|
-| A7.1.1 | ✅ | 질문: "근무일을 어떻게 정할까요?" |
-| A7.1.2 | ✅ | 2열 토글: "주 N일" / "특정 요일" |
-| A7.1.3 | ✅ | 주1일~주7일 칩 버튼 (4열 + 3열) |
-| A7.1.4 | ✅ | 월~일 정사각형 칩 (7열) |
-| A7.1.5 | ✅ | "선택: 월, 화, 수, 목, 금" 표시 |
-| A7.1.6 | ✅ | 이전 버튼 제거, 다음 버튼만 |
+| Task   | 상태 | 설명                              |
+| ------ | ---- | --------------------------------- |
+| A7.1.1 | ✅   | 질문: "근무일을 어떻게 정할까요?" |
+| A7.1.2 | ✅   | 2열 토글: "주 N일" / "특정 요일"  |
+| A7.1.3 | ✅   | 주1일~주7일 칩 버튼 (4열 + 3열)   |
+| A7.1.4 | ✅   | 월~일 정사각형 칩 (7열)           |
+| A7.1.5 | ✅   | "선택: 월, 화, 수, 목, 금" 표시   |
+| A7.1.6 | ✅   | 이전 버튼 제거, 다음 버튼만       |
 
 ---
 
@@ -1725,6 +1843,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A8.1: Step8Location Daum 우편번호 연동
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 - [x] **Task A8.1.1**: Daum Postcode 스크립트 동적 로드
@@ -1738,14 +1857,14 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ## 📊 Amendment 8 완료 요약
 
-| Task | 상태 | 설명 |
-|------|------|------|
-| A8.1.1 | ✅ | postcode.v2.js 동적 로드 |
-| A8.1.2 | ✅ | "주소 검색" 버튼 + 검색 아이콘 |
-| A8.1.3 | ✅ | embed 방식 (400px 높이) |
-| A8.1.4 | ✅ | 도로명/지번 주소 + 건물명 자동 입력 |
-| A8.1.5 | ✅ | 상세주소 입력 필드 |
-| A8.1.6 | ✅ | 다음 버튼만 표시 |
+| Task   | 상태 | 설명                                |
+| ------ | ---- | ----------------------------------- |
+| A8.1.1 | ✅   | postcode.v2.js 동적 로드            |
+| A8.1.2 | ✅   | "주소 검색" 버튼 + 검색 아이콘      |
+| A8.1.3 | ✅   | embed 방식 (400px 높이)             |
+| A8.1.4 | ✅   | 도로명/지번 주소 + 건물명 자동 입력 |
+| A8.1.5 | ✅   | 상세주소 입력 필드                  |
+| A8.1.6 | ✅   | 다음 버튼만 표시                    |
 
 ---
 
@@ -1763,6 +1882,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A9.1: Step10PayDay UI 전면 리디자인
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 - [x] **Task A9.1.1**: 질문 텍스트 변경 ("임금은 언제 지급하나요?")
@@ -1773,6 +1893,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 - [x] **Task A9.1.6**: 이전 버튼 제거, 다음 버튼만
 
 ### Epic A9.2: contractFormStore 필드 추가
+
 > 예상 시간: 10분 | **상태: ✅ 완료**
 
 - [x] **Task A9.2.1**: paymentTiming 필드 추가
@@ -1782,16 +1903,16 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ## 📊 Amendment 9 완료 요약
 
-| Task | 상태 | 설명 |
-|------|------|------|
-| A9.1.1 | ✅ | 질문: "임금은 언제 지급하나요?" |
-| A9.1.2 | ✅ | 당월/익월 2열 토글 |
-| A9.1.3 | ✅ | 말일 지급 원형 체크박스 |
-| A9.1.4 | ✅ | 1~28일 그리드 (7열 × 4행) |
-| A9.1.5 | ✅ | 말일 체크 시 그리드 비활성화 |
-| A9.1.6 | ✅ | 다음 버튼만 표시 |
-| A9.2.1 | ✅ | paymentTiming: 'current_month' \| 'next_month' |
-| A9.2.2 | ✅ | isLastDayPayment: boolean |
+| Task   | 상태 | 설명                                           |
+| ------ | ---- | ---------------------------------------------- |
+| A9.1.1 | ✅   | 질문: "임금은 언제 지급하나요?"                |
+| A9.1.2 | ✅   | 당월/익월 2열 토글                             |
+| A9.1.3 | ✅   | 말일 지급 원형 체크박스                        |
+| A9.1.4 | ✅   | 1~28일 그리드 (7열 × 4행)                      |
+| A9.1.5 | ✅   | 말일 체크 시 그리드 비활성화                   |
+| A9.1.6 | ✅   | 다음 버튼만 표시                               |
+| A9.2.1 | ✅   | paymentTiming: 'current_month' \| 'next_month' |
+| A9.2.2 | ✅   | isLastDayPayment: boolean                      |
 
 ---
 
@@ -1809,6 +1930,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A10.1: Step9JobDescription 리디자인
+
 > 예상 시간: 45분 | **상태: ✅ 완료**
 
 - [x] **Task A10.1.1**: 업종 선택 바텀시트 구현
@@ -1822,14 +1944,14 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ## 📊 Amendment 10 완료 요약
 
-| Task | 상태 | 설명 |
-|------|------|------|
-| A10.1.1 | ✅ | 6개 업종 바텀시트 |
-| A10.1.2 | ✅ | 식당, 카페, 편의점, 소매점, 미용실, 사무직 |
-| A10.1.3 | ✅ | 아이콘 + 라벨 + 업종 변경 버튼 |
-| A10.1.4 | ✅ | 토글 가능한 키워드 칩 |
-| A10.1.5 | ✅ | 추가 입력 텍스트 영역 |
-| A10.1.6 | ✅ | businessType 필드 추가 |
+| Task    | 상태 | 설명                                       |
+| ------- | ---- | ------------------------------------------ |
+| A10.1.1 | ✅   | 6개 업종 바텀시트                          |
+| A10.1.2 | ✅   | 식당, 카페, 편의점, 소매점, 미용실, 사무직 |
+| A10.1.3 | ✅   | 아이콘 + 라벨 + 업종 변경 버튼             |
+| A10.1.4 | ✅   | 토글 가능한 키워드 칩                      |
+| A10.1.5 | ✅   | 추가 입력 텍스트 영역                      |
+| A10.1.6 | ✅   | businessType 필드 추가                     |
 
 ---
 
@@ -1847,6 +1969,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A11.1: DB 마이그레이션
+
 > 예상 시간: 10분 | **상태: ✅ 완료**
 
 - [x] **Task A11.1.1**: contracts 테이블에 worker_phone 컬럼 추가
@@ -1856,6 +1979,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A11.2: 계약서 작성 폼 수정
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 - [x] **Task A11.2.1**: `stores/contractFormStore.ts`에 workerPhone 필드 추가
@@ -1871,11 +1995,12 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A11.3: 서명 페이지 수정
+
 > 예상 시간: 1시간 | **상태: ✅ 완료**
 
 - [x] **Task A11.3.1**: `worker-sign.tsx`에 휴대폰 번호 확인 단계 추가
   - 새로운 단계: `verify_phone`
-  - 마스킹된 힌트 표시 (010-****-5678)
+  - 마스킹된 힌트 표시 (010-\*\*\*\*-5678)
   - 번호 일치 확인 로직
 - [x] **Task A11.3.2**: 번호 일치 시 계약서 보기로 이동
 - [x] **Task A11.3.3**: 서명 완료 화면 개선
@@ -1885,6 +2010,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A11.4: 타입 업데이트
+
 > 예상 시간: 10분 | **상태: ✅ 완료**
 
 - [x] **Task A11.4.1**: `types/database.ts` 업데이트
@@ -1896,16 +2022,16 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ## 📊 Amendment 11 완료 요약
 
-| Task | 상태 | 설명 |
-|------|------|------|
-| A11.1.1 | ✅ | DB 마이그레이션 (worker_phone) |
-| A11.2.1 | ✅ | contractFormStore 수정 |
-| A11.2.2 | ✅ | 휴대폰 번호 validation |
-| A11.2.3 | ✅ | Step2 UI 수정 |
-| A11.3.1 | ✅ | 본인 확인 단계 추가 |
-| A11.3.2 | ✅ | 번호 일치 시 이동 |
-| A11.3.3 | ✅ | 서명 완료 화면 개선 |
-| A11.4.1 | ✅ | TypeScript 타입 업데이트 |
+| Task    | 상태 | 설명                           |
+| ------- | ---- | ------------------------------ |
+| A11.1.1 | ✅   | DB 마이그레이션 (worker_phone) |
+| A11.2.1 | ✅   | contractFormStore 수정         |
+| A11.2.2 | ✅   | 휴대폰 번호 validation         |
+| A11.2.3 | ✅   | Step2 UI 수정                  |
+| A11.3.1 | ✅   | 본인 확인 단계 추가            |
+| A11.3.2 | ✅   | 번호 일치 시 이동              |
+| A11.3.3 | ✅   | 서명 완료 화면 개선            |
+| A11.4.1 | ✅   | TypeScript 타입 업데이트       |
 
 ---
 
@@ -1945,6 +2071,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A12.1: 휴게시간 없음 옵션
+
 > 예상 시간: 10분 | **상태: ✅ 완료**
 
 - [x] **Task A12.1.1**: Step7BreakTime에 0분(없음) 옵션 추가
@@ -1955,6 +2082,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A12.2: 업종 선택 모달 자동 열림
+
 > 예상 시간: 15분 | **상태: ✅ 완료**
 
 - [x] **Task A12.2.1**: Step9JobDescription에서 업종 미선택 시 모달 자동 열림
@@ -1965,6 +2093,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A12.3: 홈 버튼 및 임시저장 기능
+
 > 예상 시간: 1시간 | **상태: ✅ 완료**
 
 - [x] **Task A12.3.1**: 계약서 작성 페이지에 홈 버튼 추가
@@ -1983,6 +2112,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A12.4: AI 리뷰어 크레딧 표시
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 - [x] **Task A12.4.1**: 대시보드에 AI 리뷰어 크레딧 표시
@@ -1996,6 +2126,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A12.5: 법적 페이지 구현
+
 > 예상 시간: 1시간 | **상태: ✅ 완료**
 
 - [x] **Task A12.5.1**: 이용약관 페이지 (`/terms`) 생성
@@ -2007,6 +2138,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A12.6: AI 노무사 버튼 프리미엄 디자인
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 - [x] **Task A12.6.1**: globals.css에 shimmer 애니메이션 추가
@@ -2019,6 +2151,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A12.7: Coming Soon 메시지
+
 > 예상 시간: 20분 | **상태: ✅ 완료**
 
 - [x] **Task A12.7.1**: PDF 다운로드 "준비 중" 토스트 메시지
@@ -2027,6 +2160,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A12.8: 공유 링크 바텀시트
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 - [x] **Task A12.8.1**: Share Link BottomSheet 구현
@@ -2037,6 +2171,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A12.9: AI 리뷰 흐름 개선
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 - [x] **Task A12.9.1**: 서명 전 AI 검토 가능하도록 수정
@@ -2051,17 +2186,17 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ## 📊 Amendment 12 완료 요약
 
-| 기능 | 상태 | 설명 |
-|------|------|------|
-| 휴게시간 없음 | ✅ | 0분 옵션 추가 |
-| 업종 모달 자동 열림 | ✅ | 미선택 시 자동 오픈 |
-| 홈 버튼 + 임시저장 | ✅ | 작성 중 홈 이동, 이어서 작성 지원 |
-| AI 리뷰어 크레딧 | ✅ | 별도 표시 + 아이콘 개선 |
-| 법적 페이지 | ✅ | terms, privacy, refund 페이지 |
-| AI 버튼 프리미엄 | ✅ | shimmer, PRO 배지, 그라데이션 |
-| Coming Soon | ✅ | PDF, 카카오톡 공유 안내 |
-| 공유 바텀시트 | ✅ | 링크 복사 및 안내 |
-| AI 리뷰 흐름 | ✅ | 저장 전 검토, 저장하고 공유하기 통합 |
+| 기능                | 상태 | 설명                                 |
+| ------------------- | ---- | ------------------------------------ |
+| 휴게시간 없음       | ✅   | 0분 옵션 추가                        |
+| 업종 모달 자동 열림 | ✅   | 미선택 시 자동 오픈                  |
+| 홈 버튼 + 임시저장  | ✅   | 작성 중 홈 이동, 이어서 작성 지원    |
+| AI 리뷰어 크레딧    | ✅   | 별도 표시 + 아이콘 개선              |
+| 법적 페이지         | ✅   | terms, privacy, refund 페이지        |
+| AI 버튼 프리미엄    | ✅   | shimmer, PRO 배지, 그라데이션        |
+| Coming Soon         | ✅   | PDF, 카카오톡 공유 안내              |
+| 공유 바텀시트       | ✅   | 링크 복사 및 안내                    |
+| AI 리뷰 흐름        | ✅   | 저장 전 검토, 저장하고 공유하기 통합 |
 
 ---
 
@@ -2077,6 +2212,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ### 추가된 Task
 
 #### Task 13.1: 사업자 대시보드 편집 기능 ✅
+
 - **구현 내용**:
   - 계약서 삭제 기능 (soft delete → 휴지통)
   - 휴지통 조회 및 복구/영구 삭제
@@ -2089,6 +2225,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
   - `components/folder/FolderTabs.tsx`
 
 #### Task 13.2: 근로자 대시보드 숨기기 기능 ✅
+
 - **구현 내용**:
   - 계약서 숨기기 기능 (worker_hidden_contracts 테이블)
   - 숨긴 계약서 조회 및 복구
@@ -2103,13 +2240,13 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ## 📊 Amendment 13 완료 요약
 
-| 기능 | 대상 | 상태 | 설명 |
-|------|------|------|------|
-| 삭제 → 휴지통 | 사업자 | ✅ | Soft delete 구현 |
-| 휴지통 복구/영구삭제 | 사업자 | ✅ | 탭으로 접근 |
-| 폴더 탭 UI | 사업자 | ✅ | 조건부 표시 |
-| 숨기기 기능 | 근로자 | ✅ | 새 테이블 생성 |
-| 숨김 탭 | 근로자 | ✅ | 조건부 표시 |
+| 기능                 | 대상   | 상태 | 설명             |
+| -------------------- | ------ | ---- | ---------------- |
+| 삭제 → 휴지통        | 사업자 | ✅   | Soft delete 구현 |
+| 휴지통 복구/영구삭제 | 사업자 | ✅   | 탭으로 접근      |
+| 폴더 탭 UI           | 사업자 | ✅   | 조건부 표시      |
+| 숨기기 기능          | 근로자 | ✅   | 새 테이블 생성   |
+| 숨김 탭              | 근로자 | ✅   | 조건부 표시      |
 
 ---
 
@@ -2127,6 +2264,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A14.1: 공유 링크 URL 단축
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 - [x] **Task A14.1.1**: `/s/[token]` 리다이렉트 라우트 생성
@@ -2142,6 +2280,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A14.2: 계약서 미리보기 공유 UX 개선
+
 > 예상 시간: 1시간 | **상태: ✅ 완료**
 
 - [x] **Task A14.2.1**: 저장 완료 후 UI 상태 변경
@@ -2157,6 +2296,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A14.3: RLS 정책 추가 (공개 링크 접근)
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 - [x] **Task A14.3.1**: Supabase 마이그레이션 적용
@@ -2169,6 +2309,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A14.4: 근로자 서명 플로우 개선
+
 > 예상 시간: 1시간 | **상태: ✅ 완료**
 
 - [x] **Task A14.4.1**: 로그인 상태 전달
@@ -2191,6 +2332,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A14.5: 계약서 상세 공유 UI 통합
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 - [x] **Task A14.5.1**: `contract-detail.tsx` 공유 바텀시트 추가
@@ -2202,31 +2344,34 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ## 📊 Amendment 14 완료 요약
 
-| 기능 | 상태 | 설명 |
-|------|------|------|
-| URL 단축 | ✅ | `/s/[token]` 리다이렉트 라우트 |
-| 공유 UX | ✅ | 저장 완료 UI, bold 안내문, 힌트 |
-| RLS 정책 | ✅ | anon 사용자 공개 접근 허용 |
-| 서명 플로우 | ✅ | 카카오 로그인 → 서명 흐름 개선 |
-| 상세 공유 UI | ✅ | 미리보기와 동일한 바텀시트 적용 |
+| 기능         | 상태 | 설명                            |
+| ------------ | ---- | ------------------------------- |
+| URL 단축     | ✅   | `/s/[token]` 리다이렉트 라우트  |
+| 공유 UX      | ✅   | 저장 완료 UI, bold 안내문, 힌트 |
+| RLS 정책     | ✅   | anon 사용자 공개 접근 허용      |
+| 서명 플로우  | ✅   | 카카오 로그인 → 서명 흐름 개선  |
+| 상세 공유 UI | ✅   | 미리보기와 동일한 바텀시트 적용 |
 
 ---
 
 ### 📌 핵심 변경 사항
 
 #### 공유 링크 형식 변경
+
 ```
 기존: https://signplease.vercel.app/contract/sign/e3c4618d56f1477a
 변경: https://signplease.vercel.app/s/e3c4618d56f1477a
 ```
 
 #### 근로자 서명 플로우 변경
+
 ```
 기존: 링크 클릭 → 번호 인증 → 서명 시도 → 로그인 필요 오류
 변경: 링크 클릭 → 번호 인증 → 카카오 로그인 → 서명
 ```
 
 #### RLS 정책 추가 이유
+
 - 비로그인(anon) 사용자도 share_token으로 계약서 조회 필요
 - 404 에러 해결을 위해 공개 접근 정책 추가
 
@@ -2243,6 +2388,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A15.1: 열람 로그 테이블 생성
+
 > 예상 시간: 15분 | **상태: ✅ 완료**
 
 - [x] **Task A15.1.1**: Supabase 마이그레이션 적용
@@ -2253,6 +2399,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A15.2: 민감정보 복호화 API
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 - [x] **Task A15.2.1**: API 엔드포인트 생성
@@ -2265,6 +2412,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A15.3: 민감정보 표시 UI
+
 > 예상 시간: 1시간 | **상태: ✅ 완료**
 
 - [x] **Task A15.3.1**: `contract-detail.tsx` 수정
@@ -2283,6 +2431,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A15.4: 타입 정의 업데이트
+
 > 예상 시간: 15분 | **상태: ✅ 완료**
 
 - [x] **Task A15.4.1**: `types/database.ts` 수정
@@ -2292,13 +2441,13 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ## 📊 Amendment 15 완료 요약
 
-| 기능 | 상태 | 설명 |
-|------|------|------|
-| 열람 로그 테이블 | ✅ | `sensitive_info_logs` 테이블 생성 |
-| 복호화 API | ✅ | `/api/contract/sensitive-info` 엔드포인트 |
-| 민감정보 UI | ✅ | 마스킹 + 클릭 시 전체 표시 |
-| 자동 숨김 | ✅ | 10초 카운트다운 후 자동 마스킹 |
-| 보안 안내 | ✅ | 열람 기록 저장 안내문 표시 |
+| 기능             | 상태 | 설명                                      |
+| ---------------- | ---- | ----------------------------------------- |
+| 열람 로그 테이블 | ✅   | `sensitive_info_logs` 테이블 생성         |
+| 복호화 API       | ✅   | `/api/contract/sensitive-info` 엔드포인트 |
+| 민감정보 UI      | ✅   | 마스킹 + 클릭 시 전체 표시                |
+| 자동 숨김        | ✅   | 10초 카운트다운 후 자동 마스킹            |
+| 보안 안내        | ✅   | 열람 기록 저장 안내문 표시                |
 
 ---
 
@@ -2313,6 +2462,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A16.1: 서명 완료 페이지 버튼 추가
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 - [x] **Task A16.1.1**: 로그인 상태별 버튼 분기
@@ -2324,6 +2474,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A16.2: AI 노무사 크레딧 오류 수정
+
 > 예상 시간: 15분 | **상태: ✅ 완료**
 
 - [x] **Task A16.2.1**: reference_id 타입 오류 수정
@@ -2334,10 +2485,10 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ## 📊 Amendment 16 완료 요약
 
-| 기능 | 상태 | 설명 |
-|------|------|------|
-| 서명 완료 버튼 | ✅ | 상태별 계약서 확인 버튼 추가 |
-| 크레딧 오류 수정 | ✅ | uuid 타입 불일치 해결 |
+| 기능             | 상태 | 설명                         |
+| ---------------- | ---- | ---------------------------- |
+| 서명 완료 버튼   | ✅   | 상태별 계약서 확인 버튼 추가 |
+| 크레딧 오류 수정 | ✅   | uuid 타입 불일치 해결        |
 
 ---
 
@@ -2355,6 +2506,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A17.1: 사업장 선택/관리 기능
+
 > 예상 시간: 2시간 | **상태: ✅ 완료**
 
 #### Story A17.1.1: 사업장 테이블 및 계약서 작성 Step 1 변경
@@ -2380,6 +2532,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A17.2: 모든 계약서 화면에 사업장명 표시
+
 > 예상 시간: 1시간 | **상태: ✅ 완료**
 
 - [x] **Task A17.2.1**: 계약서 미리보기에 사업장명 표시 (이미 있음)
@@ -2398,6 +2551,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A17.3: 카카오톡 공유 기능 수정
+
 > 예상 시간: 30분 | **상태: ⏳ 환경변수 설정 대기**
 
 - [x] **Task A17.3.1**: 카카오톡 공유 메시지에 사업장명 우선 표시
@@ -2416,6 +2570,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A17.4: 역할 전환 버그 수정
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 - [x] **Task A17.4.1**: 로그인 사용자가 게스트로 처리되는 버그 수정
@@ -2434,6 +2589,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A17.5: Zustand Hydration 버그 수정
+
 > 예상 시간: 20분 | **상태: ✅ 완료**
 
 - [x] **Task A17.5.1**: 계약서 미리보기에서 사업장명 안 보이는 문제 수정
@@ -2445,33 +2601,36 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ## 📊 Amendment 17 완료 요약
 
-| 기능 | 상태 | 설명 |
-|------|------|------|
-| 사업장 테이블 | ✅ | workplaces 테이블 생성 및 RLS |
-| Step 1 사업장 선택 | ✅ | 사업장 선택/등록 컴포넌트 |
-| 계약서 단계 재구성 | ✅ | 10단계 → 9단계 |
-| 사업장명 표시 | ✅ | 모든 계약서 화면에 추가 |
-| 카카오톡 공유 메시지 | ✅ | 사업장명 우선 표시 |
-| 카카오 콘솔 설정 | ⏳ | 사용자 수동 설정 필요 |
-| 역할 전환 버그 | ✅ | 로그인/게스트 체크 순서 수정 |
-| Hydration 버그 | ✅ | 미리보기 사업장명 표시 수정 |
+| 기능                 | 상태 | 설명                          |
+| -------------------- | ---- | ----------------------------- |
+| 사업장 테이블        | ✅   | workplaces 테이블 생성 및 RLS |
+| Step 1 사업장 선택   | ✅   | 사업장 선택/등록 컴포넌트     |
+| 계약서 단계 재구성   | ✅   | 10단계 → 9단계                |
+| 사업장명 표시        | ✅   | 모든 계약서 화면에 추가       |
+| 카카오톡 공유 메시지 | ✅   | 사업장명 우선 표시            |
+| 카카오 콘솔 설정     | ⏳   | 사용자 수동 설정 필요         |
+| 역할 전환 버그       | ✅   | 로그인/게스트 체크 순서 수정  |
+| Hydration 버그       | ✅   | 미리보기 사업장명 표시 수정   |
 
 ---
 
 ### 📌 사용자 설정 필요 사항
 
 #### 1. 카카오 개발자 콘솔
+
 1. [카카오 개발자](https://developers.kakao.com) 접속
 2. 앱 선택 → **제품 링크 관리**
 3. **웹 도메인 등록**: `https://signplease.vercel.app`
 
 #### 2. Vercel 환경변수
-| Key | Value |
-|-----|-------|
-| `NEXT_PUBLIC_APP_URL` | `https://signplease.vercel.app` |
+
+| Key                        | Value                              |
+| -------------------------- | ---------------------------------- |
+| `NEXT_PUBLIC_APP_URL`      | `https://signplease.vercel.app`    |
 | `NEXT_PUBLIC_KAKAO_JS_KEY` | `6a36a3ac7b5dd825dc430ea3ecd4bc53` |
 
 #### 3. 재배포
+
 환경변수 설정 후 Vercel에서 Redeploy 필요
 
 ---
@@ -2483,6 +2642,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ## Amendment 18: MVP 기능 정리 및 법적 필수 항목 추가 (2026년 1월 27일)
 
 ### Epic A18.1: 고객센터 이메일 문의로 변경
+
 > 예상 시간: 10분 | **상태: ✅ 완료**
 
 - [x] **Task A18.1.1**: 1:1 채팅을 이메일 문의로 변경
@@ -2493,6 +2653,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A18.2: 미출시 기능 토스트 안내
+
 > 예상 시간: 15분 | **상태: ✅ 완료**
 
 - [x] **Task A18.2.1**: 하단 네비게이션 채팅 탭 토스트 처리
@@ -2509,6 +2670,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A18.3: 계약서 저장 후 미리보기 버그 수정
+
 > 예상 시간: 10분 | **상태: ✅ 완료**
 
 - [x] **Task A18.3.1**: 저장 후 정보가 비어보이는 버그 수정
@@ -2518,6 +2680,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A18.4: 온보딩 문구 변경
+
 > 예상 시간: 5분 | **상태: ✅ 완료**
 
 - [x] **Task A18.4.1**: "10분이면 끝나요" → "1분이면 끝나요"
@@ -2527,6 +2690,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A18.5: 법적 필수 항목 계약서 추가
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 - [x] **Task A18.5.1**: 휴일(주휴일) 자동 계산 로직 추가
@@ -2543,15 +2707,15 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ## 📊 Amendment 18 완료 요약
 
-| 기능 | 상태 | 설명 |
-|------|------|------|
-| 이메일 문의 | ✅ | 1:1 채팅 → 이메일로 변경 |
-| 채팅 탭 토스트 | ✅ | 미출시 기능 안내 |
-| 경력증명서 토스트 | ✅ | 미출시 기능 안내 |
-| 미리보기 버그 수정 | ✅ | 저장 후 정보 표시 |
-| 문구 변경 | ✅ | 10분 → 1분 |
-| 휴일 표시 | ✅ | 법적 필수 항목 |
-| 연차/가산수당 | ✅ | 5인 이상만 표시 |
+| 기능               | 상태 | 설명                     |
+| ------------------ | ---- | ------------------------ |
+| 이메일 문의        | ✅   | 1:1 채팅 → 이메일로 변경 |
+| 채팅 탭 토스트     | ✅   | 미출시 기능 안내         |
+| 경력증명서 토스트  | ✅   | 미출시 기능 안내         |
+| 미리보기 버그 수정 | ✅   | 저장 후 정보 표시        |
+| 문구 변경          | ✅   | 10분 → 1분               |
+| 휴일 표시          | ✅   | 법적 필수 항목           |
+| 연차/가산수당      | ✅   | 5인 이상만 표시          |
 
 ---
 
@@ -2560,12 +2724,14 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 # Amendment 19: 근로자 계약서 상세 UI 개선 및 역할 전환 버그 수정
+
 > **날짜**: 2026년 1월 27일  
 > **목적**: 근로자(알바생) 계약서 상세 화면을 사업자 화면과 동일하게 개선, 역할 전환 오류 수정
 
 ---
 
 ### Epic A19.1: 근로자 계약서 상세 UI 개선
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 - [x] **Task A19.1.1**: 계약 내용 상세 정보 표시 추가
@@ -2585,6 +2751,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A19.2: 역할 전환 NEXT_REDIRECT 오류 수정
+
 > 예상 시간: 15분 | **상태: ✅ 완료**
 
 - [x] **Task A19.2.1**: 서버 액션 리다이렉트 방식 변경
@@ -2600,12 +2767,12 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ## 📊 Amendment 19 완료 요약
 
-| 기능 | 상태 | 설명 |
-|------|------|------|
-| 근로자 계약 상세 정보 | ✅ | 사업자 페이지와 동일한 계약 내용 표시 |
-| 서명 현황 카드 | ✅ | 시각적으로 개선된 서명 상태 표시 |
-| PDF 다운로드 버튼 | ✅ | 양측 서명 완료 시 표시 |
-| 역할 전환 오류 | ✅ | NEXT_REDIRECT 에러 수정 |
+| 기능                  | 상태 | 설명                                  |
+| --------------------- | ---- | ------------------------------------- |
+| 근로자 계약 상세 정보 | ✅   | 사업자 페이지와 동일한 계약 내용 표시 |
+| 서명 현황 카드        | ✅   | 시각적으로 개선된 서명 상태 표시      |
+| PDF 다운로드 버튼     | ✅   | 양측 서명 완료 시 표시                |
+| 역할 전환 오류        | ✅   | NEXT_REDIRECT 에러 수정               |
 
 ---
 
@@ -2623,6 +2790,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A20.1: 사업장 관리 기능 강화
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 #### Story A20.1.1: 사업장 수정/삭제 UI
@@ -2646,6 +2814,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A20.2: 삭제 후 상태 처리
+
 > 예상 시간: 10분 | **상태: ✅ 완료**
 
 - [x] **Task A20.2.1**: 삭제된 사업장이 선택된 상태였으면 선택 해제
@@ -2655,19 +2824,19 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ## 📊 Amendment 20 완료 요약
 
-| Task | 상태 | 설명 |
-|------|------|------|
-| A20.1.1.1 | ✅ | 사업장 카드에 수정/삭제 버튼 추가 |
-| A20.1.1.2 | ✅ | 수정 바텀시트 (이름, 주소 변경) |
-| A20.1.1.3 | ✅ | 삭제 확인 다이얼로그 |
-| A20.2.1 | ✅ | 삭제 후 선택 해제 처리 |
+| Task      | 상태 | 설명                              |
+| --------- | ---- | --------------------------------- |
+| A20.1.1.1 | ✅   | 사업장 카드에 수정/삭제 버튼 추가 |
+| A20.1.1.2 | ✅   | 수정 바텀시트 (이름, 주소 변경)   |
+| A20.1.1.3 | ✅   | 삭제 확인 다이얼로그              |
+| A20.2.1   | ✅   | 삭제 후 선택 해제 처리            |
 
 ---
 
 ### 📌 수정된 파일
 
-| 파일 | 변경 내용 |
-|------|----------|
+| 파일                                                  | 변경 내용                 |
+| ----------------------------------------------------- | ------------------------- |
 | `components/contract/ContractForm/Step1Workplace.tsx` | 수정/삭제 UI 및 로직 추가 |
 
 ---
@@ -2686,6 +2855,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A21.1: AI 노무사 크레딧 제거
+
 > 예상 시간: 30분 | **상태: ✅ 완료**
 
 - [x] **Task A21.1.1**: AI 노무사 크레딧 차감 로직 제거
@@ -2708,25 +2878,25 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ## 📊 Amendment 21 완료 요약
 
-| Task | 상태 | 설명 |
-|------|------|------|
-| A21.1.1 | ✅ | AI 리뷰 API에서 크레딧 차감 제거 |
-| A21.1.2 | ✅ | 대시보드 AI 크레딧 표시 제거 |
-| A21.1.3 | ✅ | 결제 페이지 AI 크레딧 제거 + 무료 안내 |
-| A21.1.4 | ✅ | 게스트 스토어 정리 |
+| Task    | 상태 | 설명                                   |
+| ------- | ---- | -------------------------------------- |
+| A21.1.1 | ✅   | AI 리뷰 API에서 크레딧 차감 제거       |
+| A21.1.2 | ✅   | 대시보드 AI 크레딧 표시 제거           |
+| A21.1.3 | ✅   | 결제 페이지 AI 크레딧 제거 + 무료 안내 |
+| A21.1.4 | ✅   | 게스트 스토어 정리                     |
 
 ---
 
 ### 📌 수정된 파일
 
-| 파일 | 변경 내용 |
-|------|----------|
-| `app/api/ai-review/route.ts` | 크레딧 차감 로직 제거 |
-| `app/(protected)/employer/employer-dashboard.tsx` | AI 크레딧 Link 제거 |
-| `app/(protected)/employer/page.tsx` | aiCredit 쿼리 제거 |
-| `app/(protected)/pricing/pricing-page.tsx` | AI 크레딧 UI 제거, 무료 안내 추가 |
-| `app/(protected)/pricing/page.tsx` | aiCredit 쿼리 제거 |
-| `stores/guestStore.ts` | aiReviewUsed 상태 제거 |
+| 파일                                              | 변경 내용                         |
+| ------------------------------------------------- | --------------------------------- |
+| `app/api/ai-review/route.ts`                      | 크레딧 차감 로직 제거             |
+| `app/(protected)/employer/employer-dashboard.tsx` | AI 크레딧 Link 제거               |
+| `app/(protected)/employer/page.tsx`               | aiCredit 쿼리 제거                |
+| `app/(protected)/pricing/pricing-page.tsx`        | AI 크레딧 UI 제거, 무료 안내 추가 |
+| `app/(protected)/pricing/page.tsx`                | aiCredit 쿼리 제거                |
+| `stores/guestStore.ts`                            | aiReviewUsed 상태 제거            |
 
 ---
 
@@ -2744,6 +2914,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A22.1: 이용약관 업데이트
+
 > 예상 시간: 20분 | **상태: ✅ 완료**
 
 - [x] **Task A22.1.1**: 전자서명 법적 효력 조항 추가 (제3조)
@@ -2763,20 +2934,20 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ## 📊 Amendment 22 완료 요약
 
-| Task | 상태 | 설명 |
-|------|------|------|
-| A22.1.1 | ✅ | 제3조 전자서명 법적 효력 추가 |
-| A22.1.2 | ✅ | 제4조 면책조항 수정 |
-| A22.1.3 | ✅ | UI 업데이트 완료 |
+| Task    | 상태 | 설명                          |
+| ------- | ---- | ----------------------------- |
+| A22.1.1 | ✅   | 제3조 전자서명 법적 효력 추가 |
+| A22.1.2 | ✅   | 제4조 면책조항 수정           |
+| A22.1.3 | ✅   | UI 업데이트 완료              |
 
 ---
 
 ### 📌 수정된 파일
 
-| 파일 | 변경 내용 |
-|------|----------|
-| `docs/terms.md` | 제3조 추가, 조항 번호 재정렬 |
-| `app/(public)/terms/page.tsx` | UI 업데이트 |
+| 파일                          | 변경 내용                    |
+| ----------------------------- | ---------------------------- |
+| `docs/terms.md`               | 제3조 추가, 조항 번호 재정렬 |
+| `app/(public)/terms/page.tsx` | UI 업데이트                  |
 
 ---
 
@@ -2794,6 +2965,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ### Epic A23.1: 업종 타입 및 UI 확장
+
 > 예상 시간: 20분 | **상태: ✅ 완료**
 
 - [x] **Task A23.1.1**: BusinessType 타입 확장
@@ -2813,38 +2985,38 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ## 📊 Amendment 23 완료 요약
 
-| Task | 상태 | 설명 |
-|------|------|------|
-| A23.1.1 | ✅ | BusinessType 타입 확장 |
-| A23.1.2 | ✅ | Validation 스키마 확장 |
-| A23.1.3 | ✅ | Step9 업종 UI 추가 |
-| A23.1.4 | ✅ | Step10 업종 UI 추가 |
+| Task    | 상태 | 설명                   |
+| ------- | ---- | ---------------------- |
+| A23.1.1 | ✅   | BusinessType 타입 확장 |
+| A23.1.2 | ✅   | Validation 스키마 확장 |
+| A23.1.3 | ✅   | Step9 업종 UI 추가     |
+| A23.1.4 | ✅   | Step10 업종 UI 추가    |
 
 ---
 
 ### 📌 수정된 파일
 
-| 파일 | 변경 내용 |
-|------|----------|
-| `stores/contractFormStore.ts` | BusinessType에 pc_cafe, startup 추가 |
-| `lib/utils/validation.ts` | businessTypeSchema 확장 |
-| `components/contract/ContractForm/Step9JobDescription.tsx` | PC방, 스타트업 업종 및 키워드 추가 |
-| `components/contract/ContractForm/Step10PayDay.tsx` | PC방, 스타트업 업종 추가 |
+| 파일                                                       | 변경 내용                            |
+| ---------------------------------------------------------- | ------------------------------------ |
+| `stores/contractFormStore.ts`                              | BusinessType에 pc_cafe, startup 추가 |
+| `lib/utils/validation.ts`                                  | businessTypeSchema 확장              |
+| `components/contract/ContractForm/Step9JobDescription.tsx` | PC방, 스타트업 업종 및 키워드 추가   |
+| `components/contract/ContractForm/Step10PayDay.tsx`        | PC방, 스타트업 업종 추가             |
 
 ---
 
 ### 📌 업종 목록 (총 8개)
 
-| 업종 | 아이콘 | 키워드 예시 |
-|------|--------|------------|
-| 식당 | 🍽️ | 홀 서빙, 주방 조리, 주문 접수 등 |
-| 카페 | ☕ | 바리스타, 디저트 제조, 매장 청소 등 |
-| 편의점 | 🏪 | 계산, 상품 진열, 재고 확인 등 |
-| 소매점 | 🛍️ | 고객 응대, 상품 정리, 매장 관리 등 |
-| 미용실 | 💇 | 샴푸, 드라이, 매장 청소 등 |
-| 사무직 | 💼 | 문서 작성, 전화 응대, 일정 관리 등 |
-| **PC방** | 🖥️ | 고객 응대, 음식 서빙, PC 관리 등 |
-| **스타트업** | 🚀 | 기획, 마케팅, 개발, 디자인 등 |
+| 업종         | 아이콘 | 키워드 예시                         |
+| ------------ | ------ | ----------------------------------- |
+| 식당         | 🍽️     | 홀 서빙, 주방 조리, 주문 접수 등    |
+| 카페         | ☕     | 바리스타, 디저트 제조, 매장 청소 등 |
+| 편의점       | 🏪     | 계산, 상품 진열, 재고 확인 등       |
+| 소매점       | 🛍️     | 고객 응대, 상품 정리, 매장 관리 등  |
+| 미용실       | 💇     | 샴푸, 드라이, 매장 청소 등          |
+| 사무직       | 💼     | 문서 작성, 전화 응대, 일정 관리 등  |
+| **PC방**     | 🖥️     | 고객 응대, 음식 서빙, PC 관리 등    |
+| **스타트업** | 🚀     | 기획, 마케팅, 개발, 디자인 등       |
 
 ---
 
@@ -2853,11 +3025,13 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ## 📝 Amendment 24: 계약 형태 선택 기능 추가
+
 > **버전**: 1.24  
 > **날짜**: 2026년 1월 31일  
 > **변경 사유**: 정규직(4대보험)/계약직(3.3%) 계약 형태 선택 기능 추가
 
 ### 변경 개요
+
 - 계약서 작성 시 사업장 선택 후 "계약 형태" 선택 단계 추가
 - 정규직 (4대보험 가입)과 계약직 (3.3% 원천징수) 중 선택
 - 전체 스텝 9 → 10단계로 변경
@@ -2902,44 +3076,44 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ## 📊 Amendment 24 완료 요약
 
-| Task | 상태 | 설명 |
-|------|------|------|
-| A24.1.1 | ✅ | 스키마 문서 업데이트 |
-| A24.1.2 | ✅ | DB 마이그레이션 |
-| A24.1.3 | ✅ | 타입 업데이트 |
-| A24.1.4 | ✅ | 스토어 수정 |
-| A24.1.5 | ✅ | Step2ContractType 컴포넌트 |
-| A24.1.6 | ✅ | 페이지 수정 |
-| A24.1.7 | ✅ | 저장 로직 확인 |
-| A24.1.8 | ✅ | 표시 로직 수정 |
-| A24.1.9 | ✅ | PDF 수정 |
+| Task    | 상태 | 설명                       |
+| ------- | ---- | -------------------------- |
+| A24.1.1 | ✅   | 스키마 문서 업데이트       |
+| A24.1.2 | ✅   | DB 마이그레이션            |
+| A24.1.3 | ✅   | 타입 업데이트              |
+| A24.1.4 | ✅   | 스토어 수정                |
+| A24.1.5 | ✅   | Step2ContractType 컴포넌트 |
+| A24.1.6 | ✅   | 페이지 수정                |
+| A24.1.7 | ✅   | 저장 로직 확인             |
+| A24.1.8 | ✅   | 표시 로직 수정             |
+| A24.1.9 | ✅   | PDF 수정                   |
 
 ---
 
 ### 📌 수정된 파일
 
-| 파일 | 변경 내용 |
-|------|----------|
-| `docs/schema.md` | Amendment 20 추가 (contract_type) |
-| `types/database.ts` | contracts 타입에 contract_type 추가 |
-| `lib/utils/validation.ts` | contractTypeSchema 추가, 스키마 수정 |
-| `stores/contractFormStore.ts` | ContractType 타입, TOTAL_STEPS 10 |
-| `components/contract/ContractForm/Step2ContractType.tsx` | 신규 생성 |
-| `app/(protected)/employer/create/page.tsx` | 스텝 순서 조정 |
-| `app/(protected)/employer/preview/[id]/contract-preview.tsx` | 계약형태 표시 |
-| `app/(protected)/employer/contract/[id]/contract-detail.tsx` | 계약형태 표시 |
-| `app/(protected)/worker/contract/[id]/contract-detail.tsx` | 계약형태 표시 |
-| `app/contract/sign/[token]/worker-sign.tsx` | 계약형태 표시 |
-| `components/contract/ContractPDF.tsx` | 계약형태 필드 추가 |
+| 파일                                                         | 변경 내용                            |
+| ------------------------------------------------------------ | ------------------------------------ |
+| `docs/schema.md`                                             | Amendment 20 추가 (contract_type)    |
+| `types/database.ts`                                          | contracts 타입에 contract_type 추가  |
+| `lib/utils/validation.ts`                                    | contractTypeSchema 추가, 스키마 수정 |
+| `stores/contractFormStore.ts`                                | ContractType 타입, TOTAL_STEPS 10    |
+| `components/contract/ContractForm/Step2ContractType.tsx`     | 신규 생성                            |
+| `app/(protected)/employer/create/page.tsx`                   | 스텝 순서 조정                       |
+| `app/(protected)/employer/preview/[id]/contract-preview.tsx` | 계약형태 표시                        |
+| `app/(protected)/employer/contract/[id]/contract-detail.tsx` | 계약형태 표시                        |
+| `app/(protected)/worker/contract/[id]/contract-detail.tsx`   | 계약형태 표시                        |
+| `app/contract/sign/[token]/worker-sign.tsx`                  | 계약형태 표시                        |
+| `components/contract/ContractPDF.tsx`                        | 계약형태 필드 추가                   |
 
 ---
 
 ### 📌 계약 형태 옵션
 
-| 값 | 라벨 | 설명 |
-|----|------|------|
-| `regular` | 정규직 (4대보험) | 국민연금, 건강보험, 고용보험, 산재보험 가입 |
-| `contract` | 계약직 (3.3%) | 사업소득으로 3.3% 원천징수 후 지급 |
+| 값         | 라벨             | 설명                                        |
+| ---------- | ---------------- | ------------------------------------------- |
+| `regular`  | 정규직 (4대보험) | 국민연금, 건강보험, 고용보험, 산재보험 가입 |
+| `contract` | 계약직 (3.3%)    | 사업소득으로 3.3% 원천징수 후 지급          |
 
 ---
 
@@ -2954,6 +3128,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 > **변경 사유**: 근로자 퇴사일 입력 및 정확한 경력 관리 기능 추가
 
 ### 변경 개요
+
 - 근로자 계약서 상세에 "퇴사 처리" 버튼 추가
 - 퇴사일 입력 시 근무일수 정확하게 계산
 - "경력증명서" → "근무이력서"로 명칭 변경 (법적 면책)
@@ -3024,38 +3199,38 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ## 📊 Amendment 25 완료 요약
 
-| Task | 상태 | 설명 |
-|------|------|------|
-| A25.1.1 | ✅ | DB 마이그레이션 (resignation_date) |
-| A25.2.1 | ✅ | 경력 유틸리티 함수 |
-| A25.3.1 | ✅ | 퇴사 처리 Server Actions |
-| A25.4.1 | ✅ | 퇴사 처리 버튼 UI |
-| A25.4.2 | ✅ | 근무기간 표시 로직 |
-| A25.5.1 | ✅ | 퇴사일 미입력 안내 배너 |
-| A25.5.2 | ✅ | 카드 클릭 이동 |
-| A25.5.3 | ✅ | 상태 배지 표시 |
-| A25.6.1 | ✅ | 명칭 변경 |
-| A25.6.2 | ✅ | 면책 문구 추가 |
-| A25.7.1 | ✅ | 사업자 화면 퇴사일 표시 |
-| A25.8.1 | ✅ | RLS 정책 수정 |
+| Task    | 상태 | 설명                               |
+| ------- | ---- | ---------------------------------- |
+| A25.1.1 | ✅   | DB 마이그레이션 (resignation_date) |
+| A25.2.1 | ✅   | 경력 유틸리티 함수                 |
+| A25.3.1 | ✅   | 퇴사 처리 Server Actions           |
+| A25.4.1 | ✅   | 퇴사 처리 버튼 UI                  |
+| A25.4.2 | ✅   | 근무기간 표시 로직                 |
+| A25.5.1 | ✅   | 퇴사일 미입력 안내 배너            |
+| A25.5.2 | ✅   | 카드 클릭 이동                     |
+| A25.5.3 | ✅   | 상태 배지 표시                     |
+| A25.6.1 | ✅   | 명칭 변경                          |
+| A25.6.2 | ✅   | 면책 문구 추가                     |
+| A25.7.1 | ✅   | 사업자 화면 퇴사일 표시            |
+| A25.8.1 | ✅   | RLS 정책 수정                      |
 
 ---
 
 ### 📌 수정된 파일
 
-| 파일 | 변경 내용 |
-|------|----------|
-| `docs/schema.md` | resignation_date 컬럼 문서화 |
-| `types/database.ts` | contracts 타입에 resignation_date 추가 |
-| `lib/utils/career.ts` | 신규 생성 - 경력 관련 유틸리티 |
-| `app/actions/resignation.ts` | 신규 생성 - 퇴사 처리 Server Actions |
-| `app/(protected)/worker/contract/[id]/contract-detail.tsx` | 퇴사 처리 UI |
-| `app/(protected)/worker/contract/[id]/page.tsx` | resignation_date 전달 |
-| `app/(protected)/worker/career/career-list.tsx` | 안내 배너, 카드 클릭, 상태 배지 |
-| `app/(protected)/worker/career/page.tsx` | resignation_date 조회 |
-| `app/(protected)/employer/contract/[id]/contract-detail.tsx` | 퇴사일 표시 |
-| `app/(protected)/employer/contract/[id]/page.tsx` | resignation_date 전달 |
-| `components/career/CareerCertificatePDF.tsx` | 명칭 및 면책 문구 변경 |
+| 파일                                                         | 변경 내용                              |
+| ------------------------------------------------------------ | -------------------------------------- |
+| `docs/schema.md`                                             | resignation_date 컬럼 문서화           |
+| `types/database.ts`                                          | contracts 타입에 resignation_date 추가 |
+| `lib/utils/career.ts`                                        | 신규 생성 - 경력 관련 유틸리티         |
+| `app/actions/resignation.ts`                                 | 신규 생성 - 퇴사 처리 Server Actions   |
+| `app/(protected)/worker/contract/[id]/contract-detail.tsx`   | 퇴사 처리 UI                           |
+| `app/(protected)/worker/contract/[id]/page.tsx`              | resignation_date 전달                  |
+| `app/(protected)/worker/career/career-list.tsx`              | 안내 배너, 카드 클릭, 상태 배지        |
+| `app/(protected)/worker/career/page.tsx`                     | resignation_date 조회                  |
+| `app/(protected)/employer/contract/[id]/contract-detail.tsx` | 퇴사일 표시                            |
+| `app/(protected)/employer/contract/[id]/page.tsx`            | resignation_date 전달                  |
+| `components/career/CareerCertificatePDF.tsx`                 | 명칭 및 면책 문구 변경                 |
 
 ---
 
@@ -3081,6 +3256,7 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 > **변경 사유**: 법적 효력 강화를 위한 서명 시점 증적 정보 저장
 
 ### 변경 개요
+
 - 서명 시 IP 주소와 User-Agent(브라우저/기기 정보)를 DB에 저장
 - 스키마에는 이미 정의되어 있었으나 코드에서 누락된 부분 보완
 - 법적 분쟁 시 "누가, 언제, 어디서, 어떤 기기로 서명했는지" 증명 가능
@@ -3111,32 +3287,32 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ## 📊 Amendment 26 완료 요약
 
-| Task | 상태 | 설명 |
-|------|------|------|
-| A26.1.1 | ✅ | 사업자 서명 (미리보기) IP/UA 저장 |
-| A26.1.2 | ✅ | 사업자 서명 (작성 시) IP/UA 저장 |
-| A26.1.3 | ✅ | 근로자 서명 (로그인) IP/UA 저장 |
-| A26.1.4 | ✅ | 근로자 서명 (링크) IP/UA 저장 |
+| Task    | 상태 | 설명                              |
+| ------- | ---- | --------------------------------- |
+| A26.1.1 | ✅   | 사업자 서명 (미리보기) IP/UA 저장 |
+| A26.1.2 | ✅   | 사업자 서명 (작성 시) IP/UA 저장  |
+| A26.1.3 | ✅   | 근로자 서명 (로그인) IP/UA 저장   |
+| A26.1.4 | ✅   | 근로자 서명 (링크) IP/UA 저장     |
 
 ---
 
 ### 📌 수정된 파일
 
-| 파일 | 변경 내용 |
-|------|----------|
+| 파일                                               | 변경 내용                |
+| -------------------------------------------------- | ------------------------ |
 | `app/(protected)/employer/preview/[id]/actions.ts` | IP, User-Agent 저장 추가 |
-| `app/(protected)/employer/create/actions.ts` | IP, User-Agent 저장 추가 |
-| `app/(protected)/worker/contract/[id]/actions.ts` | IP, User-Agent 저장 추가 |
-| `app/contract/sign/[token]/actions.ts` | IP, User-Agent 저장 추가 |
+| `app/(protected)/employer/create/actions.ts`       | IP, User-Agent 저장 추가 |
+| `app/(protected)/worker/contract/[id]/actions.ts`  | IP, User-Agent 저장 추가 |
+| `app/contract/sign/[token]/actions.ts`             | IP, User-Agent 저장 추가 |
 
 ---
 
 ### 📌 저장되는 서명 증적 정보
 
-| 항목 | 컬럼명 | 예시 |
-|------|--------|------|
-| 서명 시점 | `signed_at` | 2026-01-31T14:30:00.000Z |
-| IP 주소 | `ip_address` | 211.234.56.78 |
+| 항목      | 컬럼명       | 예시                                        |
+| --------- | ------------ | ------------------------------------------- |
+| 서명 시점 | `signed_at`  | 2026-01-31T14:30:00.000Z                    |
+| IP 주소   | `ip_address` | 211.234.56.78                               |
 | 기기 정보 | `user_agent` | Mozilla/5.0 (iPhone; CPU iPhone OS 17_0...) |
 
 ---
@@ -3146,9 +3322,11 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 ---
 
 ## Amendment 27: 체결완료 계약서 7일 수정 기능
+
 > **날짜**: 2026년 1월 31일
 
 ### 개요
+
 체결 완료된 계약서도 7일 이내에는 사장님이 수정할 수 있도록 기능 추가.
 수정 시 기존 서명이 무효화되고, 근로자에게 다시 서명을 받아야 함.
 
@@ -3237,49 +3415,49 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 
 ## 📊 Amendment 27 완료 요약
 
-| Task | 상태 | 설명 |
-|------|------|------|
-| A27.1.1 | ✅ | DB: signatures DELETE 정책 추가 |
-| A27.1.2 | ✅ | DB: notification_type ENUM 추가 |
-| A27.2.1 | ✅ | updateContract 함수 구현 |
-| A27.2.2 | ✅ | getContractForEdit 함수 구현 |
-| A27.2.3 | ✅ | checkContractEditable 함수 구현 |
-| A27.3.1 | ✅ | contractFormStore edit 모드 추가 |
-| A27.4.1 | ✅ | ContractCard 수정 버튼 조건 변경 |
-| A27.4.2 | ✅ | 계약서 상세 수정 버튼 추가 |
-| A27.4.3 | ✅ | 수정 경고 팝업 구현 |
-| A27.4.4 | ✅ | create 페이지 edit 모드 |
-| A27.4.5 | ✅ | preview 페이지 edit 모드 |
-| A27.5.1 | ✅ | 계약서 수정됨 알림 발송 |
+| Task    | 상태 | 설명                             |
+| ------- | ---- | -------------------------------- |
+| A27.1.1 | ✅   | DB: signatures DELETE 정책 추가  |
+| A27.1.2 | ✅   | DB: notification_type ENUM 추가  |
+| A27.2.1 | ✅   | updateContract 함수 구현         |
+| A27.2.2 | ✅   | getContractForEdit 함수 구현     |
+| A27.2.3 | ✅   | checkContractEditable 함수 구현  |
+| A27.3.1 | ✅   | contractFormStore edit 모드 추가 |
+| A27.4.1 | ✅   | ContractCard 수정 버튼 조건 변경 |
+| A27.4.2 | ✅   | 계약서 상세 수정 버튼 추가       |
+| A27.4.3 | ✅   | 수정 경고 팝업 구현              |
+| A27.4.4 | ✅   | create 페이지 edit 모드          |
+| A27.4.5 | ✅   | preview 페이지 edit 모드         |
+| A27.5.1 | ✅   | 계약서 수정됨 알림 발송          |
 
 ---
 
 ### 📌 수정된 파일
 
-| 파일 | 변경 내용 |
-|------|----------|
-| `app/(protected)/employer/create/actions.ts` | updateContract, getContractForEdit, checkContractEditable 추가 |
-| `app/(protected)/employer/create/page.tsx` | edit 모드 처리 추가 |
-| `app/(protected)/employer/preview/[id]/contract-preview.tsx` | edit 모드 updateContract 호출 |
-| `app/(protected)/employer/contract/[id]/contract-detail.tsx` | 수정 버튼, 경고 팝업 추가 |
-| `components/contract/ContractCard.tsx` | 수정 버튼 조건 변경 (completed 7일 이내) |
-| `stores/contractFormStore.ts` | editingContractId, isEditMode, loadContractData 추가 |
-| `app/actions/notifications.ts` | contract_modified 타입 추가 |
-| `types/database.ts` | notification_type에 contract_modified 추가 |
-| `app/(protected)/employer/page.tsx` | completed_at 필드 조회 추가 |
+| 파일                                                         | 변경 내용                                                      |
+| ------------------------------------------------------------ | -------------------------------------------------------------- |
+| `app/(protected)/employer/create/actions.ts`                 | updateContract, getContractForEdit, checkContractEditable 추가 |
+| `app/(protected)/employer/create/page.tsx`                   | edit 모드 처리 추가                                            |
+| `app/(protected)/employer/preview/[id]/contract-preview.tsx` | edit 모드 updateContract 호출                                  |
+| `app/(protected)/employer/contract/[id]/contract-detail.tsx` | 수정 버튼, 경고 팝업 추가                                      |
+| `components/contract/ContractCard.tsx`                       | 수정 버튼 조건 변경 (completed 7일 이내)                       |
+| `stores/contractFormStore.ts`                                | editingContractId, isEditMode, loadContractData 추가           |
+| `app/actions/notifications.ts`                               | contract_modified 타입 추가                                    |
+| `types/database.ts`                                          | notification_type에 contract_modified 추가                     |
+| `app/(protected)/employer/page.tsx`                          | completed_at 필드 조회 추가                                    |
 
 ---
 
 ### 📌 수정 정책 정리
 
-| 계약서 상태 | 수정 가능 여부 | 조건 |
-|------------|--------------|------|
-| draft | ✅ 가능 | 항상 |
-| pending | ✅ 가능 | 항상 |
-| completed | ✅ 가능 | 완료 후 7일 이내 |
-| completed | ❌ 불가 | 완료 후 7일 초과 |
-| expired | ❌ 불가 | - |
-| deleted | ❌ 불가 | - |
+| 계약서 상태 | 수정 가능 여부 | 조건             |
+| ----------- | -------------- | ---------------- |
+| draft       | ✅ 가능        | 항상             |
+| pending     | ✅ 가능        | 항상             |
+| completed   | ✅ 가능        | 완료 후 7일 이내 |
+| completed   | ❌ 불가        | 완료 후 7일 초과 |
+| expired     | ❌ 불가        | -                |
+| deleted     | ❌ 불가        | -                |
 
 ---
 

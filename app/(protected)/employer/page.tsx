@@ -6,17 +6,19 @@ import EmployerDashboard from './employer-dashboard';
 async function isGuestMode(): Promise<boolean> {
   const cookieStore = await cookies();
   const guestCookie = cookieStore.get('guest-storage');
-  
+
   if (guestCookie?.value) {
     try {
       const decodedValue = decodeURIComponent(guestCookie.value);
       const guestData = JSON.parse(decodedValue);
-      return guestData?.state?.isGuest && guestData?.state?.guestRole === 'employer';
+      return (
+        guestData?.state?.isGuest && guestData?.state?.guestRole === 'employer'
+      );
     } catch {
       // JSON 파싱 실패 시 무시
     }
   }
-  
+
   return false;
 }
 
@@ -32,8 +34,14 @@ const GUEST_SAMPLE_CONTRACTS = [
     completed_at: new Date(Date.now() - 5 * 86400000).toISOString(), // 5일 전 완료 (수정 가능)
     folder_id: null,
     signatures: [
-      { signer_role: 'employer' as const, signed_at: new Date(Date.now() - 6 * 86400000).toISOString() },
-      { signer_role: 'worker' as const, signed_at: new Date(Date.now() - 5 * 86400000).toISOString() },
+      {
+        signer_role: 'employer' as const,
+        signed_at: new Date(Date.now() - 6 * 86400000).toISOString(),
+      },
+      {
+        signer_role: 'worker' as const,
+        signed_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+      },
     ],
   },
   {
@@ -45,7 +53,12 @@ const GUEST_SAMPLE_CONTRACTS = [
     created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
     completed_at: null,
     folder_id: null,
-    signatures: [{ signer_role: 'employer' as const, signed_at: new Date(Date.now() - 2 * 86400000).toISOString() }],
+    signatures: [
+      {
+        signer_role: 'employer' as const,
+        signed_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+      },
+    ],
   },
   {
     id: 'sample-3',
@@ -68,8 +81,14 @@ const GUEST_SAMPLE_CONTRACTS = [
     completed_at: new Date(Date.now() - 12 * 86400000).toISOString(), // 12일 전 완료 (수정 불가)
     folder_id: null,
     signatures: [
-      { signer_role: 'employer' as const, signed_at: new Date(Date.now() - 13 * 86400000).toISOString() },
-      { signer_role: 'worker' as const, signed_at: new Date(Date.now() - 12 * 86400000).toISOString() },
+      {
+        signer_role: 'employer' as const,
+        signed_at: new Date(Date.now() - 13 * 86400000).toISOString(),
+      },
+      {
+        signer_role: 'worker' as const,
+        signed_at: new Date(Date.now() - 12 * 86400000).toISOString(),
+      },
     ],
   },
   {
@@ -81,7 +100,12 @@ const GUEST_SAMPLE_CONTRACTS = [
     created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
     completed_at: null,
     folder_id: null,
-    signatures: [{ signer_role: 'employer' as const, signed_at: new Date(Date.now() - 3 * 86400000).toISOString() }],
+    signatures: [
+      {
+        signer_role: 'employer' as const,
+        signed_at: new Date(Date.now() - 3 * 86400000).toISOString(),
+      },
+    ],
   },
 ];
 
@@ -94,8 +118,8 @@ export default async function EmployerDashboardPage() {
   } = await supabase.auth.getUser();
 
   // 로그인되어 있지 않을 때만 게스트 모드 체크
-  const isGuest = !user && await isGuestMode();
-  
+  const isGuest = !user && (await isGuestMode());
+
   if (isGuest) {
     // 게스트 모드: 샘플 데이터 반환
     return (
@@ -189,13 +213,21 @@ export default async function EmployerDashboardPage() {
 
   // 색상 팔레트 (color가 없는 폴더용 fallback)
   const colorPalette = [
-    '#3B82F6', '#22C55E', '#EAB308', '#F97316',
-    '#EF4444', '#A855F7', '#EC4899', '#6B7280',
+    '#3B82F6',
+    '#22C55E',
+    '#EAB308',
+    '#F97316',
+    '#EF4444',
+    '#A855F7',
+    '#EC4899',
+    '#6B7280',
   ];
 
   // 폴더별 계약서 수 계산 (활성 계약서만)
   const foldersWithCount = (folders || []).map((folder, index) => {
-    const count = (contracts || []).filter((c) => c.folder_id === folder.id).length;
+    const count = (contracts || []).filter(
+      (c) => c.folder_id === folder.id
+    ).length;
     return {
       id: folder.id,
       name: folder.name,
@@ -205,7 +237,9 @@ export default async function EmployerDashboardPage() {
   });
 
   // 미분류 계약서 수 (활성 계약서 중)
-  const unfiledCount = (contracts || []).filter((c) => c.folder_id === null).length;
+  const unfiledCount = (contracts || []).filter(
+    (c) => c.folder_id === null
+  ).length;
 
   // 휴지통 계약서 수
   const deletedCount = deletedContracts?.length || 0;

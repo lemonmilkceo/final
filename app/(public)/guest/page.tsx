@@ -14,10 +14,10 @@ export default function GuestRoleSelectPage() {
   const handleRoleSelect = async (role: 'employer' | 'worker') => {
     setIsLoading(true);
     setGuestMode(role);
-    
+
     // 쿠키가 설정될 시간을 확보하기 위해 약간의 딜레이
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
     // full page reload로 미들웨어가 쿠키를 읽을 수 있게 함
     window.location.href = `/${role}`;
   };
@@ -34,12 +34,8 @@ export default function GuestRoleSelectPage() {
       {/* Content */}
       <div className="flex-1 flex flex-col items-center justify-center px-8">
         <div className="mb-8 text-center">
-          <h1 className="text-[24px] font-bold text-gray-900 mb-2">
-            둘러보기
-          </h1>
-          <p className="text-[15px] text-gray-500">
-            로그인 없이 체험해보세요
-          </p>
+          <h1 className="text-[24px] font-bold text-gray-900 mb-2">둘러보기</h1>
+          <p className="text-[15px] text-gray-500">로그인 없이 체험해보세요</p>
         </div>
 
         <div className="w-full max-w-sm space-y-4">
@@ -74,9 +70,7 @@ export default function GuestRoleSelectPage() {
                 <p className="text-[17px] font-bold text-gray-900 mb-1">
                   알바생으로 둘러보기
                 </p>
-                <p className="text-[14px] text-gray-500">
-                  경력 관리 체험하기
-                </p>
+                <p className="text-[14px] text-gray-500">경력 관리 체험하기</p>
               </div>
             </div>
           </button>

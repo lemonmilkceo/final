@@ -64,8 +64,18 @@ const getStatusBadge = (status: ContractStatus) => {
         label: '서명 대기',
         className: 'bg-orange-50 text-orange-500 border border-orange-200',
         icon: (
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
         ),
       };
@@ -74,8 +84,18 @@ const getStatusBadge = (status: ContractStatus) => {
         label: '완료',
         className: 'bg-green-50 text-green-600 border border-green-200',
         icon: (
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
           </svg>
         ),
       };
@@ -93,7 +113,9 @@ const getStatusBadge = (status: ContractStatus) => {
 };
 
 // completed 상태 + 7일 이내인지 확인
-const isCompletedWithin7Days = (completedAt: string | null | undefined): boolean => {
+const isCompletedWithin7Days = (
+  completedAt: string | null | undefined
+): boolean => {
   if (!completedAt) return false;
   const completedDate = new Date(completedAt);
   const now = new Date();
@@ -103,7 +125,9 @@ const isCompletedWithin7Days = (completedAt: string | null | undefined): boolean
 };
 
 // 수정 가능 남은 일수 계산
-const getDaysLeftForEdit = (completedAt: string | null | undefined): number | null => {
+const getDaysLeftForEdit = (
+  completedAt: string | null | undefined
+): number | null => {
   if (!completedAt) return null;
   const completedDate = new Date(completedAt);
   const now = new Date();
@@ -123,21 +147,28 @@ const ContractCard: React.FC<ContractCardProps> = ({
   isDeleted = false,
 }) => {
   const router = useRouter();
-  const statusIcon = isDeleted 
+  const statusIcon = isDeleted
     ? { bgColor: 'bg-red-100', iconColor: 'text-red-400' }
     : getStatusIcon(contract.status);
   const statusBadge = isDeleted
-    ? { label: '삭제됨', className: 'bg-red-50 text-red-500 border border-red-200' }
+    ? {
+        label: '삭제됨',
+        className: 'bg-red-50 text-red-500 border border-red-200',
+      }
     : getStatusBadge(contract.status);
-  
+
   // 수정 가능 조건: draft, pending, 또는 completed 후 7일 이내
-  const isCompletedEditable = contract.status === 'completed' && isCompletedWithin7Days(contract.completed_at);
-  const canEdit = !isDeleted && (
-    contract.status === 'draft' || 
-    contract.status === 'pending' ||
-    isCompletedEditable
-  );
-  const daysLeft = isCompletedEditable ? getDaysLeftForEdit(contract.completed_at) : null;
+  const isCompletedEditable =
+    contract.status === 'completed' &&
+    isCompletedWithin7Days(contract.completed_at);
+  const canEdit =
+    !isDeleted &&
+    (contract.status === 'draft' ||
+      contract.status === 'pending' ||
+      isCompletedEditable);
+  const daysLeft = isCompletedEditable
+    ? getDaysLeftForEdit(contract.completed_at)
+    : null;
 
   const handleClick = () => {
     if (isEditMode) {
@@ -156,7 +187,7 @@ const ContractCard: React.FC<ContractCardProps> = ({
     <button
       onClick={handleClick}
       className={clsx(
-        'w-full bg-white rounded-2xl p-4 text-left transition-all',
+        'w-full bg-white rounded-2xl p-4 text-left transition-all contract-card',
         isEditMode ? 'active:bg-gray-50' : 'active:bg-gray-50',
         isSelected && 'ring-2 ring-blue-500',
         isDeleted && 'opacity-75'
@@ -174,18 +205,30 @@ const ContractCard: React.FC<ContractCardProps> = ({
             )}
           >
             {isSelected && (
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                className="w-4 h-4 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
             )}
           </div>
         )}
 
         {/* 아이콘 */}
-        <div className={clsx(
-          'w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0',
-          statusIcon.bgColor
-        )}>
+        <div
+          className={clsx(
+            'w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0',
+            statusIcon.bgColor
+          )}
+        >
           <svg
             className={clsx('w-6 h-6', statusIcon.iconColor)}
             fill="none"
@@ -214,10 +257,12 @@ const ContractCard: React.FC<ContractCardProps> = ({
         {/* 우측: 뱃지 + 수정 버튼 + 화살표 */}
         <div className="flex items-center gap-2 flex-shrink-0">
           {/* 상태 뱃지 */}
-          <span className={clsx(
-            'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-medium',
-            statusBadge.className
-          )}>
+          <span
+            className={clsx(
+              'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-medium',
+              statusBadge.className
+            )}
+          >
             {statusBadge.icon}
             {statusBadge.label}
           </span>
@@ -233,14 +278,26 @@ const ContractCard: React.FC<ContractCardProps> = ({
                   : 'bg-blue-500 active:bg-blue-600'
               )}
             >
-              {isCompletedEditable && daysLeft ? `수정 (D-${daysLeft})` : '수정'}
+              {isCompletedEditable && daysLeft
+                ? `수정 (D-${daysLeft})`
+                : '수정'}
             </button>
           )}
 
           {/* 화살표 (편집 모드 아닐 때만) */}
           {!isEditMode && (
-            <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <svg
+              className="w-5 h-5 text-gray-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           )}
         </div>

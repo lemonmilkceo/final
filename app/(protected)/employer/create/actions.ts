@@ -90,13 +90,14 @@ export async function createContract(
 
   // 서명 데이터가 있으면 서명도 함께 저장하고 공유 토큰 생성
   let shareUrl: string | undefined;
-  
+
   if (signatureData) {
     // 서명 시점 증적을 위한 IP, User-Agent 수집
     const headersList = await headers();
-    const ipAddress = headersList.get('x-forwarded-for')?.split(',')[0]?.trim() 
-      || headersList.get('x-real-ip') 
-      || null;
+    const ipAddress =
+      headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      headersList.get('x-real-ip') ||
+      null;
     const userAgent = headersList.get('user-agent') || null;
 
     const { error: signatureError } = await supabase.from('signatures').insert({
@@ -116,7 +117,7 @@ export async function createContract(
 
     // 서명이 있으면 바로 공유 토큰 생성
     const shareToken = crypto.randomUUID().replace(/-/g, '').slice(0, 16);
-    
+
     const { error: tokenError } = await supabase
       .from('contracts')
       .update({ share_token: shareToken })
@@ -212,9 +213,15 @@ export async function updateContract(
   }
 
   // 수정 가능 여부 확인
-  const canEdit = checkEditableStatus(existingContract.status, existingContract.completed_at);
+  const canEdit = checkEditableStatus(
+    existingContract.status,
+    existingContract.completed_at
+  );
   if (!canEdit.editable) {
-    return { success: false, error: canEdit.reason || '수정할 수 없는 계약서예요' };
+    return {
+      success: false,
+      error: canEdit.reason || '수정할 수 없는 계약서예요',
+    };
   }
 
   // 유효성 검사
@@ -261,9 +268,10 @@ export async function updateContract(
 
   // 3. 새 사장 서명 저장
   const headersList = await headers();
-  const ipAddress = headersList.get('x-forwarded-for')?.split(',')[0]?.trim() 
-    || headersList.get('x-real-ip') 
-    || null;
+  const ipAddress =
+    headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    headersList.get('x-real-ip') ||
+    null;
   const userAgent = headersList.get('user-agent') || null;
 
   const { error: signatureError } = await supabase.from('signatures').insert({
@@ -282,7 +290,7 @@ export async function updateContract(
 
   // 4. 공유 토큰 생성/갱신
   const shareToken = crypto.randomUUID().replace(/-/g, '').slice(0, 16);
-  
+
   const { error: tokenError } = await supabase
     .from('contracts')
     .update({ share_token: shareToken })
@@ -344,17 +352,17 @@ function checkEditableStatus(
     if (diffDays <= 7) {
       return { editable: true, daysLeft };
     } else {
-      return { 
-        editable: false, 
-        reason: '체결 완료 후 7일이 지나 수정할 수 없어요' 
+      return {
+        editable: false,
+        reason: '체결 완료 후 7일이 지나 수정할 수 없어요',
       };
     }
   }
 
   // expired, deleted 상태는 수정 불가
-  return { 
-    editable: false, 
-    reason: '수정할 수 없는 상태예요' 
+  return {
+    editable: false,
+    reason: '수정할 수 없는 상태예요',
   };
 }
 
@@ -363,7 +371,9 @@ function checkEditableStatus(
  */
 export async function checkContractEditable(
   contractId: string
-): Promise<ActionResult<{ editable: boolean; reason?: string; daysLeft?: number }>> {
+): Promise<
+  ActionResult<{ editable: boolean; reason?: string; daysLeft?: number }>
+> {
   const supabase = await createClient();
 
   const {
@@ -396,36 +406,36 @@ export async function checkContractEditable(
 /**
  * 수정할 계약서 데이터 조회
  */
-export async function getContractForEdit(
-  contractId: string
-): Promise<ActionResult<{
-  id: string;
-  workplaceId: string | null;
-  workplaceName: string | null;
-  workLocation: string;
-  contractType: 'regular' | 'contract';
-  businessSize: 'under_5' | 'over_5';
-  workerName: string;
-  workerPhone: string;
-  wageType: 'hourly' | 'monthly';
-  hourlyWage: number | null;
-  monthlyWage: number | null;
-  includesWeeklyAllowance: boolean;
-  startDate: string;
-  endDate: string | null;
-  workDays: string[] | null;
-  workDaysPerWeek: number | null;
-  workStartTime: string;
-  workEndTime: string;
-  breakMinutes: number;
-  businessType: string | null;
-  jobDescription: string | null;
-  payDay: number;
-  paymentTiming: 'current_month' | 'next_month';
-  isLastDayPayment: boolean;
-  status: string;
-  completedAt: string | null;
-}>> {
+export async function getContractForEdit(contractId: string): Promise<
+  ActionResult<{
+    id: string;
+    workplaceId: string | null;
+    workplaceName: string | null;
+    workLocation: string;
+    contractType: 'regular' | 'contract';
+    businessSize: 'under_5' | 'over_5';
+    workerName: string;
+    workerPhone: string;
+    wageType: 'hourly' | 'monthly';
+    hourlyWage: number | null;
+    monthlyWage: number | null;
+    includesWeeklyAllowance: boolean;
+    startDate: string;
+    endDate: string | null;
+    workDays: string[] | null;
+    workDaysPerWeek: number | null;
+    workStartTime: string;
+    workEndTime: string;
+    breakMinutes: number;
+    businessType: string | null;
+    jobDescription: string | null;
+    payDay: number;
+    paymentTiming: 'current_month' | 'next_month';
+    isLastDayPayment: boolean;
+    status: string;
+    completedAt: string | null;
+  }>
+> {
   const supabase = await createClient();
 
   const {
@@ -454,7 +464,10 @@ export async function getContractForEdit(
   // 수정 가능 여부 확인
   const editCheck = checkEditableStatus(contract.status, contract.completed_at);
   if (!editCheck.editable) {
-    return { success: false, error: editCheck.reason || '수정할 수 없는 계약서예요' };
+    return {
+      success: false,
+      error: editCheck.reason || '수정할 수 없는 계약서예요',
+    };
   }
 
   return {

@@ -36,8 +36,15 @@ export default function CreateContractPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editContractId = searchParams.get('edit');
-  
-  const { step, prevStep, reset, loadContractData, isEditMode, editingContractId } = useContractFormStore();
+
+  const {
+    step,
+    prevStep,
+    reset,
+    loadContractData,
+    isEditMode,
+    editingContractId,
+  } = useContractFormStore();
   const [isExitSheetOpen, setIsExitSheetOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -46,15 +53,15 @@ export default function CreateContractPage() {
   useEffect(() => {
     const loadEditData = async () => {
       if (!editContractId) return;
-      
+
       // 이미 같은 계약서를 수정 중이면 스킵
       if (isEditMode && editingContractId === editContractId) return;
-      
+
       setIsLoading(true);
       setLoadError(null);
-      
+
       const result = await getContractForEdit(editContractId);
-      
+
       if (result.success && result.data) {
         const data = result.data;
         loadContractData(editContractId, {
@@ -74,11 +81,22 @@ export default function CreateContractPage() {
           hasNoEndDate: !data.endDate,
           workDays: data.workDays || [],
           workDaysPerWeek: data.workDaysPerWeek,
-          useWorkDaysPerWeek: !!data.workDaysPerWeek && (!data.workDays || data.workDays.length === 0),
+          useWorkDaysPerWeek:
+            !!data.workDaysPerWeek &&
+            (!data.workDays || data.workDays.length === 0),
           workStartTime: data.workStartTime,
           workEndTime: data.workEndTime,
           breakMinutes: data.breakMinutes,
-          businessType: data.businessType as 'restaurant' | 'cafe' | 'convenience_store' | 'retail' | 'beauty' | 'office' | 'pc_cafe' | 'startup' | null,
+          businessType: data.businessType as
+            | 'restaurant'
+            | 'cafe'
+            | 'convenience_store'
+            | 'retail'
+            | 'beauty'
+            | 'office'
+            | 'pc_cafe'
+            | 'startup'
+            | null,
           jobDescription: data.jobDescription || '',
           payDay: data.payDay,
           paymentTiming: data.paymentTiming,
@@ -87,10 +105,10 @@ export default function CreateContractPage() {
       } else {
         setLoadError(result.error || '계약서를 불러올 수 없어요');
       }
-      
+
       setIsLoading(false);
     };
-    
+
     loadEditData();
   }, [editContractId, isEditMode, editingContractId, loadContractData]);
 
@@ -120,25 +138,25 @@ export default function CreateContractPage() {
   const renderStep = () => {
     switch (step) {
       case 1:
-        return <Step1Workplace />;      // 사업장 선택/등록
+        return <Step1Workplace />; // 사업장 선택/등록
       case 2:
-        return <Step2ContractType />;   // 계약 형태
+        return <Step2ContractType />; // 계약 형태
       case 3:
-        return <Step1BusinessSize />;   // 사업장 규모
+        return <Step1BusinessSize />; // 사업장 규모
       case 4:
-        return <Step2WorkerName />;     // 근로자 이름
+        return <Step2WorkerName />; // 근로자 이름
       case 5:
-        return <Step3Wage />;           // 시급/월급
+        return <Step3Wage />; // 시급/월급
       case 6:
-        return <Step4WorkPeriod />;     // 근무기간
+        return <Step4WorkPeriod />; // 근무기간
       case 7:
-        return <Step5WorkDays />;       // 근무요일
+        return <Step5WorkDays />; // 근무요일
       case 8:
-        return <Step6WorkTime />;       // 근무시간
+        return <Step6WorkTime />; // 근무시간
       case 9:
-        return <Step7BreakTime />;      // 휴게시간
+        return <Step7BreakTime />; // 휴게시간
       case 10:
-        return <Step10PayDay />;        // 급여일 + 업무내용
+        return <Step10PayDay />; // 급여일 + 업무내용
       default:
         return <Step1Workplace />;
     }
@@ -183,7 +201,9 @@ export default function CreateContractPage() {
       <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6">
         <div className="text-center">
           <p className="text-6xl mb-4">😢</p>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">계약서를 불러올 수 없어요</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
+            계약서를 불러올 수 없어요
+          </h2>
           <p className="text-gray-500 mb-6">{loadError}</p>
           <button
             onClick={() => router.push('/employer')}

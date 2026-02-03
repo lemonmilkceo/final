@@ -490,3 +490,87 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #9CA3AF;
 }
+
+/* ================================================
+   16. Accessibility - Reduced Motion
+   ================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ================================================
+   17. Accessibility - Focus Visible
+   ================================================ */
+button:focus-visible,
+a:focus-visible,
+[role='button']:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid #3182f6;
+  outline-offset: 2px;
+}
+
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ================================================
+   18. Accessibility - Cursor Pointer
+   ================================================ */
+button:not(:disabled),
+[role='button']:not(:disabled),
+a[href],
+.clickable {
+  cursor: pointer;
+}
+
+/* ================================================
+   19. Desktop Hover States
+   ================================================ */
+@media (hover: hover) {
+  /* Primary Button */
+  .btn-primary:hover:not(:disabled) {
+    background-color: #2563eb;
+  }
+
+  /* Secondary Button */
+  .btn-secondary:hover:not(:disabled) {
+    background-color: #e5e7eb;
+  }
+
+  /* Kakao Button */
+  .btn-kakao:hover:not(:disabled) {
+    background-color: #e6cf00;
+  }
+
+  /* Ghost Button */
+  .btn-ghost:hover:not(:disabled) {
+    background-color: #f3f4f6;
+  }
+
+  /* Card Hover */
+  .card:hover {
+    background-color: #f9fafb;
+  }
+
+  /* Contract Card Hover */
+  .contract-card:hover {
+    background-color: #f9fafb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Menu Item Hover */
+  .menu-item:hover {
+    background-color: #f9fafb;
+  }
+}

@@ -47,8 +47,8 @@ export default async function ProtectedLayout({
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="container-mobile">{children}</div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="container-mobile bg-white">{children}</div>
     </div>
   );
 }
