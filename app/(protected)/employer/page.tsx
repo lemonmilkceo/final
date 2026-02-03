@@ -22,92 +22,97 @@ async function isGuestMode(): Promise<boolean> {
   return false;
 }
 
-// 샘플 데이터 (게스트 모드용) - sampleData.ts의 SAMPLE_CONTRACT_DETAILS와 일치
-const GUEST_SAMPLE_CONTRACTS = [
-  {
-    id: 'sample-1',
-    worker_name: '김민수',
-    work_location: '싸인카페 강남점',
-    hourly_wage: 10360,
-    status: 'completed' as const,
-    created_at: new Date(Date.now() - 7 * 86400000).toISOString(),
-    completed_at: new Date(Date.now() - 5 * 86400000).toISOString(), // 5일 전 완료 (수정 가능)
-    folder_id: null,
-    signatures: [
-      {
-        signer_role: 'employer' as const,
-        signed_at: new Date(Date.now() - 6 * 86400000).toISOString(),
-      },
-      {
-        signer_role: 'worker' as const,
-        signed_at: new Date(Date.now() - 5 * 86400000).toISOString(),
-      },
-    ],
-  },
-  {
-    id: 'sample-2',
-    worker_name: '이서연',
-    work_location: '카페모카 합정점',
-    hourly_wage: 11000,
-    status: 'pending' as const,
-    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-    completed_at: null,
-    folder_id: null,
-    signatures: [
-      {
-        signer_role: 'employer' as const,
-        signed_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-      },
-    ],
-  },
-  {
-    id: 'sample-3',
-    worker_name: '박지훈',
-    work_location: '롯데마트 잠실점',
-    hourly_wage: 12000,
-    status: 'draft' as const,
-    created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
-    completed_at: null,
-    folder_id: null,
-    signatures: [],
-  },
-  {
-    id: 'sample-5',
-    worker_name: '최유진',
-    work_location: '이마트 반포점',
-    hourly_wage: 10800,
-    status: 'completed' as const,
-    created_at: new Date(Date.now() - 14 * 86400000).toISOString(),
-    completed_at: new Date(Date.now() - 12 * 86400000).toISOString(), // 12일 전 완료 (수정 불가)
-    folder_id: null,
-    signatures: [
-      {
-        signer_role: 'employer' as const,
-        signed_at: new Date(Date.now() - 13 * 86400000).toISOString(),
-      },
-      {
-        signer_role: 'worker' as const,
-        signed_at: new Date(Date.now() - 12 * 86400000).toISOString(),
-      },
-    ],
-  },
-  {
-    id: 'sample-6',
-    worker_name: '정하늘',
-    work_location: '브런치카페 이태원점',
-    hourly_wage: 11500,
-    status: 'pending' as const,
-    created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
-    completed_at: null,
-    folder_id: null,
-    signatures: [
-      {
-        signer_role: 'employer' as const,
-        signed_at: new Date(Date.now() - 3 * 86400000).toISOString(),
-      },
-    ],
-  },
-];
+// 샘플 데이터 생성 함수 (서버에서 한 번만 호출)
+function createGuestSampleContracts() {
+  const now = Date.now();
+  const DAY = 86400000;
+  
+  return [
+    {
+      id: 'sample-1',
+      worker_name: '김민수',
+      work_location: '싸인카페 강남점',
+      hourly_wage: 10360,
+      status: 'completed' as const,
+      created_at: new Date(now - 7 * DAY).toISOString(),
+      completed_at: new Date(now - 5 * DAY).toISOString(),
+      folder_id: null,
+      signatures: [
+        {
+          signer_role: 'employer' as const,
+          signed_at: new Date(now - 6 * DAY).toISOString(),
+        },
+        {
+          signer_role: 'worker' as const,
+          signed_at: new Date(now - 5 * DAY).toISOString(),
+        },
+      ],
+    },
+    {
+      id: 'sample-2',
+      worker_name: '이서연',
+      work_location: '카페모카 합정점',
+      hourly_wage: 11000,
+      status: 'pending' as const,
+      created_at: new Date(now - 2 * DAY).toISOString(),
+      completed_at: null,
+      folder_id: null,
+      signatures: [
+        {
+          signer_role: 'employer' as const,
+          signed_at: new Date(now - 2 * DAY).toISOString(),
+        },
+      ],
+    },
+    {
+      id: 'sample-3',
+      worker_name: '박지훈',
+      work_location: '롯데마트 잠실점',
+      hourly_wage: 12000,
+      status: 'draft' as const,
+      created_at: new Date(now - 1 * DAY).toISOString(),
+      completed_at: null,
+      folder_id: null,
+      signatures: [],
+    },
+    {
+      id: 'sample-5',
+      worker_name: '최유진',
+      work_location: '이마트 반포점',
+      hourly_wage: 10800,
+      status: 'completed' as const,
+      created_at: new Date(now - 14 * DAY).toISOString(),
+      completed_at: new Date(now - 12 * DAY).toISOString(),
+      folder_id: null,
+      signatures: [
+        {
+          signer_role: 'employer' as const,
+          signed_at: new Date(now - 13 * DAY).toISOString(),
+        },
+        {
+          signer_role: 'worker' as const,
+          signed_at: new Date(now - 12 * DAY).toISOString(),
+        },
+      ],
+    },
+    {
+      id: 'sample-6',
+      worker_name: '정하늘',
+      work_location: '브런치카페 이태원점',
+      hourly_wage: 11500,
+      status: 'pending' as const,
+      created_at: new Date(now - 3 * DAY).toISOString(),
+      completed_at: null,
+      folder_id: null,
+      signatures: [
+        {
+          signer_role: 'employer' as const,
+          signed_at: new Date(now - 3 * DAY).toISOString(),
+        },
+      ],
+    },
+  ];
+}
 
 export default async function EmployerDashboardPage() {
   const supabase = await createClient();
@@ -121,7 +126,8 @@ export default async function EmployerDashboardPage() {
   const isGuest = !user && (await isGuestMode());
 
   if (isGuest) {
-    // 게스트 모드: 샘플 데이터 반환
+    // 게스트 모드: 샘플 데이터 반환 (함수 내에서 날짜 계산하여 hydration 문제 방지)
+    const guestContracts = createGuestSampleContracts();
     return (
       <EmployerDashboard
         profile={{
@@ -132,7 +138,7 @@ export default async function EmployerDashboardPage() {
         credits={{
           contract: 5,
         }}
-        contracts={GUEST_SAMPLE_CONTRACTS}
+        contracts={guestContracts}
         folders={[]}
         isGuestMode={true}
       />

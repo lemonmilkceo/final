@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 async function isGuestMode(): Promise<boolean> {
   const cookieStore = await cookies();
   const guestCookie = cookieStore.get('guest-storage');
-  
+
   if (guestCookie?.value) {
     try {
       const decodedValue = decodeURIComponent(guestCookie.value);
@@ -22,7 +22,7 @@ async function isGuestMode(): Promise<boolean> {
       // JSON 파싱 실패 시 무시
     }
   }
-  
+
   return false;
 }
 
@@ -33,7 +33,7 @@ export default async function ProtectedLayout({
 }) {
   // 게스트 모드 체크 - 게스트면 인증 없이 통과
   const isGuest = await isGuestMode();
-  
+
   if (!isGuest) {
     const supabase = await createClient();
     const {

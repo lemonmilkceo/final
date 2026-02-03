@@ -26,63 +26,68 @@ async function isGuestMode(): Promise<boolean> {
   return false;
 }
 
-// 샘플 데이터 (게스트 모드용)
-const GUEST_SAMPLE_CONTRACTS = [
-  {
-    id: 'sample-1',
-    worker_name: '게스트',
-    hourly_wage: 10360,
-    wage_type: 'hourly',
-    monthly_wage: null,
-    status: 'pending' as const,
-    expires_at: new Date(Date.now() + 86400000 * 3).toISOString(), // 3일 후
-    created_at: new Date().toISOString(),
-    employer: { name: '스타벅스 강남점' },
-    signatures: [{ signer_role: 'employer' as const, signed_at: new Date().toISOString() }],
-  },
-  {
-    id: 'sample-2',
-    worker_name: '게스트',
-    hourly_wage: 11000,
-    wage_type: 'hourly',
-    monthly_wage: null,
-    status: 'pending' as const,
-    expires_at: new Date(Date.now() + 86400000 * 7).toISOString(), // 7일 후
-    created_at: new Date(Date.now() - 86400000).toISOString(),
-    employer: { name: 'CU 역삼역점' },
-    signatures: [{ signer_role: 'employer' as const, signed_at: new Date().toISOString() }],
-  },
-  {
-    id: 'sample-3',
-    worker_name: '게스트',
-    hourly_wage: 12000,
-    wage_type: 'hourly',
-    monthly_wage: null,
-    status: 'completed' as const,
-    expires_at: null,
-    created_at: new Date(Date.now() - 86400000 * 30).toISOString(),
-    employer: { name: '맥도날드 선릉점' },
-    signatures: [
-      { signer_role: 'employer' as const, signed_at: new Date(Date.now() - 86400000 * 30).toISOString() },
-      { signer_role: 'worker' as const, signed_at: new Date(Date.now() - 86400000 * 29).toISOString() },
-    ],
-  },
-  {
-    id: 'sample-4',
-    worker_name: '게스트',
-    hourly_wage: 10500,
-    wage_type: 'hourly',
-    monthly_wage: null,
-    status: 'completed' as const,
-    expires_at: null,
-    created_at: new Date(Date.now() - 86400000 * 60).toISOString(),
-    employer: { name: '올리브영 강남역점' },
-    signatures: [
-      { signer_role: 'employer' as const, signed_at: new Date(Date.now() - 86400000 * 60).toISOString() },
-      { signer_role: 'worker' as const, signed_at: new Date(Date.now() - 86400000 * 59).toISOString() },
-    ],
-  },
-];
+// 샘플 데이터 생성 함수 (서버에서 한 번만 호출하여 hydration 문제 방지)
+function createGuestSampleContracts() {
+  const now = Date.now();
+  const DAY = 86400000;
+  
+  return [
+    {
+      id: 'sample-1',
+      worker_name: '게스트',
+      hourly_wage: 10360,
+      wage_type: 'hourly',
+      monthly_wage: null,
+      status: 'pending' as const,
+      expires_at: new Date(now + DAY * 3).toISOString(),
+      created_at: new Date(now).toISOString(),
+      employer: { name: '스타벅스 강남점' },
+      signatures: [{ signer_role: 'employer' as const, signed_at: new Date(now).toISOString() }],
+    },
+    {
+      id: 'sample-2',
+      worker_name: '게스트',
+      hourly_wage: 11000,
+      wage_type: 'hourly',
+      monthly_wage: null,
+      status: 'pending' as const,
+      expires_at: new Date(now + DAY * 7).toISOString(),
+      created_at: new Date(now - DAY).toISOString(),
+      employer: { name: 'CU 역삼역점' },
+      signatures: [{ signer_role: 'employer' as const, signed_at: new Date(now).toISOString() }],
+    },
+    {
+      id: 'sample-3',
+      worker_name: '게스트',
+      hourly_wage: 12000,
+      wage_type: 'hourly',
+      monthly_wage: null,
+      status: 'completed' as const,
+      expires_at: null,
+      created_at: new Date(now - DAY * 30).toISOString(),
+      employer: { name: '맥도날드 선릉점' },
+      signatures: [
+        { signer_role: 'employer' as const, signed_at: new Date(now - DAY * 30).toISOString() },
+        { signer_role: 'worker' as const, signed_at: new Date(now - DAY * 29).toISOString() },
+      ],
+    },
+    {
+      id: 'sample-4',
+      worker_name: '게스트',
+      hourly_wage: 10500,
+      wage_type: 'hourly',
+      monthly_wage: null,
+      status: 'completed' as const,
+      expires_at: null,
+      created_at: new Date(now - DAY * 60).toISOString(),
+      employer: { name: '올리브영 강남역점' },
+      signatures: [
+        { signer_role: 'employer' as const, signed_at: new Date(now - DAY * 60).toISOString() },
+        { signer_role: 'worker' as const, signed_at: new Date(now - DAY * 59).toISOString() },
+      ],
+    },
+  ];
+}
 
 export default async function WorkerDashboardPage({ searchParams }: PageProps) {
   const params = await searchParams;
@@ -99,7 +104,8 @@ export default async function WorkerDashboardPage({ searchParams }: PageProps) {
   const isGuest = !user && await isGuestMode();
   
   if (isGuest) {
-    // 게스트 모드: 샘플 데이터 반환
+    // 게스트 모드: 샘플 데이터 반환 (함수 내에서 날짜 계산하여 hydration 문제 방지)
+    const guestContracts = createGuestSampleContracts();
     return (
       <WorkerDashboard
         profile={{
@@ -107,7 +113,7 @@ export default async function WorkerDashboardPage({ searchParams }: PageProps) {
           email: null,
           avatarUrl: null,
         }}
-        contracts={GUEST_SAMPLE_CONTRACTS}
+        contracts={guestContracts}
         isGuestMode={true}
       />
     );

@@ -23,45 +23,50 @@ async function isGuestMode(): Promise<boolean> {
   return false;
 }
 
-// 게스트용 샘플 경력 데이터
-const GUEST_SAMPLE_CAREERS = [
-  {
-    id: 'career-1',
-    worker_name: '게스트',
-    hourly_wage: 12000,
-    start_date: new Date(Date.now() - 86400000 * 90).toISOString().split('T')[0], // 90일 전
-    end_date: null, // 무기한 계약
-    resignation_date: new Date(Date.now() - 86400000 * 30).toISOString().split('T')[0], // 30일 전 퇴사
-    work_location: '서울 강남구 역삼동',
-    job_description: '홀 서빙 및 고객 응대',
-    completed_at: new Date(Date.now() - 86400000 * 30).toISOString(),
-    employer: { name: '맥도날드 선릉점' },
-  },
-  {
-    id: 'career-2',
-    worker_name: '게스트',
-    hourly_wage: 10500,
-    start_date: new Date(Date.now() - 86400000 * 180).toISOString().split('T')[0], // 180일 전
-    end_date: new Date(Date.now() - 86400000 * 120).toISOString().split('T')[0], // 120일 전 종료
-    resignation_date: null, // 계약대로 만료
-    work_location: '서울 강남구 논현동',
-    job_description: '계산 및 상품 진열',
-    completed_at: new Date(Date.now() - 86400000 * 120).toISOString(),
-    employer: { name: '올리브영 강남역점' },
-  },
-  {
-    id: 'career-3',
-    worker_name: '게스트',
-    hourly_wage: 11000,
-    start_date: new Date(Date.now() - 86400000 * 270).toISOString().split('T')[0], // 270일 전
-    end_date: null, // 무기한 계약
-    resignation_date: null, // 퇴사일 미입력 (진행 중으로 표시됨)
-    work_location: '서울 서초구 서초동',
-    job_description: '음료 제조 및 홀 정리',
-    completed_at: new Date(Date.now() - 86400000 * 200).toISOString(),
-    employer: { name: '스타벅스 교대점' },
-  },
-];
+// 게스트용 샘플 경력 데이터 생성 함수 (hydration 문제 방지)
+function createGuestSampleCareers() {
+  const now = Date.now();
+  const DAY = 86400000;
+  
+  return [
+    {
+      id: 'career-1',
+      worker_name: '게스트',
+      hourly_wage: 12000,
+      start_date: new Date(now - DAY * 90).toISOString().split('T')[0],
+      end_date: null,
+      resignation_date: new Date(now - DAY * 30).toISOString().split('T')[0],
+      work_location: '서울 강남구 역삼동',
+      job_description: '홀 서빙 및 고객 응대',
+      completed_at: new Date(now - DAY * 30).toISOString(),
+      employer: { name: '맥도날드 선릉점' },
+    },
+    {
+      id: 'career-2',
+      worker_name: '게스트',
+      hourly_wage: 10500,
+      start_date: new Date(now - DAY * 180).toISOString().split('T')[0],
+      end_date: new Date(now - DAY * 120).toISOString().split('T')[0],
+      resignation_date: null,
+      work_location: '서울 강남구 논현동',
+      job_description: '계산 및 상품 진열',
+      completed_at: new Date(now - DAY * 120).toISOString(),
+      employer: { name: '올리브영 강남역점' },
+    },
+    {
+      id: 'career-3',
+      worker_name: '게스트',
+      hourly_wage: 11000,
+      start_date: new Date(now - DAY * 270).toISOString().split('T')[0],
+      end_date: null,
+      resignation_date: null,
+      work_location: '서울 서초구 서초동',
+      job_description: '음료 제조 및 홀 정리',
+      completed_at: new Date(now - DAY * 200).toISOString(),
+      employer: { name: '스타벅스 교대점' },
+    },
+  ];
+}
 
 export default async function CareerPage() {
   const supabase = await createClient();
@@ -75,13 +80,14 @@ export default async function CareerPage() {
   const isGuest = !user && await isGuestMode();
   
   if (isGuest) {
-    // 게스트 모드: 샘플 데이터 반환
+    // 게스트 모드: 샘플 데이터 반환 (함수 내에서 날짜 계산하여 hydration 문제 방지)
+    const guestCareers = createGuestSampleCareers();
     const totalDays = 60 + 60 + 70; // 샘플 근무일수 합계
     return (
       <CareerList
-        contracts={GUEST_SAMPLE_CAREERS}
+        contracts={guestCareers}
         totalDays={totalDays}
-        totalContracts={GUEST_SAMPLE_CAREERS.length}
+        totalContracts={guestCareers.length}
         isGuestMode={true}
       />
     );
