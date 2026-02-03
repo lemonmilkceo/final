@@ -261,6 +261,27 @@ body {
   background-color: #e6cf00;
 }
 
+.btn-apple {
+  width: 100%;
+  padding: 16px;
+  border-radius: 16px;
+  background-color: #000000;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-apple:active {
+  background-color: #1a1a1a;
+}
+
 .btn-ghost {
   color: #6b7280;
   font-size: 15px;
@@ -581,6 +602,11 @@ a[href],
   /* Kakao Button */
   .btn-kakao:hover:not(:disabled) {
     background-color: #e6cf00;
+  }
+
+  /* Apple Button */
+  .btn-apple:hover:not(:disabled) {
+    background-color: #1a1a1a;
   }
 
   /* Ghost Button */

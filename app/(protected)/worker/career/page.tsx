@@ -9,17 +9,19 @@ import { getEffectiveEndDate, calculateWorkDays } from '@/lib/utils/career';
 async function isGuestMode(): Promise<boolean> {
   const cookieStore = await cookies();
   const guestCookie = cookieStore.get('guest-storage');
-  
+
   if (guestCookie?.value) {
     try {
       const decodedValue = decodeURIComponent(guestCookie.value);
       const guestData = JSON.parse(decodedValue);
-      return guestData?.state?.isGuest && guestData?.state?.guestRole === 'worker';
+      return (
+        guestData?.state?.isGuest && guestData?.state?.guestRole === 'worker'
+      );
     } catch {
       // JSON 파싱 실패 시 무시
     }
   }
-  
+
   return false;
 }
 
@@ -27,7 +29,7 @@ async function isGuestMode(): Promise<boolean> {
 function createGuestSampleCareers() {
   const now = Date.now();
   const DAY = 86400000;
-  
+
   return [
     {
       id: 'career-1',
@@ -77,8 +79,8 @@ export default async function CareerPage() {
   } = await supabase.auth.getUser();
 
   // 로그인되어 있지 않을 때만 게스트 모드 체크
-  const isGuest = !user && await isGuestMode();
-  
+  const isGuest = !user && (await isGuestMode());
+
   if (isGuest) {
     // 게스트 모드: 샘플 데이터 반환 (함수 내에서 날짜 계산하여 hydration 문제 방지)
     const guestCareers = createGuestSampleCareers();

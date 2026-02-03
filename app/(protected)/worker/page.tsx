@@ -12,17 +12,19 @@ interface PageProps {
 async function isGuestMode(): Promise<boolean> {
   const cookieStore = await cookies();
   const guestCookie = cookieStore.get('guest-storage');
-  
+
   if (guestCookie?.value) {
     try {
       const decodedValue = decodeURIComponent(guestCookie.value);
       const guestData = JSON.parse(decodedValue);
-      return guestData?.state?.isGuest && guestData?.state?.guestRole === 'worker';
+      return (
+        guestData?.state?.isGuest && guestData?.state?.guestRole === 'worker'
+      );
     } catch {
       // JSON 파싱 실패 시 무시
     }
   }
-  
+
   return false;
 }
 
@@ -30,7 +32,7 @@ async function isGuestMode(): Promise<boolean> {
 function createGuestSampleContracts() {
   const now = Date.now();
   const DAY = 86400000;
-  
+
   return [
     {
       id: 'sample-1',
@@ -42,7 +44,12 @@ function createGuestSampleContracts() {
       expires_at: new Date(now + DAY * 3).toISOString(),
       created_at: new Date(now).toISOString(),
       employer: { name: '스타벅스 강남점' },
-      signatures: [{ signer_role: 'employer' as const, signed_at: new Date(now).toISOString() }],
+      signatures: [
+        {
+          signer_role: 'employer' as const,
+          signed_at: new Date(now).toISOString(),
+        },
+      ],
     },
     {
       id: 'sample-2',
@@ -54,7 +61,12 @@ function createGuestSampleContracts() {
       expires_at: new Date(now + DAY * 7).toISOString(),
       created_at: new Date(now - DAY).toISOString(),
       employer: { name: 'CU 역삼역점' },
-      signatures: [{ signer_role: 'employer' as const, signed_at: new Date(now).toISOString() }],
+      signatures: [
+        {
+          signer_role: 'employer' as const,
+          signed_at: new Date(now).toISOString(),
+        },
+      ],
     },
     {
       id: 'sample-3',
@@ -67,8 +79,14 @@ function createGuestSampleContracts() {
       created_at: new Date(now - DAY * 30).toISOString(),
       employer: { name: '맥도날드 선릉점' },
       signatures: [
-        { signer_role: 'employer' as const, signed_at: new Date(now - DAY * 30).toISOString() },
-        { signer_role: 'worker' as const, signed_at: new Date(now - DAY * 29).toISOString() },
+        {
+          signer_role: 'employer' as const,
+          signed_at: new Date(now - DAY * 30).toISOString(),
+        },
+        {
+          signer_role: 'worker' as const,
+          signed_at: new Date(now - DAY * 29).toISOString(),
+        },
       ],
     },
     {
@@ -82,8 +100,14 @@ function createGuestSampleContracts() {
       created_at: new Date(now - DAY * 60).toISOString(),
       employer: { name: '올리브영 강남역점' },
       signatures: [
-        { signer_role: 'employer' as const, signed_at: new Date(now - DAY * 60).toISOString() },
-        { signer_role: 'worker' as const, signed_at: new Date(now - DAY * 59).toISOString() },
+        {
+          signer_role: 'employer' as const,
+          signed_at: new Date(now - DAY * 60).toISOString(),
+        },
+        {
+          signer_role: 'worker' as const,
+          signed_at: new Date(now - DAY * 59).toISOString(),
+        },
       ],
     },
   ];
@@ -92,7 +116,7 @@ function createGuestSampleContracts() {
 export default async function WorkerDashboardPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const showOnboardingComplete = params.onboarding === 'complete';
-  
+
   const supabase = await createClient();
 
   // 먼저 로그인 여부 확인
@@ -101,8 +125,8 @@ export default async function WorkerDashboardPage({ searchParams }: PageProps) {
   } = await supabase.auth.getUser();
 
   // 로그인되어 있지 않을 때만 게스트 모드 체크
-  const isGuest = !user && await isGuestMode();
-  
+  const isGuest = !user && (await isGuestMode());
+
   if (isGuest) {
     // 게스트 모드: 샘플 데이터 반환 (함수 내에서 날짜 계산하여 hydration 문제 방지)
     const guestContracts = createGuestSampleContracts();
@@ -152,8 +176,12 @@ export default async function WorkerDashboardPage({ searchParams }: PageProps) {
     .select('contract_id, hidden_at')
     .eq('worker_id', user.id);
 
-  const hiddenContractIds = new Set((hiddenContracts || []).map((h) => h.contract_id));
-  const hiddenAtMap = new Map((hiddenContracts || []).map((h) => [h.contract_id, h.hidden_at]));
+  const hiddenContractIds = new Set(
+    (hiddenContracts || []).map((h) => h.contract_id)
+  );
+  const hiddenAtMap = new Map(
+    (hiddenContracts || []).map((h) => [h.contract_id, h.hidden_at])
+  );
 
   // 전체 계약서 목록 조회 (worker_id로)
   const { data: allContracts } = await supabase
@@ -182,7 +210,9 @@ export default async function WorkerDashboardPage({ searchParams }: PageProps) {
     .order('created_at', { ascending: false });
 
   // 활성 계약서 (숨기지 않은 것)
-  const activeContracts = (allContracts || []).filter((c) => !hiddenContractIds.has(c.id));
+  const activeContracts = (allContracts || []).filter(
+    (c) => !hiddenContractIds.has(c.id)
+  );
 
   // 숨긴 계약서 (hidden_at 추가)
   const hiddenContractsList = (allContracts || [])

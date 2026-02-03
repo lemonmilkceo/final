@@ -1,18 +1,31 @@
 'use client';
 
-import { Button, KakaoIcon } from '@/components/ui/Button';
-import { signInWithKakao } from './actions';
+import { Button, KakaoIcon, AppleIcon } from '@/components/ui/Button';
+import { signInWithKakao, signInWithApple } from './actions';
 import { useTransition } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { ROUTES } from '@/lib/constants/routes';
 
 export function LoginForm() {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const handleKakaoLogin = () => {
     startTransition(async () => {
       await signInWithKakao();
     });
+  };
+
+  const handleAppleLogin = () => {
+    startTransition(async () => {
+      await signInWithApple();
+    });
+  };
+
+  const handleGuest = () => {
+    router.push(ROUTES.GUEST_SELECT_ROLE);
   };
 
   return (
@@ -64,20 +77,52 @@ export function LoginForm() {
       </div>
 
       {/* Bottom Actions */}
-      <div className="pb-8 safe-bottom space-y-4">
-        {/* Kakao Button */}
-        <Button variant="kakao" onClick={handleKakaoLogin} loading={isPending}>
-          <KakaoIcon />
-          카카오로 시작하기
-        </Button>
+      <div className="pb-8 safe-bottom">
+        {/* Social Login Buttons */}
+        <div className="space-y-2">
+          {/* Kakao Button */}
+          <Button
+            variant="kakao"
+            size="compact"
+            onClick={handleKakaoLogin}
+            disabled={isPending}
+          >
+            <KakaoIcon />
+            카카오로 시작하기
+          </Button>
+
+          {/* Apple Button */}
+          <Button
+            variant="apple"
+            size="compact"
+            onClick={handleAppleLogin}
+            disabled={isPending}
+          >
+            <AppleIcon />
+            Apple로 시작하기
+          </Button>
+        </div>
+
+        {/* Guest Button (Text Style) */}
+        <button
+          onClick={handleGuest}
+          disabled={isPending}
+          className="w-full py-3 mt-3 text-[15px] text-gray-500 font-medium active:text-gray-700 transition-colors"
+        >
+          먼저 둘러볼게요
+        </button>
 
         {/* Terms Notice */}
-        <p className="text-[13px] text-gray-400 text-center leading-relaxed">
+        <p className="text-[12px] text-gray-400 text-center leading-relaxed mt-2">
           시작하면{' '}
-          <span className="underline cursor-pointer">이용약관</span> 및{' '}
-          <span className="underline cursor-pointer">개인정보 처리방침</span>에
-          <br />
-          동의하는 것으로 봐요
+          <Link href="/terms" className="underline">
+            이용약관
+          </Link>{' '}
+          및{' '}
+          <Link href="/privacy" className="underline">
+            개인정보 처리방침
+          </Link>
+          에 동의하는 것으로 봐요
         </p>
       </div>
     </div>

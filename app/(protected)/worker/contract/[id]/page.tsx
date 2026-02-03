@@ -11,7 +11,7 @@ interface ContractDetailPageProps {
 async function isGuestMode(): Promise<boolean> {
   const cookieStore = await cookies();
   const guestCookie = cookieStore.get('guest-storage');
-  
+
   if (guestCookie?.value) {
     try {
       const decodedValue = decodeURIComponent(guestCookie.value);
@@ -21,7 +21,7 @@ async function isGuestMode(): Promise<boolean> {
       // JSON 파싱 실패 시 무시
     }
   }
-  
+
   return false;
 }
 
@@ -29,7 +29,7 @@ async function isGuestMode(): Promise<boolean> {
 function createSampleContracts() {
   const now = Date.now();
   const DAY = 86400000;
-  
+
   return {
     'sample-pending': {
       id: 'sample-pending',
@@ -61,7 +61,8 @@ function createSampleContracts() {
           id: 'sig-employer-1',
           signer_role: 'employer' as const,
           signed_at: new Date(now).toISOString(),
-          signature_data: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+          signature_data:
+            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
         },
       ],
       employer: {
@@ -100,13 +101,15 @@ function createSampleContracts() {
           id: 'sig-employer-2',
           signer_role: 'employer' as const,
           signed_at: '2025-05-20T10:00:00Z',
-          signature_data: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+          signature_data:
+            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
         },
         {
           id: 'sig-worker-2',
           signer_role: 'worker' as const,
           signed_at: '2025-05-21T14:30:00Z',
-          signature_data: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+          signature_data:
+            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
         },
       ],
       employer: {
@@ -128,13 +131,20 @@ export default async function ContractDetailPage({
   if (isGuest) {
     const sampleContracts = createSampleContracts();
     const sampleContract = sampleContracts[id as keyof typeof sampleContracts];
-    
+
     if (!sampleContract) {
       // 샘플에 없는 ID면 대기중 샘플로 대체
-      return <WorkerContractDetail contract={sampleContracts['sample-pending']} isGuestMode={true} />;
+      return (
+        <WorkerContractDetail
+          contract={sampleContracts['sample-pending']}
+          isGuestMode={true}
+        />
+      );
     }
-    
-    return <WorkerContractDetail contract={sampleContract} isGuestMode={true} />;
+
+    return (
+      <WorkerContractDetail contract={sampleContract} isGuestMode={true} />
+    );
   }
 
   // 일반 모드: DB에서 조회

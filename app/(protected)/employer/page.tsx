@@ -26,7 +26,7 @@ async function isGuestMode(): Promise<boolean> {
 function createGuestSampleContracts() {
   const now = Date.now();
   const DAY = 86400000;
-  
+
   return [
     {
       id: 'sample-1',

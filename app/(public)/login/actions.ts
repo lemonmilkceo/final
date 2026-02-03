@@ -26,3 +26,23 @@ export async function signInWithKakao() {
     redirect(data.url);
   }
 }
+
+export async function signInWithApple() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'apple',
+    options: {
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+    },
+  });
+
+  if (error) {
+    console.error('Apple OAuth Error:', error.message);
+    redirect('/login?error=auth_failed');
+  }
+
+  if (data.url) {
+    redirect(data.url);
+  }
+}
