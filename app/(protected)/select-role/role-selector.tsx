@@ -52,8 +52,8 @@ export function RoleSelector({ userName }: RoleSelectorProps) {
   };
 
   // 환영 메시지
-  const welcomeMessage = userName 
-    ? `${userName}님, 환영합니다! 👋` 
+  const welcomeMessage = userName
+    ? `${userName}님, 환영합니다! 👋`
     : '반가워요! 👋';
 
   return (
@@ -65,7 +65,9 @@ export function RoleSelector({ userName }: RoleSelectorProps) {
           <h1 className="text-[24px] font-bold text-gray-900 mb-2">
             {welcomeMessage}
           </h1>
-          <p className="text-[15px] text-gray-500">먼저 어떤 역할로 시작할까요?</p>
+          <p className="text-[15px] text-gray-500">
+            먼저 어떤 역할로 시작할까요?
+          </p>
         </div>
 
         {/* Role Cards - 가로 배치 (게스트 모드와 동일) */}
@@ -76,9 +78,7 @@ export function RoleSelector({ userName }: RoleSelectorProps) {
               onClick={() => handleSelectRole(option.value)}
               disabled={isPending}
               className={`w-full ${option.bgColor} rounded-2xl p-6 text-left ${option.activeBgColor} transition-colors ${
-                selectedRole === option.value
-                  ? 'ring-2 ring-blue-500'
-                  : ''
+                selectedRole === option.value ? 'ring-2 ring-blue-500' : ''
               } ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <div className="flex items-center gap-4">
@@ -87,7 +87,9 @@ export function RoleSelector({ userName }: RoleSelectorProps) {
                   <p className="text-[17px] font-bold text-gray-900 mb-1">
                     {option.title}
                   </p>
-                  <p className="text-[14px] text-gray-500">{option.description}</p>
+                  <p className="text-[14px] text-gray-500">
+                    {option.description}
+                  </p>
                 </div>
               </div>
             </button>

@@ -13,7 +13,7 @@ function getEncryptionKey(): string {
   if (!key) {
     throw new Error(
       'ENCRYPTION_KEY 환경 변수가 설정되지 않았습니다. ' +
-      '.env.local 파일에 ENCRYPTION_KEY를 설정해주세요.'
+        '.env.local 파일에 ENCRYPTION_KEY를 설정해주세요.'
     );
   }
   return key;
@@ -42,11 +42,7 @@ export function encryptData(plaintext: string): string {
   const authTag = cipher.getAuthTag();
 
   // IV + AuthTag + Ciphertext를 Base64로 인코딩
-  const combined = Buffer.concat([
-    iv,
-    authTag,
-    Buffer.from(encrypted, 'hex'),
-  ]);
+  const combined = Buffer.concat([iv, authTag, Buffer.from(encrypted, 'hex')]);
 
   return combined.toString('base64');
 }
@@ -81,21 +77,44 @@ export function decryptData(encryptedData: string): string {
 }
 
 /**
+ * SSN 해시용 솔트를 안전하게 가져옵니다.
+ * 프로덕션에서는 필수, 개발에서는 경고 후 기본값 사용
+ */
+function getSsnHashSalt(): string {
+  const salt = process.env.SSN_HASH_SALT;
+
+  if (!salt) {
+    // 프로덕션에서는 반드시 에러 발생
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'SSN_HASH_SALT 환경 변수가 설정되지 않았습니다. ' +
+          'Vercel 환경 변수에 SSN_HASH_SALT를 설정해주세요. ' +
+          "생성 방법: node -e \"console.log(require('crypto').randomBytes(32).toString('base64'))\""
+      );
+    }
+    // 개발 환경에서는 경고 후 기본값 사용 (개발 편의성)
+    console.warn(
+      '⚠️ [DEV] SSN_HASH_SALT 환경 변수가 설정되지 않았습니다. ' +
+        '개발용 기본값을 사용합니다. 프로덕션 배포 전 반드시 설정하세요.'
+    );
+    return 'dev-only-salt-do-not-use-in-production';
+  }
+
+  return salt;
+}
+
+/**
  * 주민등록번호를 SHA-256으로 해시 (중복 체크용)
  * 솔트를 사용하여 레인보우 테이블 공격을 방지합니다.
  * @param ssn 주민등록번호 (13자리)
  * @returns 해시값
  */
 export function hashSSN(ssn: string): string {
-  // 환경 변수 기반 솔트 사용 (미설정시 기본값 사용)
-  const salt = process.env.SSN_HASH_SALT || 'signplease-ssn-salt-v1';
-  
+  const salt = getSsnHashSalt();
+
   // 주민번호 앞 7자리 + 솔트로 해시 (생년월일 + 성별)
   const partialSSN = ssn.substring(0, 7);
-  return crypto
-    .createHmac('sha256', salt)
-    .update(partialSSN)
-    .digest('hex');
+  return crypto.createHmac('sha256', salt).update(partialSSN).digest('hex');
 }
 
 /**

@@ -1,8 +1,8 @@
 # 🎨 UI Specification
 ## 싸인해주세요 (SignPlease)
 
-> **버전**: 1.18  
-> **최종 수정일**: 2026년 1월 31일  
+> **버전**: 1.19  
+> **최종 수정일**: 2026년 2월 3일  
 > **디자인 철학**: Toss-style Radical Simplicity
 
 ---
@@ -82,6 +82,12 @@
 .btn-kakao {
   @apply w-full py-4 rounded-2xl bg-[#FEE500] text-[#191919] font-semibold text-lg;
   @apply flex items-center justify-center gap-2;
+}
+
+.btn-apple {
+  @apply w-full py-4 rounded-2xl bg-black text-white font-semibold text-lg;
+  @apply flex items-center justify-center gap-2;
+  @apply active:bg-gray-800 transition-colors;
 }
 
 .btn-ghost {
@@ -313,7 +319,6 @@ px-6, safe-bottom
 │ ←                           │   ← 뒤로가기 (로그인만)
 │                             │
 │                             │
-│                             │
 │          ✏️                 │   ← 로고
 │                             │
 │       싸인해주세요           │   ← text-[22px] font-bold
@@ -322,15 +327,17 @@ px-6, safe-bottom
 │   한 곳에서 간편하게          │
 │                             │
 │                             │
-│                             │
-│                             │
 ├─────────────────────────────┤
-│                             │
 │  ┌─────────────────────┐    │
-│  │ 🟡 카카오로 시작하기  │    │   ← btn-kakao
+│  │ 🟡 카카오로 시작하기  │    │   ← btn-kakao (py-3.5)
+│  └─────────────────────┘    │
+│  ┌─────────────────────┐    │   ← space-y-2
+│  │ 🍎 Apple로 시작하기  │    │   ← btn-apple (py-3.5)
 │  └─────────────────────┘    │
 │                             │
-│   시작하면 이용약관 및        │   ← text-[13px] text-gray-400
+│      먼저 둘러볼게요          │   ← 텍스트 버튼 (py-3)
+│                             │
+│   시작하면 이용약관 및        │   ← text-[12px] text-gray-400
 │   개인정보 처리방침에         │
 │   동의하는 것으로 봐요        │
 │                             │
@@ -367,18 +374,31 @@ px-6, safe-bottom
   </div>
   
   <!-- Bottom Actions -->
-  <div class="pb-8 safe-bottom space-y-4">
-    <!-- Kakao Button -->
-    <button class="w-full py-4 rounded-2xl bg-[#FEE500] text-[#191919] font-semibold text-lg flex items-center justify-center gap-2">
-      <svg class="w-5 h-5"><!-- 카카오 말풍선 --></svg>
-      카카오로 시작하기
+  <div class="pb-8 safe-bottom">
+    <!-- Social Login Buttons -->
+    <div class="space-y-2">
+      <!-- Kakao Button -->
+      <button class="w-full py-3.5 rounded-2xl bg-[#FEE500] text-[#191919] font-semibold text-lg flex items-center justify-center gap-2">
+        <svg class="w-5 h-5"><!-- 카카오 말풍선 --></svg>
+        카카오로 시작하기
+      </button>
+      
+      <!-- Apple Button -->
+      <button class="w-full py-3.5 rounded-2xl bg-black text-white font-semibold text-lg flex items-center justify-center gap-2">
+        <svg class="w-5 h-5"><!-- Apple 로고 --></svg>
+        Apple로 시작하기
+      </button>
+    </div>
+    
+    <!-- Guest Button (Text Style) -->
+    <button class="w-full py-3 mt-3 text-[15px] text-gray-500 font-medium">
+      먼저 둘러볼게요
     </button>
     
     <!-- Terms Notice -->
-    <p class="text-[13px] text-gray-400 text-center leading-relaxed">
-      시작하면 <span class="underline">이용약관</span> 및 
-      <span class="underline">개인정보 처리방침</span>에<br/>
-      동의하는 것으로 봐요
+    <p class="text-[12px] text-gray-400 text-center leading-relaxed mt-2">
+      시작하면 <a href="/terms" class="underline">이용약관</a> 및 
+      <a href="/privacy" class="underline">개인정보 처리방침</a>에 동의하는 것으로 봐요
     </p>
   </div>
 </div>
@@ -386,14 +406,20 @@ px-6, safe-bottom
 
 **Interaction**
 - 카카오 버튼 터치 → 카카오 OAuth 페이지 이동
+- Apple 버튼 터치 → Apple OAuth 페이지 이동
+- 둘러보기 버튼 터치 → 게스트 모드 역할 선택 화면으로 이동
 - 가입 완료 시 역할 선택 화면으로 자동 이동
 - 로그인 완료 시 대시보드로 이동
 
 **UX Writing**
 - Main Copy: "싸인해주세요"
 - Sub Copy: "계약서 작성부터 서명까지 한 곳에서 간편하게"
-- Button Label: "카카오로 시작하기"
+- Button Labels: "카카오로 시작하기", "Apple로 시작하기", "먼저 둘러볼게요"
 - Notice: "시작하면 이용약관 및 개인정보 처리방침에 동의하는 것으로 봐요"
+
+**Button Sizes (Compact for 3 buttons)**
+- 소셜 로그인 버튼: `py-3.5` (46px 높이)
+- 둘러보기 텍스트 버튼: `py-3` (배경 없음)
 
 ---
 

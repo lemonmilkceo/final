@@ -1,4 +1,5 @@
 # 📏 Coding Rules & Technical Guidelines
+
 ## 싸인해주세요 (SignPlease)
 
 > **버전**: 1.0  
@@ -180,8 +181,12 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 # 서버 전용 (NEXT_PUBLIC_ 접두사 없음)
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
 
-# 암호화 키 (32바이트, Base64 인코딩)
+# 암호화 키 (32바이트, Base64 인코딩) - 필수
 ENCRYPTION_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# 주민번호 해시용 솔트 (32바이트, Base64 인코딩) - 프로덕션 필수
+# 생성: node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+SSN_HASH_SALT=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # 토스페이먼츠
 NEXT_PUBLIC_TOSS_CLIENT_KEY=test_ck_xxx
@@ -200,10 +205,10 @@ NEXT_PUBLIC_APP_URL=https://signplease.kr
 
 ### 2.2 환경 변수 접근 규칙
 
-| 접두사 | 접근 가능 위치 | 용도 |
-|--------|---------------|------|
+| 접두사         | 접근 가능 위치    | 용도                                    |
+| -------------- | ----------------- | --------------------------------------- |
 | `NEXT_PUBLIC_` | 클라이언트 + 서버 | 공개 가능한 키 (API URL, 클라이언트 키) |
-| 없음 | 서버만 | 비밀 키 (서비스 롤 키, 암호화 키) |
+| 없음           | 서버만            | 비밀 키 (서비스 롤 키, 암호화 키)       |
 
 ```typescript
 // ❌ 잘못된 사용 - 클라이언트에서 서버 전용 키 접근
@@ -342,12 +347,15 @@ export async function updateSession(request: NextRequest) {
 
   // ⚠️ 중요: getSession() 대신 getUser() 사용
   // getSession()은 JWT 서명을 검증하지 않음
-  const { data: { user }, error } = await supabase.auth.getUser();
-  
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
   const pathname = request.nextUrl.pathname;
 
   // 보호된 경로 체크
-  const isProtectedRoute = PROTECTED_ROUTES.some(route => 
+  const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
     pathname.startsWith(route)
   );
 
@@ -414,10 +422,12 @@ export async function GET(request: NextRequest) {
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    
+
     if (!error) {
       // 프로필에서 역할 확인
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
@@ -427,12 +437,10 @@ export async function GET(request: NextRequest) {
 
         // 역할이 이미 설정된 경우 해당 대시보드로
         if (profile?.role) {
-          return NextResponse.redirect(
-            `${origin}/${profile.role}`
-          );
+          return NextResponse.redirect(`${origin}/${profile.role}`);
         }
       }
-      
+
       return NextResponse.redirect(`${origin}${next}`);
     }
   }
@@ -444,27 +452,32 @@ export async function GET(request: NextRequest) {
 
 ### 3.2 인증 상태 확인 규칙
 
-| 위치 | 사용 함수 | 안전성 |
-|------|----------|--------|
-| Server Component | `supabase.auth.getUser()` | ✅ 안전 (JWT 검증됨) |
-| Server Action | `supabase.auth.getUser()` | ✅ 안전 |
-| Route Handler | `supabase.auth.getUser()` | ✅ 안전 |
-| Middleware | `supabase.auth.getUser()` | ✅ 안전 |
-| Client Component | `supabase.auth.getUser()` | ✅ 안전 |
-| 어디서든 | `supabase.auth.getSession()` | ⚠️ 클라이언트 전용 |
+| 위치             | 사용 함수                    | 안전성               |
+| ---------------- | ---------------------------- | -------------------- |
+| Server Component | `supabase.auth.getUser()`    | ✅ 안전 (JWT 검증됨) |
+| Server Action    | `supabase.auth.getUser()`    | ✅ 안전              |
+| Route Handler    | `supabase.auth.getUser()`    | ✅ 안전              |
+| Middleware       | `supabase.auth.getUser()`    | ✅ 안전              |
+| Client Component | `supabase.auth.getUser()`    | ✅ 안전              |
+| 어디서든         | `supabase.auth.getSession()` | ⚠️ 클라이언트 전용   |
 
 ```typescript
 // ❌ 잘못된 사용 - Server에서 getSession() 사용
 export async function Page() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   // session이 조작될 수 있음!
 }
 
 // ✅ 올바른 사용 - getUser() 사용
 export async function Page() {
   const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
   // JWT가 검증됨
 }
 ```
@@ -482,7 +495,7 @@ import { redirect } from 'next/navigation';
 
 export default async function EmployerDashboard() {
   const supabase = await createClient();
-  
+
   // 인증 확인 (미들웨어에서 이미 체크하지만 이중 확인)
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (!user || authError) {
@@ -555,9 +568,9 @@ export function useDeleteContract() {
     mutationFn: async (contractId: string) => {
       const { error } = await supabase
         .from('contracts')
-        .update({ 
-          status: 'deleted', 
-          deleted_at: new Date().toISOString() 
+        .update({
+          status: 'deleted',
+          deleted_at: new Date().toISOString(),
         })
         .eq('id', contractId);
 
@@ -603,7 +616,10 @@ export async function createContract(formData: z.infer<typeof contractSchema>) {
   const supabase = await createClient();
 
   // 인증 확인
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
   if (!user || authError) {
     throw new Error('인증이 필요합니다.');
   }
@@ -682,7 +698,7 @@ interface ContractFormState {
     jobDescription?: string;
     payDay?: number;
   };
-  
+
   // Actions
   setStep: (step: number) => void;
   nextStep: () => void;
@@ -700,21 +716,24 @@ export const useContractFormStore = create<ContractFormState>()(
   persist(
     (set) => ({
       ...initialState,
-      
+
       setStep: (step) => set({ step }),
-      
-      nextStep: () => set((state) => ({ 
-        step: Math.min(state.step + 1, 10) 
-      })),
-      
-      prevStep: () => set((state) => ({ 
-        step: Math.max(state.step - 1, 1) 
-      })),
-      
-      updateData: (data) => set((state) => ({
-        data: { ...state.data, ...data }
-      })),
-      
+
+      nextStep: () =>
+        set((state) => ({
+          step: Math.min(state.step + 1, 10),
+        })),
+
+      prevStep: () =>
+        set((state) => ({
+          step: Math.max(state.step - 1, 1),
+        })),
+
+      updateData: (data) =>
+        set((state) => ({
+          data: { ...state.data, ...data },
+        })),
+
       reset: () => set(initialState),
     }),
     {
@@ -735,7 +754,7 @@ interface GuestState {
   isGuest: boolean;
   guestRole: 'employer' | 'worker' | null;
   aiReviewUsed: boolean;
-  
+
   setGuest: (role: 'employer' | 'worker') => void;
   clearGuest: () => void;
   setAiReviewUsed: () => void;
@@ -745,18 +764,20 @@ export const useGuestStore = create<GuestState>((set) => ({
   isGuest: false,
   guestRole: null,
   aiReviewUsed: false,
-  
-  setGuest: (role) => set({ 
-    isGuest: true, 
-    guestRole: role 
-  }),
-  
-  clearGuest: () => set({ 
-    isGuest: false, 
-    guestRole: null, 
-    aiReviewUsed: false 
-  }),
-  
+
+  setGuest: (role) =>
+    set({
+      isGuest: true,
+      guestRole: role,
+    }),
+
+  clearGuest: () =>
+    set({
+      isGuest: false,
+      guestRole: null,
+      aiReviewUsed: false,
+    }),
+
   setAiReviewUsed: () => set({ aiReviewUsed: true }),
 }));
 ```
@@ -808,7 +829,7 @@ interface KakaoShareOptions {
 export function initKakao() {
   if (typeof window === 'undefined') return;
   if (window.Kakao?.isInitialized()) return;
-  
+
   const script = document.createElement('script');
   script.src = 'https://developers.kakao.com/sdk/js/kakao.js';
   script.async = true;
@@ -870,14 +891,14 @@ import { createClient } from '@/lib/supabase/server';
 // 알림톡 발송 (솔라피 API 예시)
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
-  
+
   // 인증 확인
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
   if (!user || authError) {
-    return NextResponse.json(
-      { error: 'Unauthorized' },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const body = await request.json();
@@ -888,7 +909,7 @@ export async function POST(request: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.SOLAPI_API_KEY}`,
+        Authorization: `Bearer ${process.env.SOLAPI_API_KEY}`,
       },
       body: JSON.stringify({
         message: {
@@ -929,33 +950,32 @@ import { nanoid } from 'nanoid';
 // 결제 요청 준비
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
-  
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
   if (!user || authError) {
-    return NextResponse.json(
-      { error: 'Unauthorized' },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const body = await request.json();
-  const { productId, amount, productName, creditsContract, creditsAiReview } = body;
+  const { productId, amount, productName, creditsContract, creditsAiReview } =
+    body;
 
   // 주문 ID 생성
   const orderId = `order_${nanoid(16)}`;
 
   // 결제 정보 저장
-  const { error } = await supabase
-    .from('payments')
-    .insert({
-      user_id: user.id,
-      order_id: orderId,
-      amount,
-      product_name: productName,
-      credits_contract: creditsContract,
-      credits_ai_review: creditsAiReview,
-      status: 'pending',
-    });
+  const { error } = await supabase.from('payments').insert({
+    user_id: user.id,
+    order_id: orderId,
+    amount,
+    product_name: productName,
+    credits_contract: creditsContract,
+    credits_ai_review: creditsAiReview,
+    status: 'pending',
+  });
 
   if (error) {
     return NextResponse.json(
@@ -989,7 +1009,7 @@ export async function POST(request: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${Buffer.from(
+        Authorization: `Basic ${Buffer.from(
           `${process.env.TOSS_SECRET_KEY}:`
         ).toString('base64')}`,
       },
@@ -999,10 +1019,7 @@ export async function POST(request: NextRequest) {
 
   if (!tossResponse.ok) {
     const error = await tossResponse.json();
-    return NextResponse.json(
-      { error: error.message },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
   const paymentData = await tossResponse.json();
@@ -1099,12 +1116,12 @@ JSON 형식으로 응답해주세요:
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
   if (!user || authError) {
-    return NextResponse.json(
-      { error: 'Unauthorized' },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const body = await request.json();
@@ -1205,17 +1222,17 @@ const getEncryptionKey = () => {
 export function encrypt(plaintext: string): string {
   const key = getEncryptionKey();
   const iv = crypto.randomBytes(IV_LENGTH);
-  
+
   const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
-  
+
   let encrypted = cipher.update(plaintext, 'utf8');
   encrypted = Buffer.concat([encrypted, cipher.final()]);
-  
+
   const tag = cipher.getAuthTag();
-  
+
   // IV + 암호문 + Tag 결합
   const result = Buffer.concat([iv, encrypted, tag]);
-  
+
   return result.toString('base64');
 }
 
@@ -1227,31 +1244,54 @@ export function encrypt(plaintext: string): string {
 export function decrypt(ciphertext: string): string {
   const key = getEncryptionKey();
   const data = Buffer.from(ciphertext, 'base64');
-  
+
   const iv = data.subarray(0, IV_LENGTH);
   const tag = data.subarray(data.length - TAG_LENGTH);
   const encrypted = data.subarray(IV_LENGTH, data.length - TAG_LENGTH);
-  
+
   const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
   decipher.setAuthTag(tag);
-  
+
   let decrypted = decipher.update(encrypted);
   decrypted = Buffer.concat([decrypted, decipher.final()]);
-  
+
   return decrypted.toString('utf8');
 }
 
 /**
+ * SSN 해시용 솔트를 안전하게 가져옵니다.
+ * 프로덕션에서는 필수, 개발에서는 경고 후 기본값 사용
+ */
+function getSsnHashSalt(): string {
+  const salt = process.env.SSN_HASH_SALT;
+
+  if (!salt) {
+    // 프로덕션에서는 반드시 에러 발생
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'SSN_HASH_SALT 환경 변수가 설정되지 않았습니다. ' +
+          'Vercel 환경 변수에 SSN_HASH_SALT를 설정해주세요.'
+      );
+    }
+    // 개발 환경에서는 경고 후 기본값 사용
+    console.warn('⚠️ [DEV] SSN_HASH_SALT 미설정. 기본값 사용 중.');
+    return 'dev-only-salt-do-not-use-in-production';
+  }
+
+  return salt;
+}
+
+/**
  * 주민번호 해시 생성 (중복 체크용)
+ * HMAC-SHA256 사용, 솔트는 환경 변수에서 로드
  * @param ssn 주민등록번호
  * @returns SHA-256 해시
  */
 export function hashSSN(ssn: string): string {
-  const salt = process.env.ENCRYPTION_KEY!;
-  return crypto
-    .createHash('sha256')
-    .update(ssn + salt)
-    .digest('hex');
+  const salt = getSsnHashSalt();
+  // 주민번호 앞 7자리 + 솔트로 해시 (생년월일 + 성별)
+  const partialSSN = ssn.substring(0, 7);
+  return crypto.createHmac('sha256', salt).update(partialSSN).digest('hex');
 }
 ```
 
@@ -1272,7 +1312,10 @@ export async function saveWorkerDetails(formData: {
 }) {
   const supabase = await createClient();
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
   if (!user || authError) {
     throw new Error('인증이 필요합니다.');
   }
@@ -1336,8 +1379,10 @@ npx supabase gen types typescript --project-id YOUR_PROJECT_ID > types/database.
 import { Database } from './database';
 
 export type Contract = Database['public']['Tables']['contracts']['Row'];
-export type ContractInsert = Database['public']['Tables']['contracts']['Insert'];
-export type ContractUpdate = Database['public']['Tables']['contracts']['Update'];
+export type ContractInsert =
+  Database['public']['Tables']['contracts']['Insert'];
+export type ContractUpdate =
+  Database['public']['Tables']['contracts']['Update'];
 
 export type ContractStatus = Database['public']['Enums']['contract_status'];
 export type BusinessSize = Database['public']['Enums']['business_size'];
@@ -1373,14 +1418,14 @@ export interface ContractFormData {
 
 ### 9.1 네이밍 규칙
 
-| 대상 | 규칙 | 예시 |
-|------|------|------|
-| 컴포넌트 | PascalCase | `ContractCard.tsx` |
-| 훅 | camelCase with `use` prefix | `useContracts.ts` |
-| 유틸 함수 | camelCase | `formatCurrency.ts` |
-| 상수 | UPPER_SNAKE_CASE | `MAX_FILE_SIZE` |
-| 타입/인터페이스 | PascalCase | `ContractFormData` |
-| DB 컬럼 | snake_case | `hourly_wage` |
+| 대상            | 규칙                        | 예시                |
+| --------------- | --------------------------- | ------------------- |
+| 컴포넌트        | PascalCase                  | `ContractCard.tsx`  |
+| 훅              | camelCase with `use` prefix | `useContracts.ts`   |
+| 유틸 함수       | camelCase                   | `formatCurrency.ts` |
+| 상수            | UPPER_SNAKE_CASE            | `MAX_FILE_SIZE`     |
+| 타입/인터페이스 | PascalCase                  | `ContractFormData`  |
+| DB 컬럼         | snake_case                  | `hourly_wage`       |
 
 ### 9.2 파일 구조 규칙
 
@@ -1405,10 +1450,10 @@ interface ContractCardProps {
 export function ContractCard({ contract, onDelete }: ContractCardProps) {
   // 상태
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // 훅
   const router = useRouter();
-  
+
   // 핸들러
   const handleClick = () => {
     router.push(`/employer/contract/${contract.id}`);
@@ -1441,7 +1486,7 @@ export async function createContract(data: ContractFormData) {
     if (error instanceof z.ZodError) {
       throw new Error('입력값이 올바르지 않습니다.');
     }
-    
+
     console.error('Contract creation failed:', error);
     throw new Error('계약서 생성에 실패했습니다.');
   }
@@ -1454,14 +1499,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('API error:', error);
-    
+
     if (error instanceof AuthError) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    
+
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }
@@ -1487,7 +1529,7 @@ import Image from 'next/image';
   height={40}
   className="rounded-full"
   priority={false} // LCP 이미지가 아닌 경우
-/>
+/>;
 ```
 
 ### 10.2 동적 임포트
@@ -1498,9 +1540,9 @@ import dynamic from 'next/dynamic';
 
 const SignatureCanvas = dynamic(
   () => import('@/components/contract/SignatureCanvas'),
-  { 
+  {
     loading: () => <div className="h-48 bg-gray-100 animate-pulse" />,
-    ssr: false // 캔버스는 클라이언트 전용
+    ssr: false, // 캔버스는 클라이언트 전용
   }
 );
 ```
@@ -1530,9 +1572,9 @@ export function useContracts() {
 
 ### A1.1 신규 컴포넌트 경로
 
-| 컴포넌트 | 경로 | 설명 |
-|----------|------|------|
-| MenuSheet | `components/layout/MenuSheet.tsx` | 햄버거 메뉴 사이드시트 |
+| 컴포넌트   | 경로                               | 설명                      |
+| ---------- | ---------------------------------- | ------------------------- |
+| MenuSheet  | `components/layout/MenuSheet.tsx`  | 햄버거 메뉴 사이드시트    |
 | CreditCard | `components/shared/CreditCard.tsx` | 대시보드 크레딧 표시 카드 |
 
 ### A1.2 라우트 상수 추가 (`lib/constants/routes.ts`)
@@ -1553,6 +1595,7 @@ export const MENU_ROUTES = {
 ### A1.3 헤더 컴포넌트 Props 변경
 
 **기존:**
+
 ```typescript
 interface HeaderProps {
   showProfile?: boolean;
@@ -1562,13 +1605,14 @@ interface HeaderProps {
 ```
 
 **변경:**
+
 ```typescript
 interface HeaderProps {
-  showCredits?: boolean;      // 크레딧 표시 여부 (사업자만)
+  showCredits?: boolean; // 크레딧 표시 여부 (사업자만)
   showNotification?: boolean; // 알림 아이콘 표시
-  showMenu?: boolean;         // 햄버거 메뉴 표시 (기본값: true)
-  credits?: number;           // 보유 크레딧 수
-  onMenuOpen?: () => void;    // 메뉴 열기 핸들러
+  showMenu?: boolean; // 햄버거 메뉴 표시 (기본값: true)
+  credits?: number; // 보유 크레딧 수
+  onMenuOpen?: () => void; // 메뉴 열기 핸들러
 }
 ```
 
@@ -1579,7 +1623,7 @@ interface HeaderProps {
 export default async function EmployerDashboard() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   // 대기중 계약서와 완료 계약서를 한 번에 조회
   const [pendingResult, completedResult] = await Promise.all([
     supabase
@@ -1597,7 +1641,7 @@ export default async function EmployerDashboard() {
   ]);
 
   return (
-    <EmployerDashboardClient 
+    <EmployerDashboardClient
       pendingContracts={pendingResult.data ?? []}
       completedContracts={completedResult.data ?? []}
     />
@@ -1622,9 +1666,9 @@ export function DashboardClient() {
   return (
     <>
       <Header onMenuOpen={() => setIsMenuOpen(true)} />
-      <MenuSheet 
-        isOpen={isMenuOpen} 
-        onClose={() => setIsMenuOpen(false)} 
+      <MenuSheet
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
       />
     </>
   );
@@ -1652,7 +1696,7 @@ import { cookies } from 'next/headers';
 async function isGuestMode(): Promise<boolean> {
   const cookieStore = await cookies();
   const guestCookie = cookieStore.get('guest-storage');
-  
+
   if (guestCookie?.value) {
     try {
       const decodedValue = decodeURIComponent(guestCookie.value);
@@ -1662,7 +1706,7 @@ async function isGuestMode(): Promise<boolean> {
       return false;
     }
   }
-  
+
   return false;
 }
 ```
@@ -1713,9 +1757,8 @@ const cookieStorage = {
 카카오 로그인 후 `user_metadata`에서 닉네임을 가져옵니다:
 
 ```typescript
-const kakaoName = user.user_metadata?.name || 
-                  user.user_metadata?.full_name || 
-                  profile?.name;
+const kakaoName =
+  user.user_metadata?.name || user.user_metadata?.full_name || profile?.name;
 ```
 
 ---
