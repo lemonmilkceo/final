@@ -268,11 +268,13 @@ const ContractCard: React.FC<ContractCardProps> = ({
           </span>
 
           {/* 수정 버튼 (draft, pending, completed 7일 이내) */}
+          {/* span 사용: button 안에 button은 HTML 규격 위반으로 hydration 에러 발생 */}
           {!isEditMode && canEdit && (
-            <button
+            <span
+              role="button"
               onClick={handleEdit}
               className={clsx(
-                'px-3 py-1.5 text-white text-[12px] font-medium rounded-full',
+                'px-3 py-1.5 text-white text-[12px] font-medium rounded-full cursor-pointer',
                 isCompletedEditable
                   ? 'bg-orange-500 active:bg-orange-600'
                   : 'bg-blue-500 active:bg-blue-600'
@@ -281,7 +283,7 @@ const ContractCard: React.FC<ContractCardProps> = ({
               {isCompletedEditable && daysLeft
                 ? `수정 (D-${daysLeft})`
                 : '수정'}
-            </button>
+            </span>
           )}
 
           {/* 화살표 (편집 모드 아닐 때만) */}
