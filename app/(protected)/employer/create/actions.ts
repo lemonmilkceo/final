@@ -9,8 +9,8 @@ import {
   type ContractFormInput,
 } from '@/lib/utils/validation';
 import type { ActionResult } from '@/types';
-import { sendAlimtalk } from '@/lib/aligo/client';
-import { buildContractSignRequestMessage } from '@/lib/aligo/templates';
+import { sendAlimtalkWithSDK } from '@/lib/solapi/client';
+import { buildContractSignRequestVariables } from '@/lib/solapi/templates';
 import { normalizePhoneNumber, isValidMobilePhone } from '@/lib/utils/phone';
 
 export async function createContract(
@@ -137,21 +137,19 @@ export async function createContract(
           // 사업장명 가져오기
           const workplaceName = validation.data.workplaceName || '사업장';
 
-          // 알림톡 메시지 생성
-          const templateMessage = buildContractSignRequestMessage({
+          // 알림톡 템플릿 변수 생성
+          const templateData = buildContractSignRequestVariables({
             workerName: validation.data.workerName,
             workplaceName,
             shareUrl,
           });
 
-          // 알림톡 발송
-          const alimtalkResult = await sendAlimtalk({
+          // Solapi로 알림톡 발송
+          const alimtalkResult = await sendAlimtalkWithSDK({
             receiver: normalizePhoneNumber(workerPhone),
-            templateCode: templateMessage.templateCode,
-            subject: templateMessage.subject,
-            message: templateMessage.message,
-            buttonJson: templateMessage.buttonJson,
-            failoverType: 'N',
+            templateId: templateData.templateId,
+            variables: templateData.variables,
+            pfId: process.env.SOLAPI_KAKAO_PF_ID || '',
           });
 
           // 발송 이력 저장
@@ -160,7 +158,7 @@ export async function createContract(
             contract_id: contract.id,
             recipient_phone: normalizePhoneNumber(workerPhone),
             type: 'alimtalk',
-            template_code: templateMessage.templateCode,
+            template_code: templateData.templateId,
             status: alimtalkResult.success ? 'sent' : 'failed',
             message_id: alimtalkResult.messageId || null,
             error: alimtalkResult.error || null,

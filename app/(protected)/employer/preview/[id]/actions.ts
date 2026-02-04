@@ -4,8 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import type { ActionResult } from '@/types';
-import { sendAlimtalk } from '@/lib/aligo/client';
-import { buildContractSignRequestMessage } from '@/lib/aligo/templates';
+import { sendAlimtalkWithSDK } from '@/lib/solapi/client';
+import { buildContractSignRequestVariables } from '@/lib/solapi/templates';
 import { normalizePhoneNumber, isValidMobilePhone } from '@/lib/utils/phone';
 
 // 재전송 제한 횟수
@@ -273,21 +273,19 @@ export async function sendContractWithAlimtalk(contractId: string): Promise<
     };
   }
 
-  // 6. 알림톡 메시지 생성
-  const templateMessage = buildContractSignRequestMessage({
+  // 6. 알림톡 템플릿 변수 생성
+  const templateData = buildContractSignRequestVariables({
     workerName: contract.worker_name,
     workplaceName: contract.workplace_name || '사업장',
     shareUrl,
   });
 
-  // 7. 알림톡 발송
-  const alimtalkResult = await sendAlimtalk({
+  // 7. Solapi로 알림톡 발송
+  const alimtalkResult = await sendAlimtalkWithSDK({
     receiver: normalizePhoneNumber(workerPhone),
-    templateCode: templateMessage.templateCode,
-    subject: templateMessage.subject,
-    message: templateMessage.message,
-    buttonJson: templateMessage.buttonJson,
-    failoverType: 'N', // 대체발송 미사용
+    templateId: templateData.templateId,
+    variables: templateData.variables,
+    pfId: process.env.SOLAPI_KAKAO_PF_ID || '',
   });
 
   // 8. 발송 이력 저장
@@ -296,7 +294,7 @@ export async function sendContractWithAlimtalk(contractId: string): Promise<
     contract_id: contractId,
     recipient_phone: normalizePhoneNumber(workerPhone),
     type: 'alimtalk',
-    template_code: templateMessage.templateCode,
+    template_code: templateData.templateId,
     status: alimtalkResult.success ? 'sent' : 'failed',
     message_id: alimtalkResult.messageId || null,
     error: alimtalkResult.error || null,
