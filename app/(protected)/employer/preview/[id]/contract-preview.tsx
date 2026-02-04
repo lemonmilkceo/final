@@ -23,6 +23,7 @@ import {
   getAlimtalkResendCount,
 } from './actions';
 import { formatCurrency } from '@/lib/utils/format';
+import { maskPhoneNumber } from '@/lib/utils/phone';
 import { getContractShareUrl } from '@/lib/utils/share';
 import { generatePDF, getContractPDFFilename } from '@/lib/utils/pdf';
 import { shareContractViaKakao, initKakao } from '@/lib/kakao';
@@ -132,6 +133,8 @@ export default function ContractPreview({
   const [alimtalkResendCount, setAlimtalkResendCount] = useState(0);
   const [alimtalkMaxResendCount, setAlimtalkMaxResendCount] = useState(3);
   const [isAlimtalkLimitReached, setIsAlimtalkLimitReached] = useState(false);
+  const [sentWorkerPhone, setSentWorkerPhone] = useState<string | null>(null);
+  const [sentWorkerName, setSentWorkerName] = useState<string>('');
 
   // PDF 생성 관련
   const pdfRef = useRef<HTMLDivElement>(null);
@@ -434,6 +437,8 @@ export default function ContractPreview({
         setIsAlimtalkLimitReached(
           result.data.resendCount >= result.data.maxResendCount
         );
+        setSentWorkerPhone(result.data.workerPhone);
+        setSentWorkerName(result.data.workerName);
 
         // 공유 링크 시트 열기
         setIsShareSheetOpen(true);
@@ -473,6 +478,8 @@ export default function ContractPreview({
       if (result.success && result.data) {
         setAlimtalkSent(result.data.alimtalkSent);
         setAlimtalkResendCount(result.data.resendCount);
+        setSentWorkerPhone(result.data.workerPhone);
+        setSentWorkerName(result.data.workerName);
         setIsAlimtalkLimitReached(
           result.data.resendCount >= result.data.maxResendCount
         );
@@ -1215,51 +1222,96 @@ export default function ContractPreview({
         <div className="space-y-6">
           {/* 알림톡 발송 성공 안내 */}
           {alimtalkSent && (
-            <div className="bg-green-50 rounded-2xl p-4 text-center">
-              <span className="text-3xl mb-2 block">📱</span>
-              <p className="text-[15px] text-green-800">
-                근로자에게 카카오 알림톡이 전송됐어요
-              </p>
-              <p className="text-[13px] text-green-600 mt-1">
+            <div className="bg-green-50 rounded-2xl p-4">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <span className="text-2xl">📱</span>
+                <span className="text-[16px] font-bold text-green-800">
+                  알림톡 전송 완료!
+                </span>
+              </div>
+              <div className="bg-white rounded-xl p-3 space-y-2">
+                <div className="flex justify-between text-[14px]">
+                  <span className="text-gray-500">받는 분</span>
+                  <span className="text-gray-900 font-medium">
+                    {sentWorkerName} ({maskPhoneNumber(sentWorkerPhone)})
+                  </span>
+                </div>
+                <div className="flex justify-between text-[14px]">
+                  <span className="text-gray-500">전송 횟수</span>
+                  <span className="text-gray-900">
+                    {alimtalkResendCount}/{alimtalkMaxResendCount}회
+                  </span>
+                </div>
+              </div>
+              <p className="text-[13px] text-green-600 mt-3 text-center">
                 근로자가 서명하면 알림을 보내드릴게요
               </p>
             </div>
           )}
 
-          {/* 알림톡 발송 실패 시 - 재전송 버튼 */}
-          {!alimtalkSent && !isAlimtalkLimitReached && (
-            <button
-              onClick={handleResendAlimtalk}
-              disabled={isLoading}
-              className={clsx(
-                'w-full py-4 rounded-2xl font-semibold text-lg flex items-center justify-center gap-3',
-                isLoading
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-blue-500 text-white active:bg-blue-600'
-              )}
-            >
-              {isLoading ? (
-                <>
-                  <LoadingSpinner variant="button" />
-                  전송 중...
-                </>
-              ) : (
-                <>
-                  <span>📱</span>
-                  알림톡 다시 보내기
-                </>
-              )}
-            </button>
+          {/* 전화번호 없음 안내 */}
+          {!alimtalkSent && !isAlimtalkLimitReached && !sentWorkerPhone && (
+            <div className="bg-amber-50 rounded-2xl p-4 text-center">
+              <span className="text-2xl mb-2 block">📋</span>
+              <p className="text-[15px] font-medium text-amber-800">
+                근로자 연락처가 없어요
+              </p>
+              <p className="text-[13px] text-amber-600 mt-1">
+                아래 방법으로 직접 계약서를 보내주세요
+              </p>
+            </div>
+          )}
+
+          {/* 알림톡 발송 실패 시 - 재전송 버튼 (전화번호가 있는 경우만) */}
+          {!alimtalkSent && !isAlimtalkLimitReached && sentWorkerPhone && (
+            <div className="space-y-3">
+              <div className="bg-red-50 rounded-2xl p-4 text-center">
+                <span className="text-2xl mb-2 block">⚠️</span>
+                <p className="text-[15px] font-medium text-red-800">
+                  알림톡 전송에 실패했어요
+                </p>
+                <p className="text-[13px] text-red-600 mt-1">
+                  다시 시도하거나 직접 링크를 보내주세요
+                </p>
+              </div>
+              <button
+                onClick={handleResendAlimtalk}
+                disabled={isLoading}
+                className={clsx(
+                  'w-full py-4 rounded-2xl font-semibold text-lg flex items-center justify-center gap-3',
+                  isLoading
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-blue-500 text-white active:bg-blue-600'
+                )}
+              >
+                {isLoading ? (
+                  <>
+                    <LoadingSpinner variant="button" />
+                    전송 중...
+                  </>
+                ) : (
+                  <>
+                    <span>📱</span>
+                    알림톡 다시 보내기
+                  </>
+                )}
+              </button>
+            </div>
           )}
 
           {/* 재전송 한도 도달 시 안내 */}
           {isAlimtalkLimitReached && (
-            <div className="bg-amber-50 rounded-2xl p-4 text-center">
-              <span className="text-xl mb-1 block">⚠️</span>
-              <p className="text-[14px] text-amber-800">
-                재전송 한도({alimtalkMaxResendCount}회)에 도달했어요
+            <div className="bg-amber-50 rounded-2xl p-4">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <span className="text-xl">⚠️</span>
+                <span className="text-[15px] font-medium text-amber-800">
+                  재전송 한도 도달
+                </span>
+              </div>
+              <p className="text-[13px] text-amber-700 text-center">
+                알림톡은 계약서당 {alimtalkMaxResendCount}회까지만 보낼 수 있어요
               </p>
-              <p className="text-[13px] text-amber-600 mt-1">
+              <p className="text-[13px] text-amber-600 text-center mt-1">
                 아래 링크를 직접 복사해서 보내주세요
               </p>
             </div>

@@ -112,7 +112,10 @@ export default function Step2WorkerName() {
 
         {/* 휴대폰 번호 입력 */}
         <div className="mb-6">
-          <label className="text-[14px] text-gray-500 mb-2 block">휴대폰 번호</label>
+          <label className="text-[14px] text-gray-500 mb-2 block flex items-center gap-1">
+            휴대폰 번호
+            <span className="text-blue-500 text-[12px]">(알림톡 발송용)</span>
+          </label>
           <input
             type="tel"
             value={data.workerPhone}
@@ -133,10 +136,18 @@ export default function Step2WorkerName() {
         </div>
 
         {/* 안내 메시지 */}
-        <div className="bg-gray-50 rounded-2xl p-4">
-          <p className="text-[14px] text-gray-500">
-            근로자가 서명할 때 본인 확인에 사용돼요
-          </p>
+        <div className="bg-blue-50 rounded-2xl p-4">
+          <div className="flex items-start gap-3">
+            <span className="text-xl">📱</span>
+            <div>
+              <p className="text-[14px] font-medium text-blue-800">
+                이 번호로 카카오 알림톡이 전송돼요
+              </p>
+              <p className="text-[13px] text-blue-600 mt-1">
+                정확한 번호를 입력해야 근로자가 계약서를 받을 수 있어요
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 

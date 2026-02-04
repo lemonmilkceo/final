@@ -177,6 +177,8 @@ export async function sendContractWithAlimtalk(contractId: string): Promise<
     alimtalkSent: boolean;
     resendCount: number;
     maxResendCount: number;
+    workerPhone: string | null;
+    workerName: string;
   }>
 > {
   const supabase = await createClient();
@@ -247,6 +249,8 @@ export async function sendContractWithAlimtalk(contractId: string): Promise<
         alimtalkSent: false,
         resendCount: 0,
         maxResendCount: MAX_RESEND_COUNT,
+        workerPhone: null,
+        workerName: contract.worker_name,
       },
     };
   }
@@ -269,6 +273,8 @@ export async function sendContractWithAlimtalk(contractId: string): Promise<
         alimtalkSent: false,
         resendCount: currentCount,
         maxResendCount: MAX_RESEND_COUNT,
+        workerPhone,
+        workerName: contract.worker_name,
       },
     };
   }
@@ -310,6 +316,8 @@ export async function sendContractWithAlimtalk(contractId: string): Promise<
       alimtalkSent: alimtalkResult.success,
       resendCount: currentCount + (alimtalkResult.success ? 1 : 0),
       maxResendCount: MAX_RESEND_COUNT,
+      workerPhone,
+      workerName: contract.worker_name,
     },
   };
 }
