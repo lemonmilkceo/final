@@ -9,6 +9,9 @@ import {
   type ContractFormInput,
 } from '@/lib/utils/validation';
 import type { ActionResult } from '@/types';
+import { sendAlimtalk } from '@/lib/aligo/client';
+import { buildContractSignRequestMessage } from '@/lib/aligo/templates';
+import { normalizePhoneNumber, isValidMobilePhone } from '@/lib/utils/phone';
 
 export async function createContract(
   formData: ContractFormInput,
@@ -126,6 +129,49 @@ export async function createContract(
     if (!tokenError) {
       // 단축 URL 사용 - 카카오톡에서 하이퍼링크 인식 문제 해결
       shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/s/${shareToken}`;
+
+      // 알림톡 발송 (전화번호가 있는 경우)
+      const workerPhone = validation.data.workerPhone;
+      if (workerPhone && isValidMobilePhone(workerPhone)) {
+        try {
+          // 사업장명 가져오기
+          const workplaceName = validation.data.workplaceName || '사업장';
+
+          // 알림톡 메시지 생성
+          const templateMessage = buildContractSignRequestMessage({
+            workerName: validation.data.workerName,
+            workplaceName,
+            shareUrl,
+          });
+
+          // 알림톡 발송
+          const alimtalkResult = await sendAlimtalk({
+            receiver: normalizePhoneNumber(workerPhone),
+            templateCode: templateMessage.templateCode,
+            subject: templateMessage.subject,
+            message: templateMessage.message,
+            buttonJson: templateMessage.buttonJson,
+            failoverType: 'N',
+          });
+
+          // 발송 이력 저장
+          await supabase.from('notification_logs').insert({
+            user_id: user.id,
+            contract_id: contract.id,
+            recipient_phone: normalizePhoneNumber(workerPhone),
+            type: 'alimtalk',
+            template_code: templateMessage.templateCode,
+            status: alimtalkResult.success ? 'sent' : 'failed',
+            message_id: alimtalkResult.messageId || null,
+            error: alimtalkResult.error || null,
+          });
+
+          console.log('[CreateContract] 알림톡 발송 결과:', alimtalkResult);
+        } catch (error) {
+          console.error('[CreateContract] 알림톡 발송 오류:', error);
+          // 알림톡 실패해도 계약서 생성은 성공으로 처리
+        }
+      }
     }
   }
 
