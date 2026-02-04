@@ -16,7 +16,12 @@ import {
   createContract,
   updateContract,
 } from '@/app/(protected)/employer/create/actions';
-import { signContract, sendContract } from './actions';
+import {
+  signContract,
+  sendContract,
+  sendContractWithAlimtalk,
+  getAlimtalkResendCount,
+} from './actions';
 import { formatCurrency } from '@/lib/utils/format';
 import { getContractShareUrl } from '@/lib/utils/share';
 import { generatePDF, getContractPDFFilename } from '@/lib/utils/pdf';
@@ -121,6 +126,12 @@ export default function ContractPreview({
 
   // 저장 완료 상태 (공유 링크 복사 후)
   const [isSaveCompleted, setIsSaveCompleted] = useState(false);
+
+  // 알림톡 관련 상태
+  const [alimtalkSent, setAlimtalkSent] = useState(false);
+  const [alimtalkResendCount, setAlimtalkResendCount] = useState(0);
+  const [alimtalkMaxResendCount, setAlimtalkMaxResendCount] = useState(3);
+  const [isAlimtalkLimitReached, setIsAlimtalkLimitReached] = useState(false);
 
   // PDF 생성 관련
   const pdfRef = useRef<HTMLDivElement>(null);
@@ -412,11 +423,91 @@ export default function ContractPreview({
     setError('');
 
     try {
+      // 알림톡으로 발송 시도
+      const result = await sendContractWithAlimtalk(contractId);
+
+      if (result.success && result.data) {
+        setShareUrl(result.data.shareUrl);
+        setAlimtalkSent(result.data.alimtalkSent);
+        setAlimtalkResendCount(result.data.resendCount);
+        setAlimtalkMaxResendCount(result.data.maxResendCount);
+        setIsAlimtalkLimitReached(
+          result.data.resendCount >= result.data.maxResendCount
+        );
+
+        // 공유 링크 시트 열기
+        setIsShareSheetOpen(true);
+
+        // 알림톡 발송 성공 시 토스트 메시지
+        if (result.data.alimtalkSent) {
+          setToastMessage('알림톡이 전송됐어요! 📱');
+          setShowToast(true);
+        }
+      } else {
+        setError(result.error || '공유 링크 생성에 실패했어요');
+      }
+    } catch {
+      setError('알 수 없는 오류가 발생했어요');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 알림톡 재전송
+  const handleResendAlimtalk = async () => {
+    if (!contractId) return;
+
+    // 재전송 제한 확인
+    if (isAlimtalkLimitReached) {
+      setToastMessage(`재전송은 최대 ${alimtalkMaxResendCount}번까지 가능해요`);
+      setShowToast(true);
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const result = await sendContractWithAlimtalk(contractId);
+
+      if (result.success && result.data) {
+        setAlimtalkSent(result.data.alimtalkSent);
+        setAlimtalkResendCount(result.data.resendCount);
+        setIsAlimtalkLimitReached(
+          result.data.resendCount >= result.data.maxResendCount
+        );
+
+        if (result.data.alimtalkSent) {
+          setToastMessage('알림톡이 다시 전송됐어요! 📱');
+          setShowToast(true);
+        } else if (result.data.resendCount >= result.data.maxResendCount) {
+          setToastMessage(
+            `재전송 한도(${result.data.maxResendCount}회)에 도달했어요`
+          );
+          setShowToast(true);
+        }
+      } else {
+        setError(result.error || '재전송에 실패했어요');
+      }
+    } catch {
+      setError('알 수 없는 오류가 발생했어요');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 기존 방식 (SDK 공유) - fallback용
+  const handleSendLegacy = async () => {
+    if (!contractId) return;
+
+    setIsLoading(true);
+    setError('');
+
+    try {
       const result = await sendContract(contractId);
 
       if (result.success && result.data) {
         setShareUrl(result.data.shareUrl);
-        // 공유 링크 시트 열기
         setIsShareSheetOpen(true);
       } else {
         setError(result.error || '공유 링크 생성에 실패했어요');
@@ -785,16 +876,43 @@ export default function ContractPreview({
         {/* 저장 완료 상태 */}
         {isSaveCompleted ? (
           <div className="space-y-4">
-            {/* 저장 완료 안내 */}
-            <div className="bg-green-50 rounded-2xl p-4 text-center">
-              <span className="text-3xl mb-2 block">✅</span>
-              <p className="text-[16px] font-bold text-green-800 mb-1">
-                계약서가 저장됐어요!
-              </p>
-              <p className="text-[14px] text-green-700">
-                근로자가 서명하면 알림을 보내드릴게요
-              </p>
-            </div>
+            {/* 저장 완료 안내 - 알림톡 발송 결과에 따라 분기 */}
+            {alimtalkSent ? (
+              <div className="bg-green-50 rounded-2xl p-4 text-center">
+                <span className="text-3xl mb-2 block">📱</span>
+                <p className="text-[16px] font-bold text-green-800 mb-1">
+                  알림톡이 전송됐어요!
+                </p>
+                <p className="text-[14px] text-green-700">
+                  근로자가 서명하면 알림을 보내드릴게요
+                </p>
+                {alimtalkResendCount > 0 && (
+                  <p className="text-[12px] text-green-600 mt-2">
+                    재전송 {alimtalkResendCount}/{alimtalkMaxResendCount}회
+                  </p>
+                )}
+              </div>
+            ) : isAlimtalkLimitReached ? (
+              <div className="bg-amber-50 rounded-2xl p-4 text-center">
+                <span className="text-3xl mb-2 block">⚠️</span>
+                <p className="text-[16px] font-bold text-amber-800 mb-1">
+                  재전송 한도에 도달했어요
+                </p>
+                <p className="text-[14px] text-amber-700">
+                  링크를 직접 복사해서 보내주세요
+                </p>
+              </div>
+            ) : (
+              <div className="bg-green-50 rounded-2xl p-4 text-center">
+                <span className="text-3xl mb-2 block">✅</span>
+                <p className="text-[16px] font-bold text-green-800 mb-1">
+                  계약서가 저장됐어요!
+                </p>
+                <p className="text-[14px] text-green-700">
+                  근로자에게 링크를 보내주세요
+                </p>
+              </div>
+            )}
 
             {/* Share Options - PDF, 링크, 카카오톡 버튼 */}
             <div className="flex justify-center gap-6">
@@ -888,14 +1006,14 @@ export default function ContractPreview({
                 '체험 완료하기 🎉'
               ) : isNew ? (
                 signatureData ? (
-                  '저장하고 공유하기 📤'
+                  '저장하고 전송하기 📤'
                 ) : (
-                  '서명하고 저장하기 ✍️'
+                  '서명하고 전송하기 ✍️'
                 )
               ) : employerSigned ? (
-                '근로자에게 보내기 📤'
+                '알림톡 보내기 📱'
               ) : (
-                <>서명하고 보내기 ✍️</>
+                <>서명하고 전송하기 ✍️</>
               )}
             </button>
           </>
@@ -1090,10 +1208,73 @@ export default function ContractPreview({
           setIsShareSheetOpen(false);
           setIsSaveCompleted(true);
         }}
-        title="근로자에게 계약서 보내기"
+        title={
+          alimtalkSent ? '알림톡이 전송됐어요!' : '근로자에게 계약서 보내기'
+        }
       >
         <div className="space-y-6">
-          {/* 카카오톡 공유 버튼 - 메인 CTA */}
+          {/* 알림톡 발송 성공 안내 */}
+          {alimtalkSent && (
+            <div className="bg-green-50 rounded-2xl p-4 text-center">
+              <span className="text-3xl mb-2 block">📱</span>
+              <p className="text-[15px] text-green-800">
+                근로자에게 카카오 알림톡이 전송됐어요
+              </p>
+              <p className="text-[13px] text-green-600 mt-1">
+                근로자가 서명하면 알림을 보내드릴게요
+              </p>
+            </div>
+          )}
+
+          {/* 알림톡 발송 실패 시 - 재전송 버튼 */}
+          {!alimtalkSent && !isAlimtalkLimitReached && (
+            <button
+              onClick={handleResendAlimtalk}
+              disabled={isLoading}
+              className={clsx(
+                'w-full py-4 rounded-2xl font-semibold text-lg flex items-center justify-center gap-3',
+                isLoading
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-500 text-white active:bg-blue-600'
+              )}
+            >
+              {isLoading ? (
+                <>
+                  <LoadingSpinner variant="button" />
+                  전송 중...
+                </>
+              ) : (
+                <>
+                  <span>📱</span>
+                  알림톡 다시 보내기
+                </>
+              )}
+            </button>
+          )}
+
+          {/* 재전송 한도 도달 시 안내 */}
+          {isAlimtalkLimitReached && (
+            <div className="bg-amber-50 rounded-2xl p-4 text-center">
+              <span className="text-xl mb-1 block">⚠️</span>
+              <p className="text-[14px] text-amber-800">
+                재전송 한도({alimtalkMaxResendCount}회)에 도달했어요
+              </p>
+              <p className="text-[13px] text-amber-600 mt-1">
+                아래 링크를 직접 복사해서 보내주세요
+              </p>
+            </div>
+          )}
+
+          {/* 구분선 - 알림톡 전송 성공 시에만 표시 */}
+          {alimtalkSent && (
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-gray-200" />
+              <span className="text-[13px] text-gray-400">또는</span>
+              <div className="flex-1 h-px bg-gray-200" />
+            </div>
+          )}
+
+          {/* 카카오톡 공유 버튼 - SDK 방식 (보조) */}
           <button
             onClick={() => {
               setIsShareSheetOpen(false);
@@ -1109,15 +1290,8 @@ export default function ContractPreview({
                 fill="currentColor"
               />
             </svg>
-            카카오톡으로 보내기
+            카카오톡으로 공유하기
           </button>
-
-          {/* 구분선 */}
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-[13px] text-gray-400">또는</span>
-            <div className="flex-1 h-px bg-gray-200" />
-          </div>
 
           {/* 링크 표시 영역 */}
           <div className="bg-gray-50 rounded-2xl p-4">
@@ -1157,7 +1331,7 @@ export default function ContractPreview({
             }}
             className="w-full py-4 rounded-2xl font-semibold text-lg bg-gray-100 text-gray-700"
           >
-            닫기
+            {alimtalkSent ? '확인' : '닫기'}
           </button>
         </div>
       </BottomSheet>

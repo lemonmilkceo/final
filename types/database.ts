@@ -696,6 +696,60 @@ export type Database = {
           },
         ];
       };
+      notification_logs: {
+        Row: {
+          id: string;
+          user_id: string;
+          contract_id: string | null;
+          recipient_phone: string;
+          type: 'alimtalk' | 'sms' | 'push';
+          template_code: string | null;
+          status: 'sent' | 'failed' | 'pending';
+          message_id: string | null;
+          error: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          contract_id?: string | null;
+          recipient_phone: string;
+          type: 'alimtalk' | 'sms' | 'push';
+          template_code?: string | null;
+          status: 'sent' | 'failed' | 'pending';
+          message_id?: string | null;
+          error?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          contract_id?: string | null;
+          recipient_phone?: string;
+          type?: 'alimtalk' | 'sms' | 'push';
+          template_code?: string | null;
+          status?: 'sent' | 'failed' | 'pending';
+          message_id?: string | null;
+          error?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'notification_logs_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notification_logs_contract_id_fkey';
+            columns: ['contract_id'];
+            isOneToOne: false;
+            referencedRelation: 'contracts';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
