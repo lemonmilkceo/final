@@ -24,9 +24,7 @@ import {
 } from './actions';
 import { formatCurrency } from '@/lib/utils/format';
 import { maskPhoneNumber } from '@/lib/utils/phone';
-import { getContractShareUrl } from '@/lib/utils/share';
 import { generatePDF, getContractPDFFilename } from '@/lib/utils/pdf';
-import { shareContractViaKakao, initKakao } from '@/lib/kakao';
 import clsx from 'clsx';
 import type { ContractStatus } from '@/types';
 
@@ -105,9 +103,6 @@ export default function ContractPreview({
     setIsHydrated(true);
   }, []);
 
-  // 카카오 SDK 초기화
-  const [isKakaoReady, setIsKakaoReady] = useState(false);
-
   // AI Review 상태
   const [isAIReviewLoading, setIsAIReviewLoading] = useState(false);
   const [isAIReviewSheetOpen, setIsAIReviewSheetOpen] = useState(false);
@@ -145,17 +140,6 @@ export default function ContractPreview({
   const [savedContractData, setSavedContractData] = useState<
     typeof formData | null
   >(null);
-
-  // 카카오 SDK 초기화
-  useEffect(() => {
-    // 약간의 지연 후 카카오 SDK 초기화 (SDK 로드 대기)
-    const timer = setTimeout(() => {
-      const initialized = initKakao();
-      setIsKakaoReady(initialized);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
 
   // 사업자가 이미 서명했는지 확인
   const employerSigned = contract?.signatures?.some(
@@ -674,43 +658,6 @@ export default function ContractPreview({
     setIsShareSheetOpen(true);
   };
 
-  // 카카오톡 공유
-  const handleKakaoShare = () => {
-    if (!shareUrl) {
-      setError('먼저 서명하고 저장해주세요');
-      return;
-    }
-
-    if (!isKakaoReady) {
-      // SDK가 준비되지 않았으면 다시 시도
-      const initialized = initKakao();
-      if (!initialized) {
-        setToastMessage('카카오톡 공유 준비 중... 잠시 후 다시 시도해주세요');
-        setShowToast(true);
-        return;
-      }
-      setIsKakaoReady(true);
-    }
-
-    // 공유 토큰 추출
-    const shareToken = shareUrl.split('/').pop() || '';
-    const fullShareUrl = getContractShareUrl(shareToken);
-
-    const success = shareContractViaKakao({
-      workerName: displayData.workerName,
-      shareUrl: fullShareUrl,
-      workplaceName: displayData.workplaceName,
-      employerName,
-    });
-
-    if (!success) {
-      setToastMessage(
-        '카카오톡 공유에 실패했어요. 링크를 복사해서 보내주세요.'
-      );
-      setShowToast(true);
-    }
-  };
-
   // Zustand hydration 대기 (새 계약서인 경우만)
   if (isNew && !isHydrated) {
     return (
@@ -964,22 +911,6 @@ export default function ContractPreview({
                   </svg>
                 </span>
                 <span className="text-[12px] text-gray-500">링크</span>
-              </button>
-              <button
-                onClick={handleKakaoShare}
-                className="flex flex-col items-center gap-1"
-              >
-                <span className="w-12 h-12 bg-[#FEE500] rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-[#191919]" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M10 2C5.02944 2 1 5.25562 1 9.28571C1 11.8571 2.67188 14.1143 5.19531 15.4286L4.35156 18.5714C4.28516 18.8286 4.57422 19.0286 4.80078 18.8857L8.5 16.4571C9 16.5143 9.5 16.5714 10 16.5714C14.9706 16.5714 19 13.3158 19 9.28571C19 5.25562 14.9706 2 10 2Z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                </span>
-                <span className="text-[12px] text-gray-500">카카오톡</span>
               </button>
             </div>
 
@@ -1316,34 +1247,6 @@ export default function ContractPreview({
               </p>
             </div>
           )}
-
-          {/* 구분선 - 알림톡 전송 성공 시에만 표시 */}
-          {alimtalkSent && (
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-gray-200" />
-              <span className="text-[13px] text-gray-400">또는</span>
-              <div className="flex-1 h-px bg-gray-200" />
-            </div>
-          )}
-
-          {/* 카카오톡 공유 버튼 - SDK 방식 (보조) */}
-          <button
-            onClick={() => {
-              setIsShareSheetOpen(false);
-              handleKakaoShare();
-            }}
-            className="w-full py-4 rounded-2xl font-semibold text-lg bg-[#FEE500] text-[#191919] flex items-center justify-center gap-3 active:bg-[#F5DC00]"
-          >
-            <svg className="w-6 h-6" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M10 2C5.02944 2 1 5.25562 1 9.28571C1 11.8571 2.67188 14.1143 5.19531 15.4286L4.35156 18.5714C4.28516 18.8286 4.57422 19.0286 4.80078 18.8857L8.5 16.4571C9 16.5143 9.5 16.5714 10 16.5714C14.9706 16.5714 19 13.3158 19 9.28571C19 5.25562 14.9706 2 10 2Z"
-                fill="currentColor"
-              />
-            </svg>
-            카카오톡으로 공유하기
-          </button>
 
           {/* 링크 표시 영역 */}
           <div className="bg-gray-50 rounded-2xl p-4">
