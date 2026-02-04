@@ -132,9 +132,11 @@ export default function WorkerDashboard({
   // 이름 입력 프롬프트 표시 (이름이 없는 경우)
   useEffect(() => {
     if (!isGuestMode && isHydrated) {
-      const isDefaultName = profile.name === '사장님' || profile.name === '알바생' || !profile.name;
-      const isDismissed = localStorage.getItem('namePromptDismissed') === 'true';
-      
+      const isDefaultName =
+        profile.name === '사장님' || profile.name === '알바생' || !profile.name;
+      const isDismissed =
+        localStorage.getItem('namePromptDismissed') === 'true';
+
       if (isDefaultName && !isDismissed) {
         // 약간의 딜레이 후 표시 (대시보드 로드 후)
         const timer = setTimeout(() => {

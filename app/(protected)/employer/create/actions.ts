@@ -227,7 +227,7 @@ export async function updateContract(
   contractId: string,
   formData: ContractFormInput,
   signatureData: string
-): Promise<ActionResult<{ contractId: string; shareUrl?: string }>> {
+): Promise<ActionResult<{ contractId: string; shareUrl?: string; alimtalkSent?: boolean }>> {
   const supabase = await createClient();
 
   // 인증 확인
@@ -243,7 +243,7 @@ export async function updateContract(
   // 기존 계약서 조회 및 권한 확인
   const { data: existingContract, error: fetchError } = await supabase
     .from('contracts')
-    .select('id, employer_id, worker_id, worker_name, status, completed_at')
+    .select('id, employer_id, worker_id, worker_name, worker_phone, workplace_name, status, completed_at')
     .eq('id', contractId)
     .single();
 
@@ -345,7 +345,8 @@ export async function updateContract(
     shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/s/${shareToken}`;
   }
 
-  // 5. 근로자에게 알림 발송 (worker_id가 있는 경우)
+  // 5. 근로자에게 알림 발송
+  // 5-1. 인앱 알림 (worker_id가 있는 경우)
   if (existingContract.worker_id) {
     // 사업자 이름 조회
     const { data: employerProfile } = await supabase
@@ -366,11 +367,48 @@ export async function updateContract(
     });
   }
 
+  // 5-2. 카카오 알림톡 발송 (worker_phone이 있는 경우)
+  let alimtalkSent = false;
+  const workerPhone = existingContract.worker_phone;
+  
+  if (shareUrl && workerPhone && isValidMobilePhone(workerPhone)) {
+    try {
+      const templateData = buildContractSignRequestVariables({
+        workerName: existingContract.worker_name,
+        workplaceName: existingContract.workplace_name || '사업장',
+        shareUrl,
+      });
+
+      const alimtalkResult = await sendAlimtalkWithSDK({
+        receiver: normalizePhoneNumber(workerPhone),
+        templateId: templateData.templateId,
+        variables: templateData.variables,
+        pfId: process.env.SOLAPI_KAKAO_PF_ID || '',
+      });
+
+      // 발송 이력 저장
+      await supabase.from('notification_logs').insert({
+        user_id: user.id,
+        contract_id: contractId,
+        recipient_phone: normalizePhoneNumber(workerPhone),
+        type: 'alimtalk',
+        template_code: templateData.templateId,
+        status: alimtalkResult.success ? 'sent' : 'failed',
+        message_id: alimtalkResult.messageId || null,
+        error: alimtalkResult.error || null,
+      });
+
+      alimtalkSent = alimtalkResult.success;
+    } catch (error) {
+      console.error('Alimtalk send error on update:', error);
+    }
+  }
+
   // 캐시 무효화
   revalidatePath('/employer');
   revalidatePath(`/employer/contract/${contractId}`);
 
-  return { success: true, data: { contractId, shareUrl } };
+  return { success: true, data: { contractId, shareUrl, alimtalkSent } };
 }
 
 /**

@@ -70,14 +70,14 @@ export default function NamePromptSheet({
           onChange={handleInputChange}
           placeholder="이름을 입력하세요"
           className={`w-full bg-gray-100 rounded-2xl px-5 py-4 text-[17px] text-gray-900 placeholder-gray-400 border-2 transition-colors focus:outline-none ${
-            error ? 'border-red-500' : 'border-transparent focus:border-blue-500'
+            error
+              ? 'border-red-500'
+              : 'border-transparent focus:border-blue-500'
           }`}
           maxLength={20}
           autoFocus
         />
-        {error && (
-          <p className="mt-2 text-[13px] text-red-500 px-1">{error}</p>
-        )}
+        {error && <p className="mt-2 text-[13px] text-red-500 px-1">{error}</p>}
       </div>
 
       <div className="space-y-3">
