@@ -282,7 +282,8 @@ export default function WorkerSignPage({
         setToastMessage('서명이 완료됐어요! 🎉');
         setShowToast(true);
         setIsCompleted(true);
-        router.refresh();
+        // router.refresh()를 제거 - 클라이언트 상태로 완료 화면 유지
+        // 새로고침 시 서버에서 completed 상태를 확인하여 처리
       } else {
         setError(result.error || '서명 저장에 실패했어요');
       }
