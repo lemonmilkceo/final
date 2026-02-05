@@ -20,12 +20,9 @@ interface PaymentWidgetProps {
 }
 
 // 토스페이먼츠 결제위젯 클라이언트 키
-// 결제위젯 SDK는 test_gck_ 또는 live_gck_ 형식 사용
-// 환경변수가 없거나 잘못된 형식이면 공식 테스트 키 사용
-const ENV_KEY = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY;
-const CLIENT_KEY = ENV_KEY && ENV_KEY.includes('_gck_') 
-  ? ENV_KEY 
-  : 'test_gck_docs_Ovk5rk2ypNd1m8MOEMbr3W4XBQ4n'; // 토스 공식 문서 테스트 키
+// TODO: 토스 심사 후 환경변수 키로 변경
+// 현재 토스 공식 문서 테스트 키 사용 (401 에러 우회)
+const CLIENT_KEY = 'test_gck_docs_Ovk5rk2ypNd1m8MOEMbr3W4XBQ4n';
 
 export default function PaymentWidget({
   product,
