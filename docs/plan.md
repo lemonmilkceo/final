@@ -3573,4 +3573,195 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
 ---
 
+## 📝 Amendment 29: 카카오 알림톡 구현 (Solapi) (2026년 2월 4일)
+
+> **버전**: 1.29  
+> **날짜**: 2026년 2월 4일  
+> **변경 사유**: 계약서 서명 요청 알림톡 자동 발송 기능 구현
+> **우선순위**: P0 (핵심 기능)  
+> **상태**: ✅ 완료
+
+---
+
+### 개요
+
+계약서 작성/수정 후 근로자에게 카카오 알림톡으로 서명 요청 링크를 자동 발송하는 기능을 구현했습니다.
+초기에는 Aligo API를 시도했으나, Vercel의 동적 IP 환경과 호환되지 않아 Solapi로 전환했습니다.
+
+### Epic A29.1: 알림톡 인프라 구축
+
+> 예상 시간: 2시간 | **상태: ✅ 완료**
+
+- [x] **Task A29.1.1**: notification_logs 테이블 생성
+  - 컬럼: id, user_id, contract_id, recipient_phone, type, template_code, status, message_id, error, created_at
+  - RLS 정책 적용
+
+- [x] **Task A29.1.2**: Solapi API 클라이언트 구현
+  - `lib/solapi/client.ts` 생성
+  - `sendAlimtalkWithSDK()` 함수 구현
+  - ALIMTALK_ENABLED 환경변수로 on/off 제어
+
+- [x] **Task A29.1.3**: 알림톡 템플릿 빌더 구현
+  - `lib/solapi/templates.ts` 생성
+  - `buildContractSignRequestVariables()` 함수
+  - Solapi URL 형식 처리 (https:// 제거)
+
+- [x] **Task A29.1.4**: 휴대폰 번호 유틸리티 함수
+  - `lib/utils/phone.ts` 생성
+  - normalizePhoneNumber, isValidMobilePhone, maskPhoneNumber, formatPhoneNumber
+
+---
+
+### Epic A29.2: 알림톡 발송 로직 구현
+
+> 예상 시간: 2시간 | **상태: ✅ 완료**
+
+- [x] **Task A29.2.1**: 신규 계약서 생성 시 알림톡 발송
+  - `app/(protected)/employer/create/actions.ts` 수정
+  - createContract 완료 후 자동 발송
+  - notification_logs 기록
+
+- [x] **Task A29.2.2**: 계약서 수정 시 알림톡 발송
+  - `app/(protected)/employer/create/actions.ts` 수정
+  - updateContract 완료 후 자동 발송
+  - 수정된 계약서임을 안내
+
+- [x] **Task A29.2.3**: 미리보기에서 수동 발송/재발송
+  - `app/(protected)/employer/preview/[id]/actions.ts` 수정
+  - sendContractWithAlimtalk 함수 구현
+  - 최대 재발송 횟수 제한 (MAX_RESEND_COUNT: 3)
+
+- [x] **Task A29.2.4**: 계약서 상세에서 재발송
+  - `app/(protected)/employer/contract/[id]/actions.ts` 수정
+  - resendAlimtalk 함수 구현
+  - getAlimtalkStatus 함수 구현
+
+---
+
+### Epic A29.3: UI/UX 개선
+
+> 예상 시간: 2시간 | **상태: ✅ 완료**
+
+- [x] **Task A29.3.1**: 근로자 연락처 입력 안내 강화
+  - `Step2WorkerName.tsx` 수정
+  - "이 번호로 카카오 알림톡이 전송돼요" 안내 추가
+  - "(알림톡 발송용)" 라벨 추가
+
+- [x] **Task A29.3.2**: 미리보기 공유 바텀시트 개선
+  - `contract-preview.tsx` 수정
+  - 알림톡 발송 성공/실패 상태 표시
+  - 재발송 횟수 표시 (1/3)
+  - 마스킹된 수신 번호 표시
+  - 재발송 버튼 추가
+
+- [x] **Task A29.3.3**: 계약서 상세 알림톡 버튼 개선
+  - `contract-detail.tsx` 수정
+  - pending 상태에서 "알림톡" 버튼 표시
+  - 재발송 횟수 표시
+  - completed 상태에서 "공유" 버튼 숨김
+
+- [x] **Task A29.3.4**: 카카오톡 SDK 공유 버튼 제거
+  - `contract-preview.tsx` 수정
+  - 알림톡 + 직접 링크 공유로 단순화
+  - handleKakaoShare 로직 제거
+
+---
+
+### Epic A29.4: 버그 수정
+
+> 예상 시간: 30분 | **상태: ✅ 완료**
+
+- [x] **Task A29.4.1**: 근로자 서명 후 UI 깜박임 수정
+  - `app/contract/sign/[token]/worker-sign.tsx` 수정
+  - router.refresh() 제거
+  - 클라이언트 상태로 완료 화면 관리
+  - "카카오로 로그인하기" 화면 깜박임 해결
+
+---
+
+## 📊 Amendment 29 완료 요약
+
+| Task    | 상태 | 설명                               |
+| ------- | ---- | ---------------------------------- |
+| A29.1.1 | ✅   | notification_logs 테이블 생성      |
+| A29.1.2 | ✅   | Solapi API 클라이언트              |
+| A29.1.3 | ✅   | 템플릿 빌더                        |
+| A29.1.4 | ✅   | 휴대폰 번호 유틸리티               |
+| A29.2.1 | ✅   | 신규 계약서 알림톡 발송            |
+| A29.2.2 | ✅   | 수정 계약서 알림톡 발송            |
+| A29.2.3 | ✅   | 미리보기 수동 발송/재발송          |
+| A29.2.4 | ✅   | 상세 페이지 재발송                 |
+| A29.3.1 | ✅   | 연락처 입력 안내 강화              |
+| A29.3.2 | ✅   | 미리보기 바텀시트 개선             |
+| A29.3.3 | ✅   | 상세 페이지 알림톡 버튼            |
+| A29.3.4 | ✅   | 카카오톡 SDK 공유 버튼 제거        |
+| A29.4.1 | ✅   | 근로자 서명 후 UI 깜박임 수정      |
+
+---
+
+### 📌 수정된 파일
+
+| 파일                                                         | 변경 내용                        |
+| ------------------------------------------------------------ | -------------------------------- |
+| `types/database.ts`                                          | notification_logs 타입 추가      |
+| `lib/solapi/client.ts`                                       | 신규 생성 - Solapi API 클라이언트 |
+| `lib/solapi/templates.ts`                                    | 신규 생성 - 템플릿 빌더          |
+| `lib/utils/phone.ts`                                         | 신규 생성 - 휴대폰 번호 유틸리티 |
+| `app/(protected)/employer/create/actions.ts`                 | 알림톡 발송 로직 추가            |
+| `app/(protected)/employer/preview/[id]/actions.ts`           | sendContractWithAlimtalk 추가    |
+| `app/(protected)/employer/preview/[id]/contract-preview.tsx` | 알림톡 UI 개선                   |
+| `app/(protected)/employer/contract/[id]/actions.ts`          | resendAlimtalk, getAlimtalkStatus |
+| `app/(protected)/employer/contract/[id]/contract-detail.tsx` | 알림톡 버튼 개선                 |
+| `components/contract/ContractForm/Step2WorkerName.tsx`       | 연락처 안내 강화                 |
+| `app/contract/sign/[token]/worker-sign.tsx`                  | router.refresh() 제거            |
+
+---
+
+### 📌 환경 변수 설정
+
+Vercel에 다음 환경 변수를 설정해야 합니다:
+
+| Key                          | 설명                    | 필수    |
+| ---------------------------- | ----------------------- | ------- |
+| `SOLAPI_API_KEY`             | Solapi API 키           | ✅ 필수 |
+| `SOLAPI_API_SECRET`          | Solapi API 시크릿       | ✅ 필수 |
+| `SOLAPI_KAKAO_PF_ID`         | 카카오 채널 프로필 ID   | ✅ 필수 |
+| `SOLAPI_TEMPLATE_CONTRACT_SIGN` | 계약서 서명 요청 템플릿 ID | ✅ 필수 |
+| `SENDER_PHONE_NUMBER`        | 발신자 전화번호         | ✅ 필수 |
+| `ALIMTALK_ENABLED`           | 알림톡 활성화 (true/false) | 선택 |
+
+---
+
+### 📌 알림톡 발송 플로우
+
+```
+1. 사장님: 계약서 작성 완료 + 서명
+         ↓
+2. 자동: 알림톡 발송 (근로자 휴대폰 번호로)
+   - 템플릿: 계약서 서명 요청
+   - 버튼: "지금 바로 서명하기"
+         ↓
+3. 근로자: 카카오톡에서 알림톡 수신
+         ↓
+4. 버튼 클릭 → 서명 페이지 이동
+         ↓
+5. 휴대폰 번호 확인 → 서명 완료
+```
+
+---
+
+### 📌 Aligo → Solapi 전환 이유
+
+| 항목        | Aligo                    | Solapi                 |
+| ----------- | ------------------------ | ---------------------- |
+| IP 정책     | 고정 IP 필수 (화이트리스트) | 모든 IP 허용 가능      |
+| Vercel 호환 | ❌ 불가 (동적 IP)         | ✅ 호환                |
+| SDK         | REST API만               | Node.js SDK 제공       |
+
+---
+
+> **Amendment 29 끝**
+
+---
+
 > **문서 끝**

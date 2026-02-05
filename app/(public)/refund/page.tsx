@@ -14,40 +14,50 @@ export default function RefundPage() {
           <strong>제공자</strong>: 레몬밀크AI
         </p>
 
-        <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제1조 (현재 서비스 요금 정책)</h2>
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
-          <p className="text-[16px] font-bold text-green-800 mb-2">
-            🎉 본 서비스는 현재 무료로 제공됩니다!
+        <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제1조 (크레딧 상품 안내)</h2>
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+          <p className="text-[14px] text-blue-800 mb-3">
+            본 서비스는 <strong>크레딧 충전 방식</strong>으로 운영됩니다. 크레딧은 근로계약서 작성에 사용되는 디지털 재화입니다.
           </p>
-          <p className="text-[14px] text-green-700">
-            레몬밀크AI가 제공하는 &quot;싸인해주세요&quot; 서비스는 현재 베타 서비스로 운영되며, 모든 기능을 무료로 이용하실 수 있습니다. 따라서 현재 시점에서는 별도의 결제 및 환불 절차가 발생하지 않습니다.
+          <ul className="text-[14px] text-blue-700 list-disc pl-5 space-y-1">
+            <li>크레딧 5건: 4,900원</li>
+            <li>크레딧 15건: 12,900원</li>
+            <li>크레딧 50건: 39,000원</li>
+          </ul>
+          <p className="text-[13px] text-blue-600 mt-3">
+            ※ 1회 최대 충전 금액: 100,000원 / 크레딧 유효기간: 결제일로부터 12개월
           </p>
         </div>
 
-        <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제2조 (유료 서비스 전환 시 적용 규정)</h2>
-        <p className="text-[15px] text-gray-700 leading-relaxed mb-4">
-          향후 서비스가 유료로 전환되는 경우, 다음의 환불 및 취소 규정이 적용됩니다.
-        </p>
-
-        <h3 className="text-[16px] font-semibold text-gray-800 mt-6 mb-3">1. 청약 철회 가능 기간</h3>
+        <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제2조 (크레딧 환불 정책)</h2>
+        
+        <h3 className="text-[16px] font-semibold text-gray-800 mt-6 mb-3">1. 환불 가능 조건</h3>
         <ul className="text-[15px] text-gray-700 leading-relaxed list-disc pl-5 space-y-2">
-          <li>유료 서비스 결제일로부터 <strong>7일 이내</strong>에 청약 철회를 요청할 수 있습니다.</li>
-          <li>단, 아래 제3조에 해당하는 경우에는 청약 철회가 제한될 수 있습니다.</li>
+          <li>충전된 크레딧을 <strong>전혀 사용하지 않은 경우</strong>, 결제일로부터 7일 이내에 전액 환불이 가능합니다.</li>
+          <li>크레딧의 <strong>유효기간(결제일로부터 12개월) 이내</strong>에만 환불 요청이 가능합니다.</li>
+          <li>유효기간이 경과한 크레딧은 환불 대상에서 제외됩니다.</li>
         </ul>
 
-        <h3 className="text-[16px] font-semibold text-gray-800 mt-6 mb-3">2. 청약 철회 방법</h3>
+        <h3 className="text-[16px] font-semibold text-gray-800 mt-6 mb-3">2. 부분 사용 시 환불</h3>
+        <ul className="text-[15px] text-gray-700 leading-relaxed list-disc pl-5 space-y-2">
+          <li>크레딧을 일부 사용한 경우, <strong>미사용 크레딧에 해당하는 금액</strong>을 환불받을 수 있습니다.</li>
+          <li>환불 금액 = (미사용 크레딧 수 ÷ 총 구매 크레딧 수) × 결제 금액</li>
+          <li>단, 할인 적용된 상품의 경우 정가 기준이 아닌 <strong>실제 결제 금액 기준</strong>으로 계산됩니다.</li>
+        </ul>
+
+        <h3 className="text-[16px] font-semibold text-gray-800 mt-6 mb-3">3. 환불 요청 방법</h3>
         <ul className="text-[15px] text-gray-700 leading-relaxed list-disc pl-5 space-y-2">
           <li>서비스 내 설정 메뉴를 통한 환불 요청</li>
-          <li>고객센터 이메일을 통한 환불 요청</li>
+          <li>고객센터 이메일(lemonmilkceo@gmail.com)을 통한 환불 요청</li>
         </ul>
 
-        <h3 className="text-[16px] font-semibold text-gray-800 mt-6 mb-3">3. 환불 처리 기간</h3>
+        <h3 className="text-[16px] font-semibold text-gray-800 mt-6 mb-3">4. 환불 처리 기간</h3>
         <ul className="text-[15px] text-gray-700 leading-relaxed list-disc pl-5 space-y-2">
           <li>환불 요청일로부터 영업일 기준 <strong>3일 이내</strong> 처리</li>
           <li>결제 수단에 따라 실제 환불 완료까지 추가 시간이 소요될 수 있습니다.</li>
         </ul>
 
-        <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제3조 (청약 철회 제한 사항) ⚠️ 중요</h2>
+        <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제3조 (환불 제한 사항) ⚠️ 중요</h2>
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
           <p className="text-[14px] text-amber-800 mb-3">
             본 서비스는 「전자상거래 등에서의 소비자보호에 관한 법률」 제17조 제2항에 따라, 다음의 경우 청약 철회가 제한됩니다.

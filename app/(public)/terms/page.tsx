@@ -115,6 +115,17 @@ export default function TermsPage() {
           <li>이용자가 개정 약관에 동의하지 않는 경우 서비스 이용을 중단하고 탈퇴할 수 있습니다.</li>
         </ol>
 
+        <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제12조 (크레딧 정책)</h2>
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+          <ol className="text-[15px] text-gray-700 leading-relaxed list-decimal pl-5 space-y-2">
+            <li><strong>크레딧 정의</strong>: 크레딧은 본 서비스에서 근로계약서를 작성하기 위해 사용되는 디지털 재화입니다. 1크레딧으로 근로계약서 1건을 작성할 수 있습니다.</li>
+            <li><strong>충전 한도</strong>: 1회 최대 충전 금액은 <strong>100,000원</strong>으로 제한됩니다.</li>
+            <li><strong>유효기간</strong>: 충전된 크레딧(포인트)의 이용기간과 환불가능기간은 <strong>결제시점으로부터 1년(12개월) 이내</strong>로 제한됩니다.</li>
+            <li><strong>유효기간 만료</strong>: 유효기간이 경과한 크레딧은 자동으로 소멸되며, 환불 대상에서 제외됩니다.</li>
+            <li><strong>양도 불가</strong>: 크레딧은 타인에게 양도, 판매, 대여할 수 없습니다.</li>
+          </ol>
+        </div>
+
         <div className="mt-8 pt-6 border-t border-gray-200">
           <p className="text-[14px] text-gray-500">
             본 약관은 2026년 1월 25일부터 시행됩니다.

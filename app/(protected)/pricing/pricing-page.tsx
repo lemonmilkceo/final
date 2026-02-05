@@ -235,11 +235,32 @@ export default function PricingPage({
           })}
         </div>
 
-        {/* 크레딧 유효기간 안내 */}
-        <div className="bg-gray-100 rounded-xl p-4 mb-4">
-          <p className="text-[13px] text-gray-600">
-            📅 크레딧은 구매일로부터 <strong>12개월</strong>간 유효합니다.
-          </p>
+        {/* 크레딧 사용처 안내 */}
+        <div className="bg-white rounded-xl p-4 mb-4 space-y-3">
+          <p className="text-[14px] font-semibold text-gray-900">크레딧 사용 안내</p>
+          <div className="space-y-2">
+            <div className="flex items-start gap-2">
+              <span className="text-blue-500 mt-0.5">📝</span>
+              <div>
+                <p className="text-[13px] font-medium text-gray-800">충전 경로</p>
+                <p className="text-[12px] text-gray-500">이 페이지에서 원하는 크레딧 상품을 선택하고 결제</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-green-500 mt-0.5">✍️</span>
+              <div>
+                <p className="text-[13px] font-medium text-gray-800">사용처</p>
+                <p className="text-[12px] text-gray-500">근로계약서 작성 시 1건당 1크레딧 차감</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-purple-500 mt-0.5">📅</span>
+              <div>
+                <p className="text-[13px] font-medium text-gray-800">유효기간</p>
+                <p className="text-[12px] text-gray-500">구매일로부터 <strong>12개월</strong>간 유효 (환불도 12개월 이내)</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* 테스트 모드 안내 */}

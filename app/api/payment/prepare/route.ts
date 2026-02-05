@@ -30,6 +30,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 1회 충전 한도 검증 (토스페이먼츠 심사 요구사항: 10만원 제한)
+    const MAX_PAYMENT_AMOUNT = 100000;
+    if (amount > MAX_PAYMENT_AMOUNT) {
+      return NextResponse.json(
+        { error: '1회 최대 충전 금액은 100,000원입니다' },
+        { status: 400 }
+      );
+    }
+
     // 상품 정보 검증
     const VALID_PRODUCTS: Record<string, { price: number; credits: number }> = {
       credit_5: { price: 4900, credits: 5 },

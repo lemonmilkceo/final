@@ -2358,3 +2358,157 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ---
 
 > **Amendment 23 끝**
+
+---
+
+## 📝 Amendment 24: 알림톡 발송 로그 테이블 (2026년 2월 4일)
+
+> **버전**: 1.25  
+> **변경 사유**: 카카오 알림톡 발송 기록 저장
+
+### 24.1 notification_logs 테이블
+
+알림톡, SMS, 푸시 알림 발송 기록을 저장하는 테이블입니다.
+
+```sql
+CREATE TABLE public.notification_logs (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  contract_id uuid REFERENCES public.contracts(id) ON DELETE SET NULL,
+  recipient_phone text NOT NULL,
+  type text NOT NULL CHECK (type IN ('alimtalk', 'sms', 'push')),
+  template_code text,
+  status text NOT NULL CHECK (status IN ('sent', 'failed', 'pending')) DEFAULT 'pending',
+  message_id text,
+  error text,
+  created_at timestamptz DEFAULT now()
+);
+
+-- 인덱스
+CREATE INDEX idx_notification_logs_user_id ON notification_logs(user_id);
+CREATE INDEX idx_notification_logs_contract_id ON notification_logs(contract_id);
+CREATE INDEX idx_notification_logs_created_at ON notification_logs(created_at DESC);
+```
+
+### 24.2 컬럼 설명
+
+| 컬럼            | 타입        | 설명                         | NULL 허용 |
+| --------------- | ----------- | ---------------------------- | --------- |
+| id              | uuid        | PK                           | No        |
+| user_id         | uuid        | 발송자 (사업자) FK           | No        |
+| contract_id     | uuid        | 관련 계약서 FK               | Yes       |
+| recipient_phone | text        | 수신자 휴대폰 번호           | No        |
+| type            | text        | alimtalk / sms / push        | No        |
+| template_code   | text        | 알림톡 템플릿 ID             | Yes       |
+| status          | text        | sent / failed / pending      | No        |
+| message_id      | text        | Solapi 메시지 ID (성공 시)   | Yes       |
+| error           | text        | 에러 메시지 (실패 시)        | Yes       |
+| created_at      | timestamptz | 발송 시각                    | No        |
+
+### 24.3 RLS 정책
+
+```sql
+-- RLS 활성화
+ALTER TABLE notification_logs ENABLE ROW LEVEL SECURITY;
+
+-- 본인이 발송한 로그만 조회 가능
+CREATE POLICY "notification_logs_select_own"
+  ON notification_logs FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- 본인만 INSERT 가능
+CREATE POLICY "notification_logs_insert_own"
+  ON notification_logs FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+```
+
+### 24.4 사용 예시
+
+```typescript
+// 알림톡 발송 성공 시 로그 기록
+await supabase.from('notification_logs').insert({
+  user_id: userId,
+  contract_id: contractId,
+  recipient_phone: workerPhone,
+  type: 'alimtalk',
+  template_code: 'KA01TP260204072926920Rzt7krqePL7',
+  status: 'sent',
+  message_id: result.messageId,
+});
+
+// 알림톡 발송 실패 시 로그 기록
+await supabase.from('notification_logs').insert({
+  user_id: userId,
+  contract_id: contractId,
+  recipient_phone: workerPhone,
+  type: 'alimtalk',
+  template_code: 'KA01TP260204072926920Rzt7krqePL7',
+  status: 'failed',
+  error: errorMessage,
+});
+```
+
+### 24.5 재발송 횟수 조회
+
+```typescript
+// 특정 계약서의 알림톡 발송 횟수 조회
+const { count } = await supabase
+  .from('notification_logs')
+  .select('id', { count: 'exact', head: true })
+  .eq('contract_id', contractId)
+  .eq('type', 'alimtalk')
+  .eq('status', 'sent');
+
+const MAX_RESEND_COUNT = 3;
+const canResend = (count || 0) < MAX_RESEND_COUNT;
+```
+
+### 24.6 TypeScript 타입
+
+```typescript
+// types/database.ts
+
+notification_logs: {
+  Row: {
+    id: string;
+    user_id: string;
+    contract_id: string | null;
+    recipient_phone: string;
+    type: 'alimtalk' | 'sms' | 'push';
+    template_code: string | null;
+    status: 'sent' | 'failed' | 'pending';
+    message_id: string | null;
+    error: string | null;
+    created_at: string;
+  };
+  Insert: {
+    id?: string;
+    user_id: string;
+    contract_id?: string | null;
+    recipient_phone: string;
+    type: 'alimtalk' | 'sms' | 'push';
+    template_code?: string | null;
+    status?: 'sent' | 'failed' | 'pending';
+    message_id?: string | null;
+    error?: string | null;
+    created_at?: string;
+  };
+  Update: {
+    id?: string;
+    user_id?: string;
+    contract_id?: string | null;
+    recipient_phone?: string;
+    type?: 'alimtalk' | 'sms' | 'push';
+    template_code?: string | null;
+    status?: 'sent' | 'failed' | 'pending';
+    message_id?: string | null;
+    error?: string | null;
+    created_at?: string;
+  };
+  Relationships: [];
+};
+```
+
+---
+
+> **Amendment 24 끝**
