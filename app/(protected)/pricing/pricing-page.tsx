@@ -230,7 +230,14 @@ export default function PricingPage({
           })}
         </div>
 
-        {/* 안내 문구 */}
+        {/* 크레딧 유효기간 안내 */}
+        <div className="bg-gray-100 rounded-xl p-4 mb-4">
+          <p className="text-[13px] text-gray-600">
+            📅 크레딧은 구매일로부터 <strong>12개월</strong>간 유효합니다.
+          </p>
+        </div>
+
+        {/* 테스트 모드 안내 */}
         <div className="bg-blue-50 rounded-xl p-4 mb-6">
           <p className="text-[13px] text-blue-700">
             💡 <strong>테스트 모드</strong>로 운영 중이에요.
