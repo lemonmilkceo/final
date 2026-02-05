@@ -28,7 +28,7 @@ const PRODUCTS = [
     price: 4900,
     originalPrice: null,
     popular: false,
-    description: '소규모 사업장 추천',
+    description: '소규모 사업장 추천 · 결제 즉시 지급',
   },
   {
     id: 'credit_15',
@@ -37,7 +37,7 @@ const PRODUCTS = [
     price: 12900,
     originalPrice: 14700,
     popular: true,
-    description: '가장 많이 선택해요',
+    description: '가장 많이 선택해요 · 12% 할인 적용',
   },
   {
     id: 'credit_50',
@@ -46,7 +46,7 @@ const PRODUCTS = [
     price: 39000,
     originalPrice: 49000,
     popular: false,
-    description: '대형 사업장 추천',
+    description: '대형 사업장 추천 · 20% 할인 적용',
   },
 ];
 
