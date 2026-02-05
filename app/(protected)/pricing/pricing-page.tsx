@@ -88,12 +88,16 @@ export default function PricingPage({
   };
 
   // 결제하기 버튼 클릭
+  // TODO: 토스 결제 심사 후 게스트 모드 결제 차단 원복 필요
   const handlePaymentClick = () => {
-    if (isGuestMode || !userId) {
-      setShowSignupSheet(true);
-    } else {
-      setShowPayment(true);
-    }
+    // 게스트 모드에서도 결제 테스트 가능하도록 임시 허용
+    setShowPayment(true);
+    // 원래 로직:
+    // if (isGuestMode || !userId) {
+    //   setShowSignupSheet(true);
+    // } else {
+    //   setShowPayment(true);
+    // }
   };
 
   return (
@@ -262,11 +266,11 @@ export default function PricingPage({
         </Button>
       </div>
 
-      {/* 결제 위젯 (로그인된 사용자만) */}
-      {showPayment && userId && (
+      {/* 결제 위젯 - TODO: 토스 심사 후 userId 조건 원복 필요 */}
+      {showPayment && (
         <PaymentWidget
           product={selectedProduct}
-          userId={userId}
+          userId={userId || `guest_${Date.now()}`}
           onSuccess={handlePaymentSuccess}
           onError={handlePaymentError}
           onClose={() => setShowPayment(false)}

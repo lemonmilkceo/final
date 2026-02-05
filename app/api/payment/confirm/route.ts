@@ -13,6 +13,7 @@ function getTossSecretKey(): string {
   return key;
 }
 
+// TODO: 토스 결제 심사 후 게스트 모드 결제 차단 원복 필요
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const paymentKey = searchParams.get('paymentKey');
@@ -29,37 +30,15 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
 
-    // 인증 확인
+    // 인증 확인 (게스트 모드 허용을 위해 임시 비활성화)
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-
-    // 결제 정보 조회
-    const { data: payment, error: paymentError } = await supabase
-      .from('payments')
-      .select('*')
-      .eq('order_id', orderId)
-      .eq('user_id', user.id)
-      .single();
-
-    if (paymentError || !payment) {
-      console.error('Payment not found:', paymentError);
-      return NextResponse.redirect(
-        new URL('/pricing?error=payment_not_found', request.url)
-      );
-    }
-
-    // 금액 검증
-    if (payment.amount !== parseInt(amount, 10)) {
-      console.error('Amount mismatch:', payment.amount, amount);
-      return NextResponse.redirect(
-        new URL('/pricing?error=amount_mismatch', request.url)
-      );
-    }
+    // TODO: 심사 후 아래 주석 해제
+    // if (!user) {
+    //   return NextResponse.redirect(new URL('/login', request.url));
+    // }
 
     // 토스페이먼츠 시크릿 키 가져오기
     const secretKey = getTossSecretKey();
@@ -84,22 +63,38 @@ export async function GET(request: NextRequest) {
     if (!confirmResponse.ok) {
       const errorData = await confirmResponse.json();
       console.error('Toss confirm error:', errorData);
-
-      // 결제 실패 상태 업데이트
-      await supabase
-        .from('payments')
-        .update({
-          status: 'failed',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', payment.id);
-
       return NextResponse.redirect(
         new URL('/pricing?error=payment_failed', request.url)
       );
     }
 
     const confirmData = await confirmResponse.json();
+    console.log('[Payment Success]', {
+      orderId,
+      amount,
+      isGuest: !user,
+      receipt: confirmData.receipt?.url,
+    });
+
+    // 게스트 모드: DB 업데이트 스킵 (토스 심사용)
+    if (!user) {
+      console.log('[Guest Mode] Payment confirmed - skipping DB update');
+      return NextResponse.redirect(new URL('/pricing?success=true', request.url));
+    }
+
+    // 결제 정보 조회
+    const { data: payment, error: paymentError } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('order_id', orderId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (paymentError || !payment) {
+      console.error('Payment not found:', paymentError);
+      // 결제는 성공했으므로 성공 페이지로 이동
+      return NextResponse.redirect(new URL('/pricing?success=true', request.url));
+    }
 
     // 결제 성공 상태 업데이트
     await supabase
