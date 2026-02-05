@@ -9,6 +9,7 @@ import PaymentWidget from '@/components/payment/PaymentWidget';
 import GuestBanner from '@/components/shared/GuestBanner';
 import SignupPromptSheet from '@/components/shared/SignupPromptSheet';
 import { formatCurrency } from '@/lib/utils/format';
+import Footer from '@/components/layout/Footer';
 import clsx from 'clsx';
 
 interface PricingPageProps {
@@ -246,6 +247,9 @@ export default function PricingPage({
           </p>
         </div>
       </div>
+
+      {/* 사업자 정보 Footer */}
+      <Footer />
 
       {/* 하단 결제 버튼 */}
       <div className="bg-white border-t border-gray-100 px-5 pt-3 pb-4 safe-bottom">
