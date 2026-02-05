@@ -37,20 +37,30 @@ export default function PaymentWidget({
   useEffect(() => {
     async function initWidget() {
       try {
-        const tossPayments = await loadTossPayments(CLIENT_KEY);
+        console.log('[PaymentWidget] Initializing with CLIENT_KEY:', CLIENT_KEY);
+        console.log('[PaymentWidget] userId (customerKey):', userId);
         
-        // 위젯 초기화
+        const tossPayments = await loadTossPayments(CLIENT_KEY);
+        console.log('[PaymentWidget] TossPayments loaded');
+        
+        // 위젯 초기화 - 게스트용 익명 customerKey 사용
+        // 토스 위젯은 customerKey 형식에 제한이 있음 (영문, 숫자, _, - 만 허용, 2~50자)
+        const safeCustomerKey = userId.replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 50) || 'anonymous';
+        console.log('[PaymentWidget] Safe customerKey:', safeCustomerKey);
+        
         const widgetsInstance = tossPayments.widgets({
-          customerKey: userId,
+          customerKey: safeCustomerKey,
         });
 
         setWidgets(widgetsInstance);
+        console.log('[PaymentWidget] Widgets instance created');
 
         // 결제 금액 설정
         await widgetsInstance.setAmount({
           currency: 'KRW',
           value: product.price,
         });
+        console.log('[PaymentWidget] Amount set:', product.price);
 
         // 결제 수단 위젯 렌더링
         if (paymentMethodRef.current) {
@@ -58,6 +68,7 @@ export default function PaymentWidget({
             selector: '#payment-method',
             variantKey: 'DEFAULT',
           });
+          console.log('[PaymentWidget] Payment methods rendered');
         }
 
         // 약관 동의 위젯 렌더링
@@ -66,11 +77,14 @@ export default function PaymentWidget({
             selector: '#agreement',
             variantKey: 'AGREEMENT',
           });
+          console.log('[PaymentWidget] Agreement rendered');
         }
 
         setIsLoading(false);
+        console.log('[PaymentWidget] Widget initialization complete');
       } catch (error) {
-        console.error('Payment widget init error:', error);
+        console.error('[PaymentWidget] Init error:', error);
+        console.error('[PaymentWidget] Error details:', JSON.stringify(error, null, 2));
         onError('결제 위젯을 불러오는데 실패했어요');
       }
     }
