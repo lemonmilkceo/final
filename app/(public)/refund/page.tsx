@@ -57,6 +57,11 @@ export default function RefundPage() {
           <li>결제 수단에 따라 실제 환불 완료까지 추가 시간이 소요될 수 있습니다.</li>
         </ul>
 
+        <h3 className="text-[16px] font-semibold text-gray-800 mt-6 mb-3">5. 사용 완료 크레딧</h3>
+        <ul className="text-[15px] text-gray-700 leading-relaxed list-disc pl-5 space-y-2">
+          <li><strong>이미 사용한 크레딧은 취소 및 환불이 불가합니다.</strong></li>
+        </ul>
+
         <h2 className="text-[18px] font-bold text-gray-900 mt-8 mb-4">제3조 (환불 제한 사항) ⚠️ 중요</h2>
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
           <p className="text-[14px] text-amber-800 mb-3">
