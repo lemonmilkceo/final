@@ -46,14 +46,25 @@ export default function PaymentWidget({
         const tossPayments = await loadTossPayments(CLIENT_KEY);
         console.log('[PaymentWidget] TossPayments loaded');
         
-        // 위젯 초기화 - 게스트용 익명 customerKey 사용
+        // 위젯 초기화
         // 토스 위젯은 customerKey 형식에 제한이 있음 (영문, 숫자, _, - 만 허용, 2~50자)
-        const safeCustomerKey = userId.replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 50) || 'anonymous';
-        console.log('[PaymentWidget] Safe customerKey:', safeCustomerKey);
+        const isGuest = userId.startsWith('guest_');
+        console.log('[PaymentWidget] isGuest:', isGuest);
         
-        const widgetsInstance = tossPayments.widgets({
-          customerKey: safeCustomerKey,
-        });
+        let widgetsInstance: TossPaymentsWidgets;
+        
+        if (isGuest) {
+          // 비회원 결제: customerKey를 생략하면 익명 결제로 처리됨
+          widgetsInstance = tossPayments.widgets({});
+          console.log('[PaymentWidget] Anonymous mode (no customerKey)');
+        } else {
+          // 회원 결제: UUID 형식의 customerKey 사용
+          const safeCustomerKey = userId.replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 50);
+          console.log('[PaymentWidget] Safe customerKey:', safeCustomerKey);
+          widgetsInstance = tossPayments.widgets({
+            customerKey: safeCustomerKey,
+          });
+        }
 
         setWidgets(widgetsInstance);
         console.log('[PaymentWidget] Widgets instance created');
