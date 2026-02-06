@@ -123,6 +123,7 @@ export default function TermsPage() {
             <li><strong>유효기간</strong>: 충전된 크레딧(포인트)의 이용기간과 환불가능기간은 <strong>결제시점으로부터 1년(12개월) 이내</strong>로 제한됩니다.</li>
             <li><strong>유효기간 만료</strong>: 유효기간이 경과한 크레딧은 자동으로 소멸되며, 환불 대상에서 제외됩니다.</li>
             <li><strong>양도 불가</strong>: 크레딧은 타인에게 양도, 판매, 대여할 수 없습니다.</li>
+            <li><strong>환불 방법</strong>: 크레딧 환불은 구매 시 사용한 결제 수단으로 진행됩니다.</li>
           </ol>
         </div>
 
