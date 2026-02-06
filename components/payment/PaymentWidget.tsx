@@ -130,14 +130,25 @@ export default function PaymentWidget({
       });
     } catch (error: unknown) {
       console.error('Payment request error:', error);
+      console.error('Payment request error (full):', JSON.stringify(error, null, 2));
       
       // 사용자가 결제를 취소한 경우
-      if (error && typeof error === 'object' && 'code' in error && error.code === 'USER_CANCEL') {
-        onClose();
+      if (error && typeof error === 'object' && 'code' in error) {
+        const errorCode = (error as { code: string }).code;
+        const errorMessage = (error as { message?: string }).message || '';
+        
+        if (errorCode === 'USER_CANCEL') {
+          onClose();
+          return;
+        }
+        
+        // 토스페이먼츠 에러 코드별 메시지
+        console.error(`[TossPayments Error] Code: ${errorCode}, Message: ${errorMessage}`);
+        onError(`결제 실패: ${errorMessage || errorCode}`);
         return;
       }
       
-      onError('결제 요청에 실패했어요');
+      onError('결제 요청에 실패했어요. 잠시 후 다시 시도해주세요.');
     }
   };
 
