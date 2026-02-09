@@ -30,6 +30,15 @@ export async function GET(request: NextRequest) {
         // role 체크보다 우선 처리 - 반드시 서명 페이지로 리다이렉트
         const isSigningFlow = next.startsWith('/s/') || next.startsWith('/contract/sign/');
         
+        // 게스트 모드 쿠키 삭제 함수
+        const clearGuestCookie = (response: NextResponse) => {
+          response.cookies.set('guest-storage', '', {
+            expires: new Date(0),
+            path: '/',
+          });
+          return response;
+        };
+        
         if (isSigningFlow) {
           console.log('[Auth Callback] Signing flow detected, redirecting to:', next);
           
@@ -41,16 +50,24 @@ export async function GET(request: NextRequest) {
               .eq('id', user.id);
           }
           // 서명 페이지로 무조건 리다이렉트 (role 무시)
-          return NextResponse.redirect(`${origin}${next}`);
+          const response = NextResponse.redirect(`${origin}${next}`);
+          return clearGuestCookie(response);
         }
 
         // 일반 로그인: 역할이 이미 설정된 경우 해당 대시보드로
         if (profile?.role) {
-          return NextResponse.redirect(`${origin}/${profile.role}`);
+          const response = NextResponse.redirect(`${origin}/${profile.role}`);
+          return clearGuestCookie(response);
         }
       }
 
-      return NextResponse.redirect(`${origin}${next}`);
+      const response = NextResponse.redirect(`${origin}${next}`);
+      // 게스트 쿠키 삭제
+      response.cookies.set('guest-storage', '', {
+        expires: new Date(0),
+        path: '/',
+      });
+      return response;
     }
   }
 

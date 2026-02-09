@@ -1,13 +1,29 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SUPPORT_ROUTES } from '@/lib/constants/routes';
 import { useGuestStore } from '@/stores/guestStore';
+import { createClient } from '@/lib/supabase/client';
 
 export default function SupportPage() {
-  const { isGuest } = useGuestStore();
+  const { isGuest: isGuestFromStore } = useGuestStore();
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  // 실제 로그인 상태 확인
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+    };
+    checkAuth();
+  }, []);
+
+  // 실제 로그인 상태와 게스트 스토어 모두 확인
+  // 인증된 사용자면 게스트가 아님
+  const isGuest = isAuthenticated === false || (isAuthenticated === null && isGuestFromStore);
 
   const handleInquiryClick = (e: React.MouseEvent) => {
     if (isGuest) {

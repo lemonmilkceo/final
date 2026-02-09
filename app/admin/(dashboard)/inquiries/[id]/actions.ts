@@ -3,6 +3,7 @@
 import { requireAdmin } from '@/lib/admin/auth';
 import { createAdminClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import type { Json } from '@/types/database';
 
 /**
  * 문의 상태 변경
@@ -50,6 +51,17 @@ export async function addAdminResponse(
 
     const supabase = createAdminClient();
 
+    // 문의 정보 조회 (사용자 ID, 제목 필요)
+    const { data: inquiry } = await supabase
+      .from('cs_inquiries')
+      .select('user_id, subject, status')
+      .eq('id', inquiryId)
+      .single();
+
+    if (!inquiry) {
+      return { success: false, error: '문의를 찾을 수 없습니다' };
+    }
+
     // 응답 추가
     const { error: responseError } = await supabase.from('cs_responses').insert({
       inquiry_id: inquiryId,
@@ -63,18 +75,22 @@ export async function addAdminResponse(
     }
 
     // 상태가 pending이면 in_progress로 변경
-    const { data: inquiry } = await supabase
-      .from('cs_inquiries')
-      .select('status')
-      .eq('id', inquiryId)
-      .single();
-
-    if (inquiry?.status === 'pending') {
+    if (inquiry.status === 'pending') {
       await supabase
         .from('cs_inquiries')
         .update({ status: 'in_progress' })
         .eq('id', inquiryId);
     }
+
+    // 사용자에게 알림 전송
+    await supabase.from('notifications').insert({
+      user_id: inquiry.user_id,
+      type: 'system',
+      title: '문의 답변이 도착했어요',
+      body: `"${inquiry.subject}" 문의에 답변이 등록되었습니다.`,
+      data: { inquiryId } as Json,
+      is_read: false,
+    });
 
     revalidatePath(`/admin/inquiries/${inquiryId}`);
     revalidatePath('/admin/inquiries');

@@ -1147,6 +1147,7 @@ export type Database = {
         | "contract_modified"
         | "system"
         | "credit_low"
+        | "inquiry_response"
       signer_role: "employer" | "worker"
       user_role: "employer" | "worker"
     }
@@ -1287,6 +1288,7 @@ export const Constants = {
         "contract_modified",
         "system",
         "credit_low",
+        "inquiry_response",
       ],
       signer_role: ["employer", "worker"],
       user_role: ["employer", "worker"],

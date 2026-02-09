@@ -9,12 +9,13 @@ import clsx from 'clsx';
 
 interface NotificationData {
   contractId?: string;
+  inquiryId?: string;
   [key: string]: unknown;
 }
 
 interface Notification {
   id: string;
-  type: 'contract_sent' | 'contract_signed' | 'contract_expired_soon' | 'contract_expired';
+  type: 'contract_sent' | 'contract_signed' | 'contract_expired_soon' | 'contract_expired' | 'system' | 'credit_low';
   title: string;
   body: string;
   data?: NotificationData | null;
@@ -40,6 +41,10 @@ const getNotificationIcon = (type: Notification['type']) => {
       return '⏰';
     case 'contract_expired':
       return '❌';
+    case 'system':
+      return '💬';
+    case 'credit_low':
+      return '💳';
     default:
       return '🔔';
   }
@@ -77,8 +82,12 @@ export default function NotificationSheet({
       }
     }
 
-    // 알림에 계약서 ID가 있으면 해당 계약서로 이동
-    if (notification.data?.contractId) {
+    // 알림 데이터에 따라 적절한 페이지로 이동
+    if (notification.data?.inquiryId) {
+      // 문의 답변 알림 → 문의 상세 페이지로 이동
+      router.push(`/support/inquiry/${notification.data.inquiryId}`);
+    } else if (notification.data?.contractId) {
+      // 계약서 관련 알림 → 계약서 상세 페이지로 이동
       const contractPath = userRole === 'employer' 
         ? `/employer/contract/${notification.data.contractId}`
         : `/worker/contract/${notification.data.contractId}`;
