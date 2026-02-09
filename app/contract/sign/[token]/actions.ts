@@ -56,7 +56,7 @@ export async function signAsWorker(
   token: string,
   signatureImageData: string,
   workerDetails?: WorkerDetailsInput
-): Promise<ActionResult> {
+): Promise<ActionResult<{ contractId: string }>> {
   const supabase = await createClient();
 
   // 계약서 조회 (share_token으로) - 알림을 위해 employer_id, worker_name도 조회
@@ -206,7 +206,7 @@ export async function signAsWorker(
     // 캐시 무효화
     revalidatePath(`/contract/sign/${token}`);
 
-    return { success: true };
+    return { success: true, data: { contractId: contract.id } };
   } catch (error) {
     console.error('Worker sign error:', error);
     return { success: false, error: '서명 처리 중 오류가 발생했어요' };

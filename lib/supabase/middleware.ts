@@ -143,6 +143,11 @@ export async function updateSession(request: NextRequest) {
 
   // 게스트 모드일 경우 허용된 경로만 접근 가능
   if (isGuest && guestRole && isGuestAllowedRoute) {
+    // 역할 무관 공통 경로 (고객센터, 가격 등)
+    const GUEST_COMMON_ROUTES = ['/support', '/pricing'];
+    if (GUEST_COMMON_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))) {
+      return supabaseResponse;
+    }
     // 게스트 모드에서 역할에 맞는 경로만 허용
     if (guestRole === 'employer' && pathname.startsWith('/employer')) {
       return supabaseResponse;

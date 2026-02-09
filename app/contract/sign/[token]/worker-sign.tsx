@@ -137,6 +137,7 @@ export default function WorkerSignPage({
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isCompleted, setIsCompleted] = useState(false);
+  const [completedContractId, setCompletedContractId] = useState<string | null>(null);
 
   // 근로자가 이미 서명했는지 확인
   const workerSigned = contract.signatures?.some(
@@ -282,8 +283,10 @@ export default function WorkerSignPage({
         setToastMessage('서명이 완료됐어요! 🎉');
         setShowToast(true);
         setIsCompleted(true);
-        // router.refresh()를 제거 - 클라이언트 상태로 완료 화면 유지
-        // 새로고침 시 서버에서 completed 상태를 확인하여 처리
+        // 완료된 계약서 ID 저장 (상세 페이지 이동용)
+        if (result.data?.contractId) {
+          setCompletedContractId(result.data.contractId);
+        }
       } else {
         setError(result.error || '서명 저장에 실패했어요');
       }
@@ -369,16 +372,16 @@ export default function WorkerSignPage({
         {isLoggedIn ? (
           <>
             <button
-              onClick={() => router.push('/worker')}
+              onClick={() => router.push(completedContractId ? `/worker/contract/${completedContractId}` : '/worker')}
               className="w-full max-w-xs py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg text-center mb-3"
             >
               내 계약서 확인하기 📄
             </button>
             <button
-              onClick={() => router.push('/')}
+              onClick={() => router.push('/worker')}
               className="text-[14px] text-gray-400"
             >
-              홈으로 가기
+              목록으로 가기
             </button>
           </>
         ) : (
