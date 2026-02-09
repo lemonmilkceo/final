@@ -1139,155 +1139,180 @@ export default function ContractPreview({
         </div>
       </BottomSheet>
 
-      {/* 공유 링크 시트 */}
+      {/* 공유 링크 시트 - 상태별 단순화된 UI */}
       <BottomSheet
         isOpen={isShareSheetOpen}
         onClose={() => {
           setIsShareSheetOpen(false);
           setIsSaveCompleted(true);
         }}
-        title={
-          alimtalkSent ? '알림톡이 전송됐어요!' : '근로자에게 계약서 보내기'
-        }
+        title={alimtalkSent ? '전송 완료' : '근로자에게 보내기'}
       >
-        <div className="space-y-6">
-          {/* 알림톡 발송 성공 안내 */}
+        <div className="space-y-5">
+          {/* ========== 상태 A: 알림톡 전송 성공 ========== */}
           {alimtalkSent && (
-            <div className="bg-green-50 rounded-2xl p-4">
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <span className="text-2xl">📱</span>
-                <span className="text-[16px] font-bold text-green-800">
-                  알림톡 전송 완료!
-                </span>
-              </div>
-              <div className="bg-white rounded-xl p-3 space-y-2">
-                <div className="flex justify-between text-[14px]">
-                  <span className="text-gray-500">받는 분</span>
-                  <span className="text-gray-900 font-medium">
-                    {sentWorkerName} ({maskPhoneNumber(sentWorkerPhone)})
-                  </span>
+            <>
+              <div className="text-center py-4">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-3xl">✅</span>
                 </div>
-                <div className="flex justify-between text-[14px]">
-                  <span className="text-gray-500">전송 횟수</span>
-                  <span className="text-gray-900">
-                    {alimtalkResendCount}/{alimtalkMaxResendCount}회
-                  </span>
-                </div>
-              </div>
-              <p className="text-[13px] text-green-600 mt-3 text-center">
-                근로자가 서명하면 알림을 보내드릴게요
-              </p>
-            </div>
-          )}
-
-          {/* 전화번호 없음 안내 */}
-          {!alimtalkSent && !isAlimtalkLimitReached && !sentWorkerPhone && (
-            <div className="bg-amber-50 rounded-2xl p-4 text-center">
-              <span className="text-2xl mb-2 block">📋</span>
-              <p className="text-[15px] font-medium text-amber-800">
-                근로자 연락처가 없어요
-              </p>
-              <p className="text-[13px] text-amber-600 mt-1">
-                아래 방법으로 직접 계약서를 보내주세요
-              </p>
-            </div>
-          )}
-
-          {/* 알림톡 발송 실패 시 - 재전송 버튼 (전화번호가 있는 경우만) */}
-          {!alimtalkSent && !isAlimtalkLimitReached && sentWorkerPhone && (
-            <div className="space-y-3">
-              <div className="bg-red-50 rounded-2xl p-4 text-center">
-                <span className="text-2xl mb-2 block">⚠️</span>
-                <p className="text-[15px] font-medium text-red-800">
-                  알림톡 전송에 실패했어요
+                <h3 className="text-[18px] font-bold text-gray-900 mb-1">
+                  알림톡이 전송됐어요!
+                </h3>
+                <p className="text-[14px] text-gray-500">
+                  {sentWorkerName}님 ({maskPhoneNumber(sentWorkerPhone)})
                 </p>
-                <p className="text-[13px] text-red-600 mt-1">
-                  다시 시도하거나 직접 링크를 보내주세요
+              </div>
+              <div className="bg-gray-50 rounded-xl p-4 text-center">
+                <p className="text-[14px] text-gray-600">
+                  근로자가 서명하면 알림을 보내드릴게요
                 </p>
               </div>
               <button
-                onClick={handleResendAlimtalk}
-                disabled={isLoading}
-                className={clsx(
-                  'w-full py-4 rounded-2xl font-semibold text-lg flex items-center justify-center gap-3',
-                  isLoading
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-500 text-white active:bg-blue-600'
-                )}
-              >
-                {isLoading ? (
-                  <>
-                    <LoadingSpinner variant="button" />
-                    전송 중...
-                  </>
-                ) : (
-                  <>
-                    <span>📱</span>
-                    알림톡 다시 보내기
-                  </>
-                )}
-              </button>
-            </div>
-          )}
-
-          {/* 재전송 한도 도달 시 안내 */}
-          {isAlimtalkLimitReached && (
-            <div className="bg-amber-50 rounded-2xl p-4">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <span className="text-xl">⚠️</span>
-                <span className="text-[15px] font-medium text-amber-800">
-                  재전송 한도 도달
-                </span>
-              </div>
-              <p className="text-[13px] text-amber-700 text-center">
-                알림톡은 계약서당 {alimtalkMaxResendCount}회까지만 보낼 수 있어요
-              </p>
-              <p className="text-[13px] text-amber-600 text-center mt-1">
-                아래 링크를 직접 복사해서 보내주세요
-              </p>
-            </div>
-          )}
-
-          {/* 링크 표시 영역 */}
-          <div className="bg-gray-50 rounded-2xl p-4">
-            <p className="text-[13px] text-gray-500 mb-2">링크 직접 복사</p>
-            <div className="flex items-center gap-2">
-              <div className="flex-1 bg-white rounded-xl px-4 py-3 border border-gray-200 overflow-hidden">
-                <p className="text-[14px] text-gray-700 break-all">
-                  {shareUrl || '링크 생성 중...'}
-                </p>
-              </div>
-              <button
-                onClick={async () => {
-                  if (shareUrl) {
-                    // URL만 단독으로 복사 (앞뒤 공백 없이)
-                    await navigator.clipboard.writeText(shareUrl.trim());
-                    setToastMessage(
-                      '링크가 복사됐어요! 카카오톡에 붙여넣기 하세요 📋'
-                    );
-                    setShowToast(true);
-                  }
+                onClick={() => {
+                  setIsShareSheetOpen(false);
+                  setIsSaveCompleted(true);
                 }}
-                className="px-4 py-3 bg-blue-500 text-white rounded-xl font-medium text-[14px] whitespace-nowrap"
+                className="w-full py-4 rounded-2xl font-semibold text-lg bg-blue-500 text-white"
               >
-                복사
+                확인
               </button>
-            </div>
-            <p className="text-[12px] text-gray-400 mt-2">
-              💡 링크만 단독으로 보내야 클릭이 잘 돼요
-            </p>
-          </div>
+            </>
+          )}
 
-          {/* 닫기 버튼 */}
-          <button
-            onClick={() => {
-              setIsShareSheetOpen(false);
-              setIsSaveCompleted(true);
-            }}
-            className="w-full py-4 rounded-2xl font-semibold text-lg bg-gray-100 text-gray-700"
-          >
-            {alimtalkSent ? '확인' : '닫기'}
-          </button>
+          {/* ========== 상태 B: 전화번호 없음 → 링크 복사 유도 ========== */}
+          {!alimtalkSent && !sentWorkerPhone && (
+            <>
+              <div className="text-center py-2">
+                <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-2xl">🔗</span>
+                </div>
+                <h3 className="text-[17px] font-bold text-gray-900 mb-1">
+                  링크를 직접 보내주세요
+                </h3>
+                <p className="text-[14px] text-gray-500">
+                  근로자 연락처가 없어 알림톡을 보낼 수 없어요
+                </p>
+              </div>
+              
+              {/* 주요 CTA: 링크 복사 */}
+              <div className="bg-gray-50 rounded-2xl p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 bg-white rounded-xl px-4 py-3 border border-gray-200 overflow-hidden">
+                    <p className="text-[14px] text-gray-700 truncate">
+                      {shareUrl || '링크 생성 중...'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      if (shareUrl) {
+                        await navigator.clipboard.writeText(shareUrl.trim());
+                        setToastMessage('링크가 복사됐어요! 📋');
+                        setShowToast(true);
+                      }
+                    }}
+                    className="px-5 py-3 bg-blue-500 text-white rounded-xl font-semibold text-[15px] whitespace-nowrap"
+                  >
+                    복사
+                  </button>
+                </div>
+                <p className="text-[12px] text-gray-400 mt-2 text-center">
+                  💡 카카오톡에 링크만 단독으로 보내야 잘 열려요
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  setIsShareSheetOpen(false);
+                  setIsSaveCompleted(true);
+                }}
+                className="w-full py-4 rounded-2xl font-semibold text-lg bg-gray-100 text-gray-600"
+              >
+                닫기
+              </button>
+            </>
+          )}
+
+          {/* ========== 상태 C: 알림톡 보내기 가능 (재전송 또는 실패 후 재시도) ========== */}
+          {!alimtalkSent && sentWorkerPhone && (
+            <>
+              <div className="text-center py-2">
+                <div className="w-14 h-14 bg-[#FEE500] rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-2xl">💬</span>
+                </div>
+                <h3 className="text-[17px] font-bold text-gray-900 mb-1">
+                  {sentWorkerName}님에게 알림톡 보내기
+                </h3>
+                <p className="text-[14px] text-gray-500">
+                  {maskPhoneNumber(sentWorkerPhone)}
+                  {alimtalkResendCount > 0 && ` · 발송 ${alimtalkResendCount}/${alimtalkMaxResendCount}회`}
+                </p>
+              </div>
+
+              {/* 주요 CTA: 알림톡 보내기 */}
+              {!isAlimtalkLimitReached ? (
+                <button
+                  onClick={handleResendAlimtalk}
+                  disabled={isLoading}
+                  className={clsx(
+                    'w-full py-4 rounded-2xl font-semibold text-lg flex items-center justify-center gap-2',
+                    isLoading
+                      ? 'bg-gray-200 text-gray-400'
+                      : 'bg-[#FEE500] text-gray-900 active:bg-yellow-400'
+                  )}
+                >
+                  {isLoading ? (
+                    <>
+                      <LoadingSpinner variant="button" />
+                      전송 중...
+                    </>
+                  ) : (
+                    <>카카오 알림톡 보내기</>
+                  )}
+                </button>
+              ) : (
+                <div className="bg-amber-50 rounded-2xl p-4 text-center">
+                  <p className="text-[14px] text-amber-700">
+                    ⚠️ 알림톡 재전송 한도({alimtalkMaxResendCount}회)에 도달했어요
+                  </p>
+                </div>
+              )}
+
+              {/* 보조 옵션: 링크 직접 복사 */}
+              <div className="pt-2">
+                <p className="text-[13px] text-gray-400 text-center mb-3">또는</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-gray-100 rounded-xl px-4 py-3 overflow-hidden">
+                    <p className="text-[13px] text-gray-600 truncate">
+                      {shareUrl || '링크 생성 중...'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      if (shareUrl) {
+                        await navigator.clipboard.writeText(shareUrl.trim());
+                        setToastMessage('링크가 복사됐어요! 📋');
+                        setShowToast(true);
+                      }
+                    }}
+                    className="px-4 py-3 bg-gray-200 text-gray-700 rounded-xl font-medium text-[14px] whitespace-nowrap"
+                  >
+                    복사
+                  </button>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  setIsShareSheetOpen(false);
+                  setIsSaveCompleted(true);
+                }}
+                className="w-full py-4 rounded-2xl font-semibold text-lg bg-gray-100 text-gray-600"
+              >
+                닫기
+              </button>
+            </>
+          )}
         </div>
       </BottomSheet>
     </div>
