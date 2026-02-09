@@ -1,5 +1,11 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { jwtVerify } from 'jose';
+
+/**
+ * 관리자 경로
+ */
+const ADMIN_ROUTES = ['/admin'];
 
 /**
  * 보호된 경로 (로그인 필수)
@@ -74,6 +80,37 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
+
+  // ═══════════════════════════════════════════════════════════
+  // 관리자 경로 보호 (일반 사용자 인증보다 먼저 처리)
+  // ═══════════════════════════════════════════════════════════
+  const isAdminRoute = ADMIN_ROUTES.some((route) => pathname.startsWith(route));
+
+  if (isAdminRoute && pathname !== '/admin/login') {
+    // 관리자 세션 쿠키 확인 (Supabase 세션과 별개)
+    const adminSession = request.cookies.get('admin_session')?.value;
+
+    if (!adminSession) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/admin/login';
+      return NextResponse.redirect(url);
+    }
+
+    // JWT 검증 (jose는 Edge Runtime 호환)
+    try {
+      const secret = new TextEncoder().encode(process.env.ADMIN_JWT_SECRET);
+      await jwtVerify(adminSession, secret);
+    } catch {
+      const url = request.nextUrl.clone();
+      url.pathname = '/admin/login';
+      const response = NextResponse.redirect(url);
+      response.cookies.delete('admin_session');
+      return response;
+    }
+
+    // 관리자 인증 성공 - 일반 사용자 경로 체크 건너뛰기
+    return supabaseResponse;
+  }
 
   // 게스트 모드 체크 (localStorage는 서버에서 접근 불가하므로 쿠키 사용)
   const guestCookie = request.cookies.get('guest-storage');
