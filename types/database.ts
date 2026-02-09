@@ -545,7 +545,10 @@ export type Database = {
       refund_requests: {
         Row: {
           admin_note: string | null
+          base_refund_amount: number | null
           created_at: string | null
+          fee_amount: number | null
+          fee_rate: number | null
           id: string
           original_amount: number
           payment_id: string
@@ -565,7 +568,10 @@ export type Database = {
         }
         Insert: {
           admin_note?: string | null
+          base_refund_amount?: number | null
           created_at?: string | null
+          fee_amount?: number | null
+          fee_rate?: number | null
           id?: string
           original_amount: number
           payment_id: string
@@ -585,7 +591,10 @@ export type Database = {
         }
         Update: {
           admin_note?: string | null
+          base_refund_amount?: number | null
           created_at?: string | null
+          fee_amount?: number | null
+          fee_rate?: number | null
           id?: string
           original_amount?: number
           payment_id?: string

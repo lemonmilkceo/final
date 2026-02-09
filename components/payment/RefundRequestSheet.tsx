@@ -39,6 +39,10 @@ export default function RefundRequestSheet({
     refundCredits: number;
     refundAmount: number;
     usedCredits: number;
+    baseRefundAmount: number;
+    feeAmount: number;
+    feeRate: number;
+    isNoFeeApplied: boolean;
   } | null>(null);
 
   const handleSubmit = async () => {
@@ -74,6 +78,10 @@ export default function RefundRequestSheet({
         refundCredits: data.refundRequest.refundCredits,
         refundAmount: data.refundRequest.refundAmount,
         usedCredits: data.refundRequest.usedCredits,
+        baseRefundAmount: data.refundRequest.baseRefundAmount,
+        feeAmount: data.refundRequest.feeAmount,
+        feeRate: data.refundRequest.feeRate,
+        isNoFeeApplied: data.refundRequest.isNoFeeApplied,
       });
 
       // 성공 시 부모 컴포넌트에 알림
@@ -117,12 +125,33 @@ export default function RefundRequestSheet({
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[14px] text-gray-500">환불 예정 금액</span>
-                <span className="text-[14px] font-bold text-blue-600">
-                  {formatCurrency(refundInfo.refundAmount)}
+                <span className="text-[14px] text-gray-500">환불 기본 금액</span>
+                <span className="text-[14px] font-medium text-gray-900">
+                  {formatCurrency(refundInfo.baseRefundAmount)}
                 </span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-[14px] text-gray-500">
+                  환불 수수료 ({Math.round(refundInfo.feeRate * 100)}%)
+                </span>
+                <span className={`text-[14px] font-medium ${refundInfo.isNoFeeApplied ? 'text-green-600' : 'text-red-500'}`}>
+                  {refundInfo.isNoFeeApplied ? '면제' : `-${formatCurrency(refundInfo.feeAmount)}`}
+                </span>
+              </div>
+              <div className="border-t border-gray-200 pt-2 mt-2">
+                <div className="flex justify-between">
+                  <span className="text-[14px] font-semibold text-gray-700">환불 예정 금액</span>
+                  <span className="text-[14px] font-bold text-blue-600">
+                    {formatCurrency(refundInfo.refundAmount)}
+                  </span>
+                </div>
+              </div>
             </div>
+            {refundInfo.isNoFeeApplied && (
+              <p className="text-[12px] text-green-600 mt-2">
+                🎉 7일 이내 미사용 환불로 수수료가 면제됐어요
+              </p>
+            )}
           </div>
         ) : (
           // 요청 폼
@@ -147,6 +176,18 @@ export default function RefundRequestSheet({
                 <br />
                 사용한 크레딧은 환불 금액에서 제외됩니다.
               </p>
+            </div>
+
+            {/* 수수료 안내 */}
+            <div className="bg-amber-50 rounded-xl p-4">
+              <p className="text-[13px] text-amber-700 font-medium mb-1">
+                💰 환불 수수료 안내
+              </p>
+              <ul className="text-[12px] text-amber-600 space-y-1 list-disc pl-4">
+                <li>결제 후 <strong>7일 이내</strong> + <strong>크레딧 미사용</strong> 시: <strong>수수료 0%</strong></li>
+                <li>그 외의 경우: <strong>환불 금액의 10%</strong> 수수료 적용</li>
+                <li>최소 환불 금액: 1,000원</li>
+              </ul>
             </div>
 
             {/* 환불 사유 */}

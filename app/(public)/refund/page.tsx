@@ -41,9 +41,32 @@ export default function RefundPage() {
         <h3 className="text-[16px] font-semibold text-gray-800 mt-6 mb-3">2. 부분 사용 시 환불</h3>
         <ul className="text-[15px] text-gray-700 leading-relaxed list-disc pl-5 space-y-2">
           <li>크레딧을 일부 사용한 경우, <strong>미사용 크레딧에 해당하는 금액</strong>을 환불받을 수 있습니다.</li>
-          <li>환불 금액 = (미사용 크레딧 수 ÷ 총 구매 크레딧 수) × 결제 금액</li>
+          <li>환불 기본 금액 = (미사용 크레딧 수 ÷ 총 구매 크레딧 수) × 결제 금액</li>
+          <li><strong>환불 수수료 10%</strong>가 적용됩니다. (최종 환불 금액 = 환불 기본 금액 - 수수료)</li>
           <li>단, 할인 적용된 상품의 경우 정가 기준이 아닌 <strong>실제 결제 금액 기준</strong>으로 계산됩니다.</li>
         </ul>
+
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4 mt-4">
+          <p className="text-[14px] text-green-800 font-medium mb-2">
+            ✨ 수수료 면제 조건
+          </p>
+          <ul className="text-[14px] text-green-700 list-disc pl-5 space-y-1">
+            <li>결제일로부터 <strong>7일 이내</strong>이면서</li>
+            <li>충전된 크레딧을 <strong>전혀 사용하지 않은 경우</strong></li>
+          </ul>
+          <p className="text-[13px] text-green-600 mt-2">
+            위 두 조건을 모두 충족하면 수수료 없이 전액 환불됩니다.
+          </p>
+        </div>
+
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mt-4">
+          <p className="text-[14px] text-gray-800 font-medium mb-2">
+            📌 최소 환불 금액
+          </p>
+          <p className="text-[14px] text-gray-700">
+            수수료 차감 후 환불 금액이 <strong>1,000원 미만</strong>인 경우 환불이 불가합니다.
+          </p>
+        </div>
 
         <h3 className="text-[16px] font-semibold text-gray-800 mt-6 mb-3">3. 환불 요청 방법</h3>
         <ul className="text-[15px] text-gray-700 leading-relaxed list-disc pl-5 space-y-2">

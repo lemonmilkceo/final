@@ -2,9 +2,19 @@ import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimit, getRateLimitKey } from '@/lib/utils/rate-limiter';
 
+// 환불 수수료 설정
+const FEE_RATE = 0.10; // 10% 수수료
+const NO_FEE_DAYS = 7; // 7일 이내 미사용 시 수수료 면제
+const MINIMUM_REFUND_AMOUNT = 1000; // 최소 환불 금액 1,000원
+
 /**
  * 환불 요청 생성 API
  * POST /api/refund/request
+ * 
+ * 수수료 정책:
+ * - 기본: 10% 수수료 적용
+ * - 예외: 결제 후 7일 이내 + 크레딧 미사용 시 수수료 면제
+ * - 최소 환불 금액: 1,000원
  */
 export async function POST(request: NextRequest) {
   try {
@@ -142,11 +152,11 @@ export async function POST(request: NextRequest) {
     const usedCredits = Math.min(usedAfterPayment, totalCredits);
     const refundCredits = totalCredits - usedCredits;
 
-    // 환불 금액 계산 (미사용 크레딧 비례)
-    const refundAmount = Math.floor((refundCredits / totalCredits) * payment.amount);
+    // 환불 기본 금액 계산 (미사용 크레딧 비례)
+    const baseRefundAmount = Math.floor((refundCredits / totalCredits) * payment.amount);
 
     // 환불 가능 크레딧이 없는 경우
-    if (refundCredits <= 0 || refundAmount <= 0) {
+    if (refundCredits <= 0 || baseRefundAmount <= 0) {
       return NextResponse.json(
         { error: '이미 모든 크레딧을 사용하여 환불이 불가능해요' },
         { status: 400 }
@@ -155,6 +165,23 @@ export async function POST(request: NextRequest) {
 
     // 환불 유형 결정
     const requestType = usedCredits === 0 ? 'full' : 'partial';
+
+    // 수수료 계산
+    // 조건: 결제 후 7일 이내 + 크레딧 미사용 시 수수료 면제
+    const daysSincePayment = Math.floor((now.getTime() - paymentDate.getTime()) / (1000 * 60 * 60 * 24));
+    const isNoFeeEligible = daysSincePayment <= NO_FEE_DAYS && usedCredits === 0;
+    
+    const appliedFeeRate = isNoFeeEligible ? 0 : FEE_RATE;
+    const feeAmount = Math.floor(baseRefundAmount * appliedFeeRate);
+    const refundAmount = baseRefundAmount - feeAmount;
+
+    // 최소 환불 금액 체크
+    if (refundAmount < MINIMUM_REFUND_AMOUNT) {
+      return NextResponse.json(
+        { error: `최소 환불 금액은 ${MINIMUM_REFUND_AMOUNT.toLocaleString()}원이에요. 수수료 차감 후 환불 금액이 부족해요.` },
+        { status: 400 }
+      );
+    }
 
     // 환불 요청 생성
     const { data: refundRequest, error: insertError } = await supabase
@@ -168,6 +195,9 @@ export async function POST(request: NextRequest) {
         used_credits: usedCredits,
         refund_credits: refundCredits,
         original_amount: payment.amount,
+        base_refund_amount: baseRefundAmount,
+        fee_rate: appliedFeeRate,
+        fee_amount: feeAmount,
         refund_amount: refundAmount,
         status: 'pending',
       })
@@ -191,7 +221,11 @@ export async function POST(request: NextRequest) {
         usedCredits,
         refundCredits,
         originalAmount: payment.amount,
+        baseRefundAmount,
+        feeRate: appliedFeeRate,
+        feeAmount,
         refundAmount,
+        isNoFeeApplied: isNoFeeEligible,
       },
     });
   } catch (error) {

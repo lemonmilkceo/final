@@ -2,8 +2,8 @@
 
 ## 싸인해주세요 (SignPlease)
 
-> **버전**: 2.0  
-> **최종 수정일**: 2026년 2월 5일  
+> **버전**: 2.2  
+> **최종 수정일**: 2026년 2월 9일  
 > **작성자**: Technical PO
 
 ---
@@ -353,6 +353,10 @@ AI 노무사 검토 결과를 저장합니다.
 | `processed_at` | `timestamptz` | YES | NULL | 처리 일시 |
 | `processed_by` | `uuid` | YES | NULL | 처리자 ID |
 | `toss_cancel_key` | `text` | YES | NULL | 토스 취소 키 |
+| `toss_cancel_reason` | `text` | YES | NULL | 토스 취소 사유 |
+| `base_refund_amount` | `integer` | YES | NULL | 수수료 차감 전 환불 금액 |
+| `fee_rate` | `numeric(5,4)` | NO | `0.10` | 적용된 수수료율 (0.10 = 10%) |
+| `fee_amount` | `integer` | NO | `0` | 수수료 금액 |
 | `created_at` | `timestamptz` | NO | `now()` | 생성일시 |
 | `updated_at` | `timestamptz` | NO | `now()` | 수정일시 |
 
@@ -367,6 +371,11 @@ AI 노무사 검토 결과를 저장합니다.
 - 자신의 환불 요청만 SELECT
 - 자신의 환불 요청만 INSERT (pending 상태)
 - 자신의 환불 요청만 UPDATE (cancelled로 변경만 허용)
+
+**환불 수수료 정책 (2026-02-09 적용):**
+- 기본 수수료: 10%
+- 수수료 면제 조건: 결제 후 7일 이내 + 크레딧 미사용
+- 최소 환불 금액: 1,000원 (수수료 차감 후)
 
 ---
 
@@ -721,6 +730,180 @@ CREATE POLICY "signatures_delete_employer" ON signatures
 
 ```sql
 ALTER TYPE notification_type ADD VALUE IF NOT EXISTS 'contract_modified';
+```
+
+### 7.8 결제 시스템 보안 강화 마이그레이션 (2026-02-09)
+
+#### payments 테이블 인덱스 및 제약조건
+
+```sql
+-- 성능 최적화를 위한 인덱스
+CREATE INDEX IF NOT EXISTS idx_payments_user_id ON payments(user_id);
+CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
+CREATE INDEX IF NOT EXISTS idx_payments_created_at ON payments(created_at DESC);
+
+-- 중복 주문 방지
+ALTER TABLE payments ADD CONSTRAINT payments_order_id_unique UNIQUE (order_id);
+
+-- 유효한 상태값만 허용
+ALTER TABLE payments ADD CONSTRAINT payments_status_check 
+  CHECK (status IN ('pending', 'completed', 'failed', 'expired', 'refunded'));
+```
+
+#### credit_transactions 테이블 인덱스
+
+```sql
+CREATE INDEX IF NOT EXISTS idx_credit_transactions_user_type 
+  ON credit_transactions(user_id, credit_type);
+CREATE INDEX IF NOT EXISTS idx_credit_transactions_reference 
+  ON credit_transactions(reference_id);
+CREATE INDEX IF NOT EXISTS idx_credit_transactions_created_at 
+  ON credit_transactions(created_at DESC);
+```
+
+#### RLS 정책 (payments, credits, credit_transactions)
+
+```sql
+-- payments RLS
+ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "payments_select_own" ON payments 
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "payments_insert_own" ON payments 
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "payments_update_own" ON payments 
+  FOR UPDATE USING (auth.uid() = user_id);
+
+-- credits RLS
+ALTER TABLE credits ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "credits_select_own" ON credits 
+  FOR SELECT USING (auth.uid() = user_id);
+
+-- credit_transactions RLS
+ALTER TABLE credit_transactions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "credit_transactions_select_own" ON credit_transactions 
+  FOR SELECT USING (auth.uid() = user_id);
+```
+
+#### process_payment_completion 함수 (Race Condition 방지)
+
+```sql
+CREATE OR REPLACE FUNCTION process_payment_completion(
+  p_payment_id UUID,
+  p_user_id UUID,
+  p_payment_key TEXT,
+  p_receipt_url TEXT
+) RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_payment RECORD;
+BEGIN
+  -- Row Lock으로 동시 접근 방지 (SKIP LOCKED로 이미 처리 중인 건 제외)
+  SELECT * INTO v_payment
+  FROM payments
+  WHERE id = p_payment_id
+    AND user_id = p_user_id
+    AND status = 'pending'
+  FOR UPDATE SKIP LOCKED;
+  
+  IF NOT FOUND THEN
+    -- 이미 다른 트랜잭션에서 처리 중이거나 완료됨
+    RETURN FALSE;
+  END IF;
+  
+  -- 결제 상태 업데이트
+  UPDATE payments
+  SET status = 'completed',
+      payment_key = p_payment_key,
+      receipt_url = p_receipt_url,
+      paid_at = NOW()
+  WHERE id = p_payment_id;
+  
+  -- 크레딧 지급 (계약서 크레딧)
+  IF v_payment.credits_contract > 0 THEN
+    PERFORM add_credit(
+      p_user_id,
+      'contract',
+      v_payment.credits_contract,
+      '결제: ' || v_payment.product_name,
+      p_payment_id
+    );
+  END IF;
+  
+  -- 크레딧 지급 (AI 검토 크레딧)
+  IF v_payment.credits_ai_review > 0 THEN
+    PERFORM add_credit(
+      p_user_id,
+      'ai_review',
+      v_payment.credits_ai_review,
+      '결제: ' || v_payment.product_name,
+      p_payment_id
+    );
+  END IF;
+  
+  RETURN TRUE;
+END;
+$$;
+```
+
+#### expire_old_credits 함수 (크레딧 만료 처리)
+
+```sql
+CREATE OR REPLACE FUNCTION expire_old_credits()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  UPDATE credits
+  SET amount = 0,
+      updated_at = NOW()
+  WHERE expires_at < NOW()
+    AND amount > 0;
+END;
+$$;
+```
+
+#### cleanup_pending_payments 함수 (결제 정리)
+
+```sql
+CREATE OR REPLACE FUNCTION cleanup_pending_payments()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  UPDATE payments
+  SET status = 'expired'
+  WHERE status = 'pending'
+    AND created_at < NOW() - INTERVAL '24 hours';
+END;
+$$;
+```
+
+### 7.9 환불 수수료 시스템 마이그레이션 (2026-02-09)
+
+```sql
+-- refund_requests 테이블에 수수료 관련 컬럼 추가
+ALTER TABLE refund_requests ADD COLUMN IF NOT EXISTS base_refund_amount integer;
+ALTER TABLE refund_requests ADD COLUMN IF NOT EXISTS fee_rate numeric(5,4) DEFAULT 0.10;
+ALTER TABLE refund_requests ADD COLUMN IF NOT EXISTS fee_amount integer DEFAULT 0;
+
+-- 기존 데이터 마이그레이션 (기존 refund_amount를 base_refund_amount로)
+UPDATE refund_requests 
+SET base_refund_amount = refund_amount,
+    fee_amount = 0,
+    fee_rate = 0
+WHERE base_refund_amount IS NULL;
+
+-- 코멘트 추가
+COMMENT ON COLUMN refund_requests.base_refund_amount IS '수수료 차감 전 환불 금액';
+COMMENT ON COLUMN refund_requests.fee_rate IS '적용된 수수료율 (0.10 = 10%)';
+COMMENT ON COLUMN refund_requests.fee_amount IS '수수료 금액';
 ```
 
 ---
