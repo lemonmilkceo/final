@@ -559,7 +559,7 @@ export async function getContractForEdit(contractId: string): Promise<
       workplaceId: contract.workplace_id,
       workplaceName: contract.workplace_name,
       workLocation: contract.work_location,
-      contractType: contract.contract_type,
+      contractType: contract.contract_type as 'regular' | 'contract',
       businessSize: contract.business_size,
       workerName: contract.worker_name,
       workerPhone: contract.worker_phone || '',

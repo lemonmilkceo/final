@@ -130,9 +130,15 @@ export default async function SignPage({ params }: SignPageProps) {
     );
   }
 
+  // contract_type 타입 단언
+  const typedContract = {
+    ...contract,
+    contract_type: contract.contract_type as 'regular' | 'contract' | undefined,
+  };
+
   return (
     <WorkerSignPage 
-      contract={contract} 
+      contract={typedContract} 
       token={token} 
       isLoggedIn={isLoggedIn} 
       existingWorkerDetails={existingWorkerDetails}

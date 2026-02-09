@@ -20,6 +20,9 @@ interface PricingPageProps {
   isGuestMode?: boolean;
 }
 
+// 단건 충전 한도 (토스페이먼츠 심사 요건)
+const MAX_SINGLE_CHARGE = 100000;
+
 // 상품 정의
 const PRODUCTS = [
   {
@@ -89,6 +92,13 @@ export default function PricingPage({
 
   // 결제하기 버튼 클릭
   const handlePaymentClick = () => {
+    // 충전 한도 검증
+    if (selectedProduct.price > MAX_SINGLE_CHARGE) {
+      setToastMessage('1회 최대 충전 금액은 10만원이에요');
+      setShowToast(true);
+      return;
+    }
+    
     if (isGuestMode || !userId) {
       setShowSignupSheet(true);
     } else {

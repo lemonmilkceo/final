@@ -87,10 +87,16 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
     notFound();
   }
 
+  // contract_type 타입 단언 (DB에서는 string으로 반환)
+  const typedContract = {
+    ...contract,
+    contract_type: contract.contract_type as 'regular' | 'contract' | undefined,
+  };
+
   return (
     <ContractPreview
       contractId={id}
-      contract={contract}
+      contract={typedContract}
       isNew={false}
       employerName={employerName}
     />

@@ -185,5 +185,11 @@ export default async function ContractDetailPage({
     notFound();
   }
 
-  return <WorkerContractDetail contract={contract} isGuestMode={false} />;
+  // contract_type 타입 단언
+  const typedContract = {
+    ...contract,
+    contract_type: contract.contract_type as 'regular' | 'contract' | undefined,
+  };
+
+  return <WorkerContractDetail contract={typedContract} isGuestMode={false} />;
 }
