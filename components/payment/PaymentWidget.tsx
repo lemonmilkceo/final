@@ -20,10 +20,7 @@ interface PaymentWidgetProps {
 }
 
 // 토스페이먼츠 결제위젯 클라이언트 키
-// TODO: 토스 심사 후 라이브 키로 변경
-// 환경변수가 빈 문자열인 경우에도 fallback 적용
-const envKey = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY;
-const CLIENT_KEY = (envKey && envKey.trim() !== '') ? envKey : 'test_gck_Gv6LjeKD8a6BwweDB04L3wYxAdXy';
+const CLIENT_KEY = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY!;
 
 export default function PaymentWidget({
   product,

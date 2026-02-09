@@ -88,16 +88,12 @@ export default function PricingPage({
   };
 
   // 결제하기 버튼 클릭
-  // TODO: 토스 결제 심사 후 게스트 모드 결제 차단 원복 필요
   const handlePaymentClick = () => {
-    // 게스트 모드에서도 결제 테스트 가능하도록 임시 허용
-    setShowPayment(true);
-    // 원래 로직:
-    // if (isGuestMode || !userId) {
-    //   setShowSignupSheet(true);
-    // } else {
-    //   setShowPayment(true);
-    // }
+    if (isGuestMode || !userId) {
+      setShowSignupSheet(true);
+    } else {
+      setShowPayment(true);
+    }
   };
 
   return (
@@ -263,14 +259,6 @@ export default function PricingPage({
           </div>
         </div>
 
-        {/* 테스트 모드 안내 */}
-        <div className="bg-blue-50 rounded-xl p-4 mb-6">
-          <p className="text-[13px] text-blue-700">
-            💡 <strong>테스트 모드</strong>로 운영 중이에요.
-            <br />
-            카드번호 <code className="bg-blue-100 px-1 rounded">4242 4242 4242 4242</code>로 테스트할 수 있어요.
-          </p>
-        </div>
       </div>
 
       {/* 사업자 정보 Footer */}
@@ -287,11 +275,11 @@ export default function PricingPage({
         </Button>
       </div>
 
-      {/* 결제 위젯 - TODO: 토스 심사 후 userId 조건 원복 필요 */}
-      {showPayment && (
+      {/* 결제 위젯 */}
+      {showPayment && userId && (
         <PaymentWidget
           product={selectedProduct}
-          userId={userId || `guest_${Date.now()}`}
+          userId={userId}
           onSuccess={handlePaymentSuccess}
           onError={handlePaymentError}
           onClose={() => setShowPayment(false)}

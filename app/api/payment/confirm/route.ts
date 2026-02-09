@@ -13,7 +13,6 @@ function getTossSecretKey(): string {
   return key;
 }
 
-// TODO: 토스 결제 심사 후 게스트 모드 결제 차단 원복 필요
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const paymentKey = searchParams.get('paymentKey');
@@ -30,15 +29,14 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
 
-    // 인증 확인 (게스트 모드 허용을 위해 임시 비활성화)
+    // 인증 확인
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
-    // TODO: 심사 후 아래 주석 해제
-    // if (!user) {
-    //   return NextResponse.redirect(new URL('/login', request.url));
-    // }
+    if (!user) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
 
     // 토스페이먼츠 시크릿 키 가져오기
     const secretKey = getTossSecretKey();
@@ -75,12 +73,6 @@ export async function GET(request: NextRequest) {
       isGuest: !user,
       receipt: confirmData.receipt?.url,
     });
-
-    // 게스트 모드: DB 업데이트 스킵 (토스 심사용)
-    if (!user) {
-      console.log('[Guest Mode] Payment confirmed - skipping DB update');
-      return NextResponse.redirect(new URL('/pricing?success=true', request.url));
-    }
 
     // 결제 정보 조회
     const { data: payment, error: paymentError } = await supabase

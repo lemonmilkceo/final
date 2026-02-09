@@ -1,23 +1,21 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
-// TODO: 토스 결제 심사 후 게스트 모드 결제 차단 원복 필요
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
 
-    // 인증 확인 (게스트 모드 허용을 위해 임시 비활성화)
+    // 인증 확인
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
-    // TODO: 심사 후 아래 주석 해제
-    // if (authError || !user) {
-    //   return NextResponse.json(
-    //     { error: '로그인이 필요해요' },
-    //     { status: 401 }
-    //   );
-    // }
+    if (!user) {
+      return NextResponse.json(
+        { error: '로그인이 필요해요' },
+        { status: 401 }
+      );
+    }
 
     const body = await request.json();
     const { orderId, productId, amount, credits } = body;
@@ -52,12 +50,6 @@ export async function POST(request: NextRequest) {
         { error: '잘못된 상품 정보예요' },
         { status: 400 }
       );
-    }
-
-    // 게스트 모드: DB 저장 스킵 (토스 심사용)
-    if (!user) {
-      console.log('[Guest Mode] Payment prepare - skipping DB insert for orderId:', orderId);
-      return NextResponse.json({ success: true, orderId });
     }
 
     // payments 테이블에 대기 상태로 기록
