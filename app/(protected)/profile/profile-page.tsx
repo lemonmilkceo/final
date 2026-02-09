@@ -9,6 +9,7 @@ import BottomSheet from '@/components/ui/BottomSheet';
 import Toast from '@/components/ui/Toast';
 import { updateProfile, updateWorkerDetails } from './actions';
 import { checkAccountBeforeDelete, deleteAccount } from '@/app/actions/account';
+import { redeemPromoCode } from '@/app/actions/promo';
 import clsx from 'clsx';
 
 // 은행 목록
@@ -72,6 +73,39 @@ export default function ProfilePage({ profile, workerDetails }: ProfilePageProps
     remainingCredits: number;
   } | null>(null);
   const [toast, setToast] = useState<{ message: string; variant: 'success' | 'error' } | null>(null);
+
+  // 프로모션 코드 상태
+  const [promoCode, setPromoCode] = useState('');
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoResult, setPromoResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  const handleRedeemPromoCode = async () => {
+    if (!promoCode.trim()) return;
+    
+    setPromoLoading(true);
+    setPromoResult(null);
+
+    const result = await redeemPromoCode(promoCode.trim().toUpperCase());
+
+    if (result.success) {
+      setPromoResult({ 
+        success: true, 
+        message: `🎉 ${result.creditAmount}크레딧이 지급되었습니다!` 
+      });
+      setPromoCode('');
+      router.refresh();
+    } else {
+      setPromoResult({ 
+        success: false, 
+        message: result.error || '코드 적용에 실패했습니다' 
+      });
+    }
+
+    setPromoLoading(false);
+    
+    // 5초 후 결과 메시지 숨김
+    setTimeout(() => setPromoResult(null), 5000);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -386,6 +420,49 @@ export default function ProfilePage({ profile, workerDetails }: ProfilePageProps
             )}
           </div>
         )}
+
+        {/* 프로모션 코드 섹션 */}
+        <div className="mt-8 pt-6 border-t border-gray-100">
+          <h3 className="text-[16px] font-bold text-gray-900 mb-4">🎁 프로모션 코드</h3>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={promoCode}
+              onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+              placeholder="코드를 입력하세요"
+              maxLength={20}
+              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-[15px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+            />
+            <button
+              onClick={handleRedeemPromoCode}
+              disabled={!promoCode.trim() || promoLoading}
+              className={clsx(
+                'px-5 py-3 rounded-xl font-semibold text-[15px] transition-colors',
+                promoCode.trim() && !promoLoading
+                  ? 'bg-blue-500 text-white active:bg-blue-600'
+                  : 'bg-gray-200 text-gray-400'
+              )}
+            >
+              {promoLoading ? '...' : '적용'}
+            </button>
+          </div>
+          
+          {/* 결과 메시지 */}
+          {promoResult && (
+            <div className={clsx(
+              'mt-3 p-3 rounded-xl text-[14px]',
+              promoResult.success
+                ? 'bg-green-50 text-green-700'
+                : 'bg-red-50 text-red-600'
+            )}>
+              {promoResult.message}
+            </div>
+          )}
+          
+          <p className="mt-3 text-[12px] text-gray-400">
+            프로모션 코드가 있다면 입력해서 크레딧을 받으세요
+          </p>
+        </div>
 
         {/* 가입일 정보 */}
         <div className="mt-8 pt-6 border-t border-gray-100">

@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import EmployerDashboard from './employer-dashboard';
+import { getActiveAnnouncements, Announcement } from '@/app/actions/announcement';
 
 // 게스트 모드 체크 함수
 async function isGuestMode(): Promise<boolean> {
@@ -250,6 +251,9 @@ export default async function EmployerDashboardPage() {
   // 휴지통 계약서 수
   const deletedCount = deletedContracts?.length || 0;
 
+  // 공지사항 조회
+  const announcements = await getActiveAnnouncements('employer');
+
   return (
     <EmployerDashboard
       profile={{
@@ -265,6 +269,7 @@ export default async function EmployerDashboardPage() {
       folders={foldersWithCount}
       unfiledCount={unfiledCount}
       deletedCount={deletedCount}
+      announcements={announcements}
     />
   );
 }

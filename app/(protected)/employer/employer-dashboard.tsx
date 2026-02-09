@@ -33,6 +33,10 @@ import {
 } from './folders/actions';
 import { useContractFormStore } from '@/stores/contractFormStore';
 import type { ContractStatus } from '@/types';
+import type { Announcement } from '@/app/actions/announcement';
+import NoticeBar from '@/components/announcement/NoticeBar';
+import Banner from '@/components/announcement/Banner';
+import { PopupContainer } from '@/components/announcement/PopupModal';
 
 // 정렬 타입
 type SortType = 'latest' | 'location';
@@ -90,6 +94,7 @@ interface EmployerDashboardProps {
   unfiledCount?: number;
   deletedCount?: number;
   isGuestMode?: boolean;
+  announcements?: Announcement[];
 }
 
 export default function EmployerDashboard({
@@ -101,6 +106,7 @@ export default function EmployerDashboard({
   unfiledCount = 0,
   deletedCount = 0,
   isGuestMode = false,
+  announcements = [],
 }: EmployerDashboardProps) {
   const router = useRouter();
 
@@ -498,6 +504,16 @@ export default function EmployerDashboard({
 
   return (
     <div className="min-h-screen bg-gray-50 pb-6">
+      {/* 공지사항 바 (상단) */}
+      {!isEditMode && announcements.length > 0 && (
+        <NoticeBar announcements={announcements} />
+      )}
+
+      {/* 팝업 모달 */}
+      {!isGuestMode && announcements.length > 0 && (
+        <PopupContainer announcements={announcements} />
+      )}
+
       {/* 편집 모드 헤더 */}
       {isEditMode ? (
         <header className="bg-white px-5 py-4 sticky top-0 z-40 safe-top">
@@ -734,6 +750,13 @@ export default function EmployerDashboard({
 
       {/* 게스트 모드 배너 */}
       {isGuestMode && !isEditMode && <GuestBanner />}
+
+      {/* 공지사항 배너 (본문 영역) */}
+      {!isEditMode && !isGuestMode && announcements.some(a => a.type === 'banner') && (
+        <div className="px-5 mt-4">
+          <Banner announcements={announcements} />
+        </div>
+      )}
 
       {/* 폴더 탭 (조건부 표시) */}
       {showFolderTabs && !isEditMode && (

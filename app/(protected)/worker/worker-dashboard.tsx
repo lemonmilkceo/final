@@ -20,6 +20,10 @@ import { hideContracts, unhideContracts } from './actions';
 import { updateProfile } from '@/app/(protected)/profile/actions';
 import clsx from 'clsx';
 import type { ContractStatus } from '@/types';
+import type { Announcement } from '@/app/actions/announcement';
+import NoticeBar from '@/components/announcement/NoticeBar';
+import Banner from '@/components/announcement/Banner';
+import { PopupContainer } from '@/components/announcement/PopupModal';
 
 // 탭 타입
 type TabType = 'all' | 'hidden';
@@ -71,6 +75,7 @@ interface WorkerDashboardProps {
   isGuestMode?: boolean;
   showOnboardingComplete?: boolean;
   isOnboardingComplete?: boolean;
+  announcements?: Announcement[];
 }
 
 export default function WorkerDashboard({
@@ -81,6 +86,7 @@ export default function WorkerDashboard({
   isGuestMode = false,
   showOnboardingComplete = false,
   isOnboardingComplete = true,
+  announcements = [],
 }: WorkerDashboardProps) {
   const router = useRouter();
 
@@ -377,6 +383,16 @@ export default function WorkerDashboard({
 
   return (
     <div className="min-h-screen bg-gray-50 pb-6">
+      {/* 공지사항 바 (상단) */}
+      {!isEditMode && announcements.length > 0 && (
+        <NoticeBar announcements={announcements} />
+      )}
+
+      {/* 팝업 모달 */}
+      {!isGuestMode && announcements.length > 0 && (
+        <PopupContainer announcements={announcements} />
+      )}
+
       {/* 편집 모드 헤더 */}
       {isEditMode ? (
         <header className="bg-white px-5 py-4 sticky top-0 z-40 safe-top">
@@ -516,6 +532,13 @@ export default function WorkerDashboard({
 
       {/* 게스트 모드 배너 */}
       {isGuestMode && !isEditMode && <GuestBanner />}
+
+      {/* 공지사항 배너 (본문 영역) */}
+      {!isEditMode && !isGuestMode && announcements.some(a => a.type === 'banner') && (
+        <div className="px-5 mt-4">
+          <Banner announcements={announcements} />
+        </div>
+      )}
 
       {/* 탭 (숨긴 계약서가 있을 때만) */}
       {showTabs && !isEditMode && (

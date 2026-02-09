@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { ROUTES } from '@/lib/constants/routes';
 import WorkerDashboard from './worker-dashboard';
+import { getActiveAnnouncements } from '@/app/actions/announcement';
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -222,6 +223,9 @@ export default async function WorkerDashboardPage({ searchParams }: PageProps) {
       hidden_at: hiddenAtMap.get(c.id) || null,
     }));
 
+  // 공지사항 조회
+  const announcements = await getActiveAnnouncements('worker');
+
   return (
     <WorkerDashboard
       profile={{
@@ -234,6 +238,7 @@ export default async function WorkerDashboardPage({ searchParams }: PageProps) {
       hiddenCount={hiddenContractsList.length}
       showOnboardingComplete={showOnboardingComplete}
       isOnboardingComplete={isOnboardingComplete}
+      announcements={announcements}
     />
   );
 }
