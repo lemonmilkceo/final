@@ -351,33 +351,52 @@ export default function WorkerSignPage({
           계약이 완료됐어요!
         </h1>
         <p className="text-[15px] text-gray-500 mb-4">
-          이 계약서가 첫 경력으로 저장돼요
+          이 계약서가 내 경력에 자동 저장됐어요
         </p>
         
-        {/* 혜택 안내 */}
-        <div className="bg-blue-50 rounded-2xl p-4 mb-8 w-full max-w-xs text-left">
-          <p className="text-[14px] text-blue-700 font-medium mb-2">
-            ✨ 회원가입하면 이런 혜택이 있어요
+        {/* 완료 안내 */}
+        <div className="bg-green-50 rounded-2xl p-4 mb-8 w-full max-w-xs text-left">
+          <p className="text-[14px] text-green-700 font-medium mb-2">
+            ✅ 저장된 정보
           </p>
-          <ul className="text-[13px] text-blue-600 space-y-1">
-            <li>• 내 경력 자동 관리</li>
-            <li>• 계약서 PDF 다운로드</li>
-            <li>• 다음 계약 정보 자동 입력</li>
+          <ul className="text-[13px] text-green-600 space-y-1">
+            <li>• 계약서 원본 보관</li>
+            <li>• 경력 자동 등록</li>
+            <li>• PDF 다운로드 가능</li>
           </ul>
         </div>
 
-        <a
-          href="/signup"
-          className="w-full max-w-xs py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg text-center block mb-3"
-        >
-          3초만에 가입하기
-        </a>
-        <button
-          onClick={() => router.push('/')}
-          className="text-[14px] text-gray-400"
-        >
-          나중에 할게요
-        </button>
+        {isLoggedIn ? (
+          <>
+            <button
+              onClick={() => router.push('/worker')}
+              className="w-full max-w-xs py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg text-center mb-3"
+            >
+              내 계약서 확인하기 📄
+            </button>
+            <button
+              onClick={() => router.push('/')}
+              className="text-[14px] text-gray-400"
+            >
+              홈으로 가기
+            </button>
+          </>
+        ) : (
+          <>
+            <a
+              href="/login"
+              className="w-full max-w-xs py-4 rounded-2xl bg-[#FEE500] text-[#3C1E1E] font-semibold text-lg text-center block mb-3"
+            >
+              카카오로 로그인하기
+            </a>
+            <button
+              onClick={() => router.push('/')}
+              className="text-[14px] text-gray-400"
+            >
+              홈으로 가기
+            </button>
+          </>
+        )}
       </div>
     );
   }
