@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit, getRateLimitKey } from '@/lib/utils/rate-limiter';
 
 /**
  * 환불 요청 생성 API
@@ -18,6 +19,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: '로그인이 필요해요' },
         { status: 401 }
+      );
+    }
+
+    // [보안] Rate Limiting: 사용자당 분당 3회 제한
+    const rateLimitKey = getRateLimitKey('refund:request', user.id);
+    const { allowed, remaining, resetAt } = checkRateLimit(rateLimitKey, 3, 60 * 1000);
+    
+    if (!allowed) {
+      return NextResponse.json(
+        { error: '요청이 너무 많아요. 잠시 후 다시 시도해주세요.' },
+        { 
+          status: 429,
+          headers: {
+            'X-RateLimit-Remaining': remaining.toString(),
+            'X-RateLimit-Reset': resetAt.toString(),
+          }
+        }
       );
     }
 
@@ -82,20 +100,46 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 현재 크레딧 잔액 조회
-    const { data: credit } = await supabase
-      .from('credits')
+    // [개선] 해당 결제 건에서 지급된 크레딧의 사용량을 정확히 계산
+    // credit_transactions에서 reference_id(결제ID)로 추적
+    const totalCredits = payment.credits_contract;
+    
+    // 1. 해당 결제로 지급된 크레딧 확인
+    const { data: creditGiven } = await supabase
+      .from('credit_transactions')
       .select('amount')
       .eq('user_id', user.id)
       .eq('credit_type', 'contract')
+      .eq('reference_id', paymentId)
+      .gt('amount', 0) // 양수만 (지급)
       .single();
 
-    const currentCredits = credit?.amount || 0;
-    const totalCredits = payment.credits_contract;
-    
-    // 사용한 크레딧 계산 (간단히: 구매 크레딧 - 현재 잔액, 단 음수 방지)
-    // 실제로는 credit_transactions를 추적해야 정확함
-    const usedCredits = Math.max(0, totalCredits - currentCredits);
+    // 2. 지급 기록이 없으면 환불 불가
+    if (!creditGiven) {
+      return NextResponse.json(
+        { error: '결제 크레딧 지급 기록을 찾을 수 없어요' },
+        { status: 400 }
+      );
+    }
+
+    // 3. 현재 잔액과 결제 후 사용량 계산
+    // 결제 이후 사용한 크레딧 = 전체 마이너스 트랜잭션 합계 (음수)
+    const { data: usedTransactions } = await supabase
+      .from('credit_transactions')
+      .select('amount')
+      .eq('user_id', user.id)
+      .eq('credit_type', 'contract')
+      .lt('amount', 0) // 음수만 (사용)
+      .gte('created_at', payment.paid_at || payment.created_at);
+
+    // 결제 이후 총 사용량 (양수로 변환)
+    const usedAfterPayment = usedTransactions?.reduce(
+      (sum, t) => sum + Math.abs(t.amount),
+      0
+    ) || 0;
+
+    // 해당 결제 건에서 사용된 크레딧 (최대 해당 결제 크레딧까지)
+    const usedCredits = Math.min(usedAfterPayment, totalCredits);
     const refundCredits = totalCredits - usedCredits;
 
     // 환불 금액 계산 (미사용 크레딧 비례)

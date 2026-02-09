@@ -264,9 +264,13 @@ AI 노무사 검토 결과를 저장합니다.
 | `user_id` | `uuid` | NO | - | FK → profiles.id |
 | `credit_type` | `credit_type` | NO | - | 크레딧 종류 |
 | `amount` | `integer` | NO | `0` | 보유 수량 |
+| `expires_at` | `timestamptz` | YES | `now() + 1 year` | 만료일시 |
 | `updated_at` | `timestamptz` | NO | `now()` | 수정일시 |
 
 **Constraints:** UNIQUE(`user_id`, `credit_type`), CHECK(`amount >= 0`)
+
+**RLS Policies:**
+- `credits_select_own`: 자신의 크레딧만 조회
 
 ---
 
@@ -282,8 +286,16 @@ AI 노무사 검토 결과를 저장합니다.
 | `amount` | `integer` | NO | - | 변동 수량 (+/-) |
 | `balance_after` | `integer` | NO | - | 거래 후 잔액 |
 | `description` | `text` | NO | - | 거래 설명 |
-| `reference_id` | `uuid` | YES | NULL | 관련 ID |
+| `reference_id` | `uuid` | YES | NULL | 관련 ID (payments.id 등) |
 | `created_at` | `timestamptz` | NO | `now()` | 거래 일시 |
+
+**Indexes:**
+- `idx_credit_transactions_user_type`
+- `idx_credit_transactions_reference`
+- `idx_credit_transactions_created_at`
+
+**RLS Policies:**
+- `credit_transactions_select_own`: 자신의 거래 내역만 조회
 
 ---
 
@@ -305,6 +317,56 @@ AI 노무사 검토 결과를 저장합니다.
 | `paid_at` | `timestamptz` | YES | NULL | 결제 완료 일시 |
 | `receipt_url` | `text` | YES | NULL | 영수증 URL |
 | `created_at` | `timestamptz` | NO | `now()` | 생성일시 |
+
+**Constraints:**
+- `UNIQUE(order_id)` - 중복 주문 방지
+- `CHECK(status IN ('pending', 'completed', 'failed', 'expired', 'refunded'))`
+
+**Indexes:**
+- `idx_payments_user_id`, `idx_payments_status`, `idx_payments_created_at`
+
+**RLS Policies:**
+- `payments_select_own`: 자신의 결제만 조회
+- `payments_insert_own`: 자신의 결제만 생성
+- `payments_update_own`: 자신의 결제만 수정
+
+---
+
+### 3.17 refund_requests
+
+환불 요청 내역을 저장합니다.
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
+| `user_id` | `uuid` | NO | - | FK → auth.users.id |
+| `payment_id` | `uuid` | NO | - | FK → payments.id |
+| `request_type` | `text` | NO | - | 환불 유형 (full/partial) |
+| `reason` | `text` | NO | - | 환불 사유 |
+| `total_credits` | `integer` | NO | - | 총 지급 크레딧 |
+| `used_credits` | `integer` | NO | - | 사용된 크레딧 |
+| `refund_credits` | `integer` | NO | - | 환불 크레딧 |
+| `original_amount` | `integer` | NO | - | 원결제 금액 |
+| `refund_amount` | `integer` | NO | - | 환불 금액 |
+| `status` | `text` | NO | `'pending'` | 환불 상태 |
+| `admin_note` | `text` | YES | NULL | 관리자 메모 |
+| `processed_at` | `timestamptz` | YES | NULL | 처리 일시 |
+| `processed_by` | `uuid` | YES | NULL | 처리자 ID |
+| `toss_cancel_key` | `text` | YES | NULL | 토스 취소 키 |
+| `created_at` | `timestamptz` | NO | `now()` | 생성일시 |
+| `updated_at` | `timestamptz` | NO | `now()` | 수정일시 |
+
+**Constraints:**
+- `CHECK(request_type IN ('full', 'partial'))`
+- `CHECK(status IN ('pending', 'approved', 'rejected', 'completed', 'cancelled'))`
+
+**Indexes:**
+- `idx_refund_requests_user_id`, `idx_refund_requests_payment_id`, `idx_refund_requests_status`
+
+**RLS Policies:**
+- 자신의 환불 요청만 SELECT
+- 자신의 환불 요청만 INSERT (pending 상태)
+- 자신의 환불 요청만 UPDATE (cancelled로 변경만 허용)
 
 ---
 
@@ -439,6 +501,26 @@ AI 노무사 검토 결과를 저장합니다.
 
 ### 5.4 expire_pending_contracts()
 만료된 계약서 자동 처리 (pg_cron 매시간 실행)
+
+### 5.5 process_payment_completion()
+결제 완료 처리 함수 (Race Condition 방지)
+- Row Lock으로 동시 접근 방지
+- 상태 업데이트 + 크레딧 지급 원자적 처리
+
+```sql
+process_payment_completion(
+  p_payment_id UUID,
+  p_user_id UUID,
+  p_payment_key TEXT,
+  p_receipt_url TEXT
+) RETURNS BOOLEAN
+```
+
+### 5.6 expire_old_credits()
+만료된 크레딧 자동 처리 (pg_cron 매일 실행)
+
+### 5.7 cleanup_pending_payments()
+24시간 이상 pending 상태인 결제 expired 처리 (pg_cron 매시간 실행)
 
 ---
 

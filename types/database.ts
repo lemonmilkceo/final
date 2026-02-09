@@ -298,6 +298,7 @@ export type Database = {
         Row: {
           amount: number
           credit_type: Database["public"]["Enums"]["credit_type"]
+          expires_at: string | null
           id: string
           updated_at: string
           user_id: string
@@ -305,6 +306,7 @@ export type Database = {
         Insert: {
           amount?: number
           credit_type: Database["public"]["Enums"]["credit_type"]
+          expires_at?: string | null
           id?: string
           updated_at?: string
           user_id: string
@@ -312,6 +314,7 @@ export type Database = {
         Update: {
           amount?: number
           credit_type?: Database["public"]["Enums"]["credit_type"]
+          expires_at?: string | null
           id?: string
           updated_at?: string
           user_id?: string
@@ -836,7 +839,18 @@ export type Database = {
         }
         Returns: number
       }
+      cleanup_pending_payments: { Args: never; Returns: number }
+      expire_old_credits: { Args: never; Returns: number }
       expire_pending_contracts: { Args: never; Returns: number }
+      process_payment_completion: {
+        Args: {
+          p_payment_id: string
+          p_payment_key: string
+          p_receipt_url: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       use_credit: {
         Args: {
           p_amount: number

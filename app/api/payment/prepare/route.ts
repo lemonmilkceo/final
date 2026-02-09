@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit, getRateLimitKey } from '@/lib/utils/rate-limiter';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,6 +15,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: '로그인이 필요해요' },
         { status: 401 }
+      );
+    }
+
+    // [보안] Rate Limiting: 사용자당 분당 5회 제한
+    const rateLimitKey = getRateLimitKey('payment:prepare', user.id);
+    const { allowed, remaining, resetAt } = checkRateLimit(rateLimitKey, 5, 60 * 1000);
+    
+    if (!allowed) {
+      return NextResponse.json(
+        { error: '요청이 너무 많아요. 잠시 후 다시 시도해주세요.' },
+        { 
+          status: 429,
+          headers: {
+            'X-RateLimit-Remaining': remaining.toString(),
+            'X-RateLimit-Reset': resetAt.toString(),
+          }
+        }
       );
     }
 

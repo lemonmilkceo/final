@@ -38,6 +38,42 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
+    // [보안] 토스 API 호출 전 DB에서 결제 정보 먼저 조회
+    const { data: payment, error: paymentError } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('order_id', orderId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (paymentError || !payment) {
+      console.error('Payment not found:', paymentError);
+      return NextResponse.redirect(
+        new URL('/pricing?error=payment_not_found', request.url)
+      );
+    }
+
+    // [보안] 금액 조작 방지: DB에 저장된 금액과 요청된 금액 비교
+    const requestedAmount = parseInt(amount, 10);
+    if (payment.amount !== requestedAmount) {
+      console.error('[Security] Amount mismatch:', {
+        expected: payment.amount,
+        received: requestedAmount,
+        orderId,
+      });
+      return NextResponse.redirect(
+        new URL('/pricing?error=amount_mismatch', request.url)
+      );
+    }
+
+    // [보안] 이미 처리된 결제인지 확인 (중복 처리 방지)
+    if (payment.status !== 'pending') {
+      console.log('Payment already processed:', payment.status);
+      return NextResponse.redirect(
+        new URL('/pricing?success=true', request.url)
+      );
+    }
+
     // 토스페이먼츠 시크릿 키 가져오기
     const secretKey = getTossSecretKey();
 
@@ -53,7 +89,7 @@ export async function GET(request: NextRequest) {
         body: JSON.stringify({
           paymentKey,
           orderId,
-          amount: parseInt(amount, 10),
+          amount: payment.amount, // [보안] DB에 저장된 금액 사용
         }),
       }
     );
@@ -67,72 +103,36 @@ export async function GET(request: NextRequest) {
     }
 
     const confirmData = await confirmResponse.json();
-    console.log('[Payment Success]', {
+    console.log('[Payment Confirmed]', {
       orderId,
-      amount,
-      isGuest: !user,
+      amount: payment.amount,
       receipt: confirmData.receipt?.url,
     });
 
-    // 결제 정보 조회
-    const { data: payment, error: paymentError } = await supabase
-      .from('payments')
-      .select('*')
-      .eq('order_id', orderId)
-      .eq('user_id', user.id)
-      .single();
+    // [보안] 결제 상태 업데이트 + 크레딧 지급을 원자적 DB 함수로 처리
+    // Race Condition 방지: Row Lock으로 동시 처리 차단
+    const { data: processResult, error: processError } = await supabase.rpc(
+      'process_payment_completion',
+      {
+        p_payment_id: payment.id,
+        p_user_id: user.id,
+        p_payment_key: paymentKey,
+        p_receipt_url: confirmData.receipt?.url || null,
+      }
+    );
 
-    if (paymentError || !payment) {
-      console.error('Payment not found:', paymentError);
-      // 결제는 성공했으므로 성공 페이지로 이동
-      return NextResponse.redirect(new URL('/pricing?success=true', request.url));
-    }
-
-    // 결제 성공 상태 업데이트
-    await supabase
-      .from('payments')
-      .update({
-        status: 'completed',
-        payment_key: paymentKey,
-        receipt_url: confirmData.receipt?.url || null,
-        paid_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', payment.id);
-
-    // 크레딧 지급 (병렬 처리)
-    const creditPromises = [];
-
-    if (payment.credits_contract > 0) {
-      creditPromises.push(
-        supabase
-          .rpc('add_credit', {
-            p_user_id: user.id,
-            p_credit_type: 'contract',
-            p_amount: payment.credits_contract,
-            p_description: `결제: ${payment.product_name}`,
-            p_reference_id: payment.id,
-          })
-          .then()
+    if (processError) {
+      console.error('Payment process error:', processError);
+      // 토스에서 결제는 성공했으므로 일단 성공 페이지로 이동
+      // 관리자가 수동 처리 필요
+      return NextResponse.redirect(
+        new URL('/pricing?success=true&warning=credit_pending', request.url)
       );
     }
 
-    if (payment.credits_ai_review > 0) {
-      creditPromises.push(
-        supabase
-          .rpc('add_credit', {
-            p_user_id: user.id,
-            p_credit_type: 'ai_review',
-            p_amount: payment.credits_ai_review,
-            p_description: `결제: ${payment.product_name}`,
-            p_reference_id: payment.id,
-          })
-          .then()
-      );
-    }
-
-    if (creditPromises.length > 0) {
-      await Promise.all(creditPromises);
+    if (!processResult) {
+      // 이미 다른 요청이 처리함 (정상적인 중복 요청)
+      console.log('Payment already processed by another request');
     }
 
     // 성공 페이지로 리다이렉트

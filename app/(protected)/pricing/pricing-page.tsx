@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import PageHeader from '@/components/layout/PageHeader';
 import Button from '@/components/ui/Button';
 import Toast from '@/components/ui/Toast';
@@ -60,11 +60,43 @@ export default function PricingPage({
   isGuestMode = false,
 }: PricingPageProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [selectedProduct, setSelectedProduct] = useState(PRODUCTS[1]); // 기본 인기상품
   const [showPayment, setShowPayment] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [showSignupSheet, setShowSignupSheet] = useState(false);
+
+  // [개선] URL 쿼리 파라미터 처리 (결제 성공/실패 리다이렉트)
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const error = searchParams.get('error');
+    const warning = searchParams.get('warning');
+
+    if (success === 'true') {
+      setToastMessage('결제가 완료됐어요! 🎉');
+      setShowToast(true);
+      // URL 정리
+      router.replace('/pricing');
+    } else if (error) {
+      const errorMessages: Record<string, string> = {
+        payment_failed: '결제에 실패했어요. 다시 시도해주세요.',
+        payment_not_found: '결제 정보를 찾을 수 없어요.',
+        amount_mismatch: '결제 금액이 일치하지 않아요.',
+        missing_params: '필수 정보가 누락됐어요.',
+        server_error: '서버 오류가 발생했어요.',
+      };
+      setToastMessage(errorMessages[error] || '결제에 실패했어요.');
+      setShowToast(true);
+      router.replace('/pricing');
+    }
+
+    if (warning === 'credit_pending') {
+      // 결제는 성공했지만 크레딧 지급 대기 중
+      setToastMessage('결제 완료! 크레딧은 곧 지급돼요.');
+      setShowToast(true);
+    }
+  }, [searchParams, router]);
 
   const handlePaymentSuccess = () => {
     setShowPayment(false);
@@ -163,6 +195,8 @@ export default function PricingPage({
               <button
                 key={product.id}
                 onClick={() => setSelectedProduct(product)}
+                aria-label={`${product.name} ${product.price.toLocaleString()}원 선택`}
+                aria-pressed={isSelected}
                 className={clsx(
                   'w-full bg-white rounded-2xl p-5 text-left transition-all',
                   'border-2',

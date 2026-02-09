@@ -126,7 +126,16 @@ export default function PaymentWidget({
       });
 
       if (!prepareResponse.ok) {
-        throw new Error('결제 준비에 실패했어요');
+        // [개선] API 에러 응답 파싱하여 구체적인 메시지 표시
+        const errorData = await prepareResponse.json().catch(() => ({}));
+        const errorMessage = errorData.error || '결제 준비에 실패했어요';
+        
+        // Rate Limit 에러 처리
+        if (prepareResponse.status === 429) {
+          throw new Error('요청이 너무 많아요. 잠시 후 다시 시도해주세요.');
+        }
+        
+        throw new Error(errorMessage);
       }
 
       // 토스페이먼츠 결제 요청
@@ -172,12 +181,14 @@ export default function PaymentWidget({
           <button
             onClick={onClose}
             className="w-10 h-10 flex items-center justify-center -mr-2"
+            aria-label="결제창 닫기"
           >
             <svg
               className="w-6 h-6 text-gray-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
