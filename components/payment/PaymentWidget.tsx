@@ -31,6 +31,8 @@ export default function PaymentWidget({
 }: PaymentWidgetProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [widgets, setWidgets] = useState<TossPaymentsWidgets | null>(null);
+  const [isPaymentMethodSelected, setIsPaymentMethodSelected] = useState(false);
+  const [isAgreementChecked, setIsAgreementChecked] = useState(false);
   const paymentMethodRef = useRef<HTMLDivElement>(null);
   const agreementRef = useRef<HTMLDivElement>(null);
 
@@ -78,20 +80,33 @@ export default function PaymentWidget({
 
         // 결제 수단 위젯 렌더링
         if (paymentMethodRef.current) {
-          await widgetsInstance.renderPaymentMethods({
+          const paymentMethodWidget = await widgetsInstance.renderPaymentMethods({
             selector: '#payment-method',
             variantKey: 'DEFAULT',
           });
           console.log('[PaymentWidget] Payment methods rendered');
+          
+          // 결제 수단 선택 상태 감지
+          paymentMethodWidget.on('paymentMethodSelect', (paymentMethod) => {
+            console.log('[PaymentWidget] Payment method selected:', paymentMethod);
+            setIsPaymentMethodSelected(!!paymentMethod);
+          });
         }
 
         // 약관 동의 위젯 렌더링
         if (agreementRef.current) {
-          await widgetsInstance.renderAgreement({
+          const agreementWidget = await widgetsInstance.renderAgreement({
             selector: '#agreement',
             variantKey: 'AGREEMENT',
           });
           console.log('[PaymentWidget] Agreement rendered');
+          
+          // 약관 동의 상태 감지
+          agreementWidget.on('agreementStatusChange', (agreementStatus) => {
+            console.log('[PaymentWidget] Agreement status changed:', agreementStatus);
+            // agreementStatus.agreedRequiredTerms가 true면 필수 약관 동의 완료
+            setIsAgreementChecked(agreementStatus?.agreedRequiredTerms ?? false);
+          });
         }
 
         setIsLoading(false);
@@ -239,10 +254,20 @@ export default function PaymentWidget({
 
         {/* 결제 버튼 */}
         <div className="sticky bottom-0 bg-white border-t border-gray-100 px-5 pt-3 pb-4 safe-bottom">
+          {/* 결제 조건 안내 */}
+          {!isLoading && (!isPaymentMethodSelected || !isAgreementChecked) && (
+            <p className="text-[13px] text-orange-500 text-center mb-2">
+              {!isPaymentMethodSelected && !isAgreementChecked 
+                ? '결제 수단을 선택하고 필수 약관에 동의해주세요'
+                : !isPaymentMethodSelected 
+                  ? '결제 수단을 선택해주세요'
+                  : '필수 약관에 동의해주세요'}
+            </p>
+          )}
           <button
             onClick={handlePayment}
-            disabled={isLoading}
-            className="w-full py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg disabled:bg-gray-300 disabled:cursor-not-allowed"
+            disabled={isLoading || !isPaymentMethodSelected || !isAgreementChecked}
+            className="w-full py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
           >
             {isLoading ? '로딩 중...' : `${product.price.toLocaleString()}원 결제하기`}
           </button>
