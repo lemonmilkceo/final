@@ -8,9 +8,7 @@ interface User {
   role: string | null;
   is_blocked: boolean | null;
   created_at: string;
-  credits: {
-    amount: number;
-  }[] | null;
+  contractCredits: number;
   provider?: string;
 }
 
@@ -25,8 +23,7 @@ async function getUsers(search?: string, role?: string): Promise<User[]> {
       phone,
       role,
       is_blocked,
-      created_at,
-      credits (amount)
+      created_at
     `)
     .order('created_at', { ascending: false })
     .limit(100);
@@ -46,6 +43,23 @@ async function getUsers(search?: string, role?: string): Promise<User[]> {
     return [];
   }
 
+  const profiles = data || [];
+  const userIds = profiles.map(p => p.id);
+
+  // credit_type = 'contract'인 크레딧만 가져오기
+  const { data: creditsData } = await supabase
+    .from('credits')
+    .select('user_id, amount')
+    .eq('credit_type', 'contract')
+    .in('user_id', userIds);
+
+  const creditsMap = new Map<string, number>();
+  if (creditsData) {
+    for (const c of creditsData) {
+      creditsMap.set(c.user_id, c.amount);
+    }
+  }
+
   // provider 정보 가져오기
   const { data: providers } = await supabase.rpc('get_user_providers');
   const providerMap = new Map<string, string>();
@@ -55,11 +69,16 @@ async function getUsers(search?: string, role?: string): Promise<User[]> {
     }
   }
 
-  // users에 provider 정보 추가
-  const users = (data as unknown as User[]) || [];
-  return users.map(user => ({
-    ...user,
-    provider: providerMap.get(user.id) || 'unknown',
+  // users에 provider 및 크레딧 정보 추가
+  return profiles.map(profile => ({
+    id: profile.id,
+    name: profile.name,
+    phone: profile.phone,
+    role: profile.role,
+    is_blocked: profile.is_blocked,
+    created_at: profile.created_at,
+    contractCredits: creditsMap.get(profile.id) || 0,
+    provider: providerMap.get(profile.id) || 'unknown',
   }));
 }
 
@@ -219,7 +238,7 @@ export default async function UsersPage({
                     </span>
                   </td>
                   <td className="px-6 py-4 font-medium text-gray-900">
-                    {user.credits?.find(c => true)?.amount || 0}
+                    {user.contractCredits}
                   </td>
                   <td className="px-6 py-4">
                     {user.is_blocked ? (
