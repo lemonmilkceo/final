@@ -10,7 +10,7 @@ import { revalidatePath } from 'next/cache';
 export async function createPromoCode(formData: {
   code: string;
   creditAmount: number;
-  maxUses: number | null;
+  maxUses: number;
   expiresAt: string | null;
   description: string;
 }): Promise<{ success: boolean; error?: string }> {

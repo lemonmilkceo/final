@@ -21,7 +21,7 @@ export default function NewPromoPage() {
 
   const [code, setCode] = useState('');
   const [creditAmount, setCreditAmount] = useState('1');
-  const [maxUses, setMaxUses] = useState('');
+  const [maxUses, setMaxUses] = useState('1');
   const [expiresAt, setExpiresAt] = useState('');
   const [description, setDescription] = useState('');
 
@@ -47,11 +47,18 @@ export default function NewPromoPage() {
       return;
     }
 
+    const maxUsesNum = parseInt(maxUses);
+    if (isNaN(maxUsesNum) || maxUsesNum < 1) {
+      setError('최대 사용 횟수는 1 이상이어야 합니다');
+      setLoading(false);
+      return;
+    }
+
     try {
       const result = await createPromoCode({
         code: code.trim(),
         creditAmount: creditAmountNum,
-        maxUses: maxUses ? parseInt(maxUses) : null,
+        maxUses: maxUsesNum,
         expiresAt: expiresAt || null,
         description: description.trim(),
       });
@@ -126,18 +133,18 @@ export default function NewPromoPage() {
           {/* 최대 사용 횟수 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              최대 사용 횟수
+              최대 사용 횟수 <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
               value={maxUses}
               onChange={(e) => setMaxUses(e.target.value)}
               min="1"
-              placeholder="비워두면 무제한"
+              placeholder="1"
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <p className="mt-1 text-sm text-gray-500">
-              비워두면 무제한 사용 가능합니다
+              이 코드를 사용할 수 있는 최대 횟수입니다
             </p>
           </div>
 
