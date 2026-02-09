@@ -11,6 +11,7 @@ interface User {
   credits: {
     amount: number;
   }[] | null;
+  provider?: string;
 }
 
 async function getUsers(search?: string, role?: string): Promise<User[]> {
@@ -45,7 +46,21 @@ async function getUsers(search?: string, role?: string): Promise<User[]> {
     return [];
   }
 
-  return (data as unknown as User[]) || [];
+  // provider 정보 가져오기
+  const { data: providers } = await supabase.rpc('get_user_providers');
+  const providerMap = new Map<string, string>();
+  if (providers) {
+    for (const p of providers) {
+      providerMap.set(p.user_id, p.provider);
+    }
+  }
+
+  // users에 provider 정보 추가
+  const users = (data as unknown as User[]) || [];
+  return users.map(user => ({
+    ...user,
+    provider: providerMap.get(user.id) || 'unknown',
+  }));
 }
 
 async function getUserStats(): Promise<{
@@ -182,9 +197,14 @@ export default async function UsersPage({
               {users.map((user) => (
                 <tr key={user.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
-                    <p className="font-medium text-gray-900">
-                      {user.name || '이름 없음'}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <span title={user.provider === 'kakao' ? '카카오 로그인' : user.provider === 'apple' ? '애플 로그인' : user.provider}>
+                        {user.provider === 'kakao' ? '💬' : user.provider === 'apple' ? '🍎' : '❓'}
+                      </span>
+                      <p className="font-medium text-gray-900">
+                        {user.name || '이름 없음'}
+                      </p>
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-gray-600">
                     {user.phone || '-'}

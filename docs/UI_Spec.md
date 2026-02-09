@@ -2,8 +2,8 @@
 
 ## 싸인해주세요 (SignPlease)
 
-> **버전**: 1.19  
-> **최종 수정일**: 2026년 2월 3일  
+> **버전**: 1.20  
+> **최종 수정일**: 2026년 2월 9일  
 > **디자인 철학**: Toss-style Radical Simplicity
 
 ---
@@ -6101,3 +6101,156 @@ hover:bg-blue-50 transition-colors
 ---
 
 > **Amendment 20 끝**
+
+---
+
+## 📝 Amendment 21: 결제 UI 보안 및 UX 강화 (2026년 2월 9일)
+
+> **버전**: 1.22  
+> **변경 사유**: 결제 시스템 보안 강화에 따른 UI/UX 개선
+
+### 21.1 결제 위젯 접근성 개선
+
+#### 닫기 버튼 접근성
+
+```tsx
+<button
+  onClick={onClose}
+  className="w-10 h-10 flex items-center justify-center -mr-2"
+  aria-label="결제창 닫기"  // 스크린 리더 지원
+>
+  <svg
+    className="w-6 h-6 text-gray-400"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+    aria-hidden="true"  // 장식용 아이콘 숨김
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+  </svg>
+</button>
+```
+
+### 21.2 상품 선택 버튼 접근성
+
+```tsx
+<button
+  key={product.id}
+  onClick={() => setSelectedProduct(product)}
+  aria-label={`${product.name} ${product.price.toLocaleString()}원 선택`}
+  aria-pressed={isSelected}  // 토글 상태 전달
+  className={clsx(
+    'w-full bg-white rounded-2xl p-5 text-left transition-all',
+    'border-2',
+    isSelected
+      ? 'border-blue-500 bg-blue-50/50'
+      : 'border-gray-100 hover:border-gray-200'
+  )}
+>
+  {/* ... */}
+</button>
+```
+
+### 21.3 결제 결과 토스트 메시지
+
+#### URL 파라미터 기반 피드백
+
+| 파라미터 | 값 | 토스트 메시지 |
+|----------|-----|--------------|
+| `success` | `true` | "결제가 완료됐어요! 🎉" |
+| `error` | `payment_not_found` | "결제 정보를 찾을 수 없어요" |
+| `error` | `amount_mismatch` | "결제 금액이 일치하지 않아요" |
+| `error` | `unauthorized` | "로그인이 필요해요" |
+| `error` | `payment_failed` | "결제가 실패했어요. 다시 시도해주세요" |
+| `error` | (기타) | "결제에 실패했어요" |
+| `warning` | `credit_pending` | "결제 완료! 크레딧은 곧 지급돼요" |
+
+**구현:**
+```tsx
+useEffect(() => {
+  const success = searchParams.get('success');
+  const error = searchParams.get('error');
+  const warning = searchParams.get('warning');
+
+  if (success === 'true') {
+    setToastMessage('결제가 완료됐어요! 🎉');
+    setShowToast(true);
+    router.replace('/pricing');  // URL 정리
+  } else if (error) {
+    const errorMessages: Record<string, string> = {
+      payment_not_found: '결제 정보를 찾을 수 없어요',
+      amount_mismatch: '결제 금액이 일치하지 않아요',
+      unauthorized: '로그인이 필요해요',
+      payment_failed: '결제가 실패했어요. 다시 시도해주세요',
+    };
+    setToastMessage(errorMessages[error] || '결제에 실패했어요');
+    setShowToast(true);
+    router.replace('/pricing');
+  }
+
+  if (warning === 'credit_pending') {
+    setToastMessage('결제 완료! 크레딧은 곧 지급돼요');
+    setShowToast(true);
+  }
+}, [searchParams, router]);
+```
+
+### 21.4 Rate Limit 에러 처리
+
+#### 결제 준비 실패 시
+
+```
+┌─────────────────────────────────────┐
+│                                     │
+│   ⚠️ 요청이 너무 많아요              │
+│   잠시 후 다시 시도해주세요          │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+**코드:**
+```tsx
+if (!prepareResponse.ok) {
+  const errorData = await prepareResponse.json().catch(() => ({}));
+  const errorMessage = errorData.error || '결제 준비에 실패했어요';
+  
+  if (prepareResponse.status === 429) {
+    throw new Error('요청이 너무 많아요. 잠시 후 다시 시도해주세요.');
+  }
+  throw new Error(errorMessage);
+}
+```
+
+### 21.5 에러 메시지 스타일
+
+```css
+/* 에러 토스트 */
+.toast-error {
+  @apply bg-red-50 border border-red-200 text-red-700 rounded-xl p-4;
+}
+
+/* 성공 토스트 */
+.toast-success {
+  @apply bg-green-50 border border-green-200 text-green-700 rounded-xl p-4;
+}
+
+/* 경고 토스트 */
+.toast-warning {
+  @apply bg-amber-50 border border-amber-200 text-amber-700 rounded-xl p-4;
+}
+```
+
+### 21.6 토스트 메시지 표
+
+| 상황 | 메시지 | variant |
+|------|--------|---------|
+| 결제 성공 | "결제가 완료됐어요! 🎉" | success |
+| 결제 실패 (금액 불일치) | "결제 금액이 일치하지 않아요" | error |
+| 결제 실패 (정보 없음) | "결제 정보를 찾을 수 없어요" | error |
+| 결제 실패 (일반) | "결제가 실패했어요. 다시 시도해주세요" | error |
+| Rate Limit 초과 | "요청이 너무 많아요. 잠시 후 다시 시도해주세요" | error |
+| 크레딧 지급 지연 | "결제 완료! 크레딧은 곧 지급돼요" | warning |
+
+---
+
+> **Amendment 21 끝**

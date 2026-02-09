@@ -2,8 +2,8 @@
 
 ## 싸인해주세요 (SignPlease)
 
-> **버전**: 2.0  
-> **최종 수정일**: 2026년 2월 5일  
+> **버전**: 2.1  
+> **최종 수정일**: 2026년 2월 9일  
 > **목적**: 개발 진행 상황 추적 및 미완료 작업 관리
 
 ---
@@ -200,6 +200,13 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 - 크레딧 구매 UI
 - 결제 준비/확인 API
 - 결제 내역 조회
+- **[2026-02-09] 보안 및 UX 강화**
+  - 금액 조작 방지 (서버 측 검증)
+  - Race Condition 방지 (원자적 DB 함수)
+  - Rate Limiting (API 요청 제한)
+  - RLS 정책 적용 (payments, credits, credit_transactions)
+  - 에러 메시지 상세화 및 접근성 개선
+  - URL 파라미터 기반 결제 결과 피드백
 
 ### 추가 구현된 기능
 - 카카오 알림톡 (Solapi)
@@ -207,6 +214,8 @@ ALTER TABLE folders ADD COLUMN color text DEFAULT '#3B82F6';
 - 법적 페이지 (이용약관, 개인정보처리방침, 환불정책)
 - SSN 해시 솔트 보안 강화
 - URL 단축 라우트 (/s/[token])
+- **[2026-02-09] Rate Limiter 유틸리티** (`lib/utils/rate-limiter.ts`)
+- **[2026-02-09] 결제 보안 함수** (`process_payment_completion` DB Function)
 
 ---
 

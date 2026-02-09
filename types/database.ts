@@ -854,6 +854,13 @@ export type Database = {
       cleanup_pending_payments: { Args: never; Returns: number }
       expire_old_credits: { Args: never; Returns: number }
       expire_pending_contracts: { Args: never; Returns: number }
+      get_user_providers: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          provider: string
+          user_id: string
+        }[]
+      }
       process_payment_completion: {
         Args: {
           p_payment_id: string
