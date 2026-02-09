@@ -160,14 +160,29 @@ export async function updateSession(request: NextRequest) {
 
   // 역할별 접근 제한 체크
   if (user) {
-    // 프로필에서 역할 확인
+    // 프로필에서 역할 및 차단 상태 확인
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, is_blocked')
       .eq('id', user.id)
       .single();
 
     const userRole = profile?.role;
+    const isBlocked = profile?.is_blocked;
+
+    // 차단된 사용자는 /blocked 페이지로 이동
+    if (isBlocked && pathname !== '/blocked') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/blocked';
+      return NextResponse.redirect(url);
+    }
+
+    // 차단되지 않은 사용자가 /blocked 페이지 접근 시 대시보드로
+    if (!isBlocked && pathname === '/blocked') {
+      const url = request.nextUrl.clone();
+      url.pathname = userRole ? `/${userRole}` : '/select-role';
+      return NextResponse.redirect(url);
+    }
 
     // 역할이 없는 경우 역할 선택 페이지로 (이미 역할 선택 페이지가 아닌 경우만)
     if (!userRole && isProtectedRoute && pathname !== '/select-role') {

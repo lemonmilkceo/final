@@ -53,6 +53,93 @@ export type Database = {
           },
         ]
       }
+      announcement_views: {
+        Row: {
+          announcement_id: string
+          dismissed: boolean
+          id: string
+          user_id: string
+          viewed_at: string
+        }
+        Insert: {
+          announcement_id: string
+          dismissed?: boolean
+          id?: string
+          user_id: string
+          viewed_at?: string
+        }
+        Update: {
+          announcement_id?: string
+          dismissed?: boolean
+          id?: string
+          user_id?: string
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_views_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "announcements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcement_views_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      announcements: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string | null
+          ends_at: string | null
+          id: string
+          is_active: boolean
+          link_text: string | null
+          link_url: string | null
+          priority: number
+          starts_at: string
+          target_roles: string[] | null
+          title: string
+          type: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          link_text?: string | null
+          link_url?: string | null
+          priority?: number
+          starts_at?: string
+          target_roles?: string[] | null
+          title: string
+          type?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          link_text?: string | null
+          link_url?: string | null
+          priority?: number
+          starts_at?: string
+          target_roles?: string[] | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           content: string
@@ -329,6 +416,85 @@ export type Database = {
           },
         ]
       }
+      cs_inquiries: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          content: string
+          created_at: string
+          id: string
+          priority: number
+          status: string
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category?: string
+          content: string
+          created_at?: string
+          id?: string
+          priority?: number
+          status?: string
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          priority?: number
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_inquiries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_responses: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          inquiry_id: string
+          responder_type: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          inquiry_id: string
+          responder_type?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          inquiry_id?: string
+          responder_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_responses_inquiry_id_fkey"
+            columns: ["inquiry_id"]
+            isOneToOne: false
+            referencedRelation: "cs_inquiries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       folders: {
         Row: {
           color: string | null
@@ -515,6 +681,8 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          blocked_at: string | null
+          blocked_reason: string | null
           created_at: string
           id: string
           is_blocked: boolean | null
@@ -525,6 +693,8 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          blocked_at?: string | null
+          blocked_reason?: string | null
           created_at?: string
           id: string
           is_blocked?: boolean | null
@@ -535,6 +705,8 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          blocked_at?: string | null
+          blocked_reason?: string | null
           created_at?: string
           id?: string
           is_blocked?: boolean | null
@@ -542,6 +714,84 @@ export type Database = {
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      promo_code_uses: {
+        Row: {
+          credit_amount: number
+          id: string
+          promo_code_id: string
+          used_at: string
+          user_id: string
+        }
+        Insert: {
+          credit_amount: number
+          id?: string
+          promo_code_id: string
+          used_at?: string
+          user_id: string
+        }
+        Update: {
+          credit_amount?: number
+          id?: string
+          promo_code_id?: string
+          used_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_code_uses_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_code_uses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promo_codes: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          credit_amount: number
+          current_uses: number
+          description: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_uses: number | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          credit_amount?: number
+          current_uses?: number
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          credit_amount?: number
+          current_uses?: number
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
         }
         Relationships: []
       }
@@ -855,7 +1105,7 @@ export type Database = {
       expire_old_credits: { Args: never; Returns: number }
       expire_pending_contracts: { Args: never; Returns: number }
       get_user_providers: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           provider: string
           user_id: string
@@ -869,6 +1119,10 @@ export type Database = {
           p_user_id: string
         }
         Returns: boolean
+      }
+      redeem_promo_code: {
+        Args: { p_code: string; p_user_id: string }
+        Returns: Json
       }
       use_credit: {
         Args: {
@@ -891,6 +1145,8 @@ export type Database = {
         | "contract_expired_soon"
         | "contract_expired"
         | "contract_modified"
+        | "system"
+        | "credit_low"
       signer_role: "employer" | "worker"
       user_role: "employer" | "worker"
     }
@@ -1029,6 +1285,8 @@ export const Constants = {
         "contract_expired_soon",
         "contract_expired",
         "contract_modified",
+        "system",
+        "credit_low",
       ],
       signer_role: ["employer", "worker"],
       user_role: ["employer", "worker"],

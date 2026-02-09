@@ -14,11 +14,11 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: '대시보드', href: '/admin', icon: '📊' },
   { label: '환불 관리', href: '/admin/refunds', icon: '💳' },
+  { label: '문의 관리', href: '/admin/inquiries', icon: '💬' },
   { label: '사용자 관리', href: '/admin/users', icon: '👥' },
-  // Phase 2에서 추가 예정
-  // { label: '문의 관리', href: '/admin/inquiries', icon: '💬' },
-  // { label: '프로모션', href: '/admin/promos', icon: '🎁' },
-  // { label: '공지사항', href: '/admin/announcements', icon: '📢' },
+  { label: '결제 내역', href: '/admin/payments', icon: '💰' },
+  { label: '프로모션', href: '/admin/promos', icon: '🎁' },
+  { label: '공지사항', href: '/admin/announcements', icon: '📢' },
 ];
 
 interface AdminSidebarProps {

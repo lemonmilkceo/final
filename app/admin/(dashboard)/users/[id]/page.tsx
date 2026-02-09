@@ -9,6 +9,8 @@ interface UserDetail {
   phone: string | null;
   role: string | null;
   is_blocked: boolean | null;
+  blocked_at: string | null;
+  blocked_reason: string | null;
   created_at: string;
 }
 
@@ -44,7 +46,7 @@ async function getUserDetail(id: string): Promise<UserDetail | null> {
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, name, phone, role, is_blocked, created_at')
+    .select('id, name, phone, role, is_blocked, blocked_at, blocked_reason, created_at')
     .eq('id', id)
     .single();
 
@@ -340,6 +342,7 @@ export default async function UserDetailPage({
             userId={user.id}
             isBlocked={user.is_blocked || false}
             currentCredits={credits?.amount || 0}
+            blockedReason={user.blocked_reason}
           />
         </div>
       </div>
