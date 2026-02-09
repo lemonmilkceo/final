@@ -95,37 +95,51 @@ export default function NewInquiryPage() {
         {/* 제목 */}
         <div>
           <label className="block text-[15px] font-semibold text-gray-900 mb-2">
-            제목
+            제목 <span className="text-[13px] font-normal text-gray-400">(2자 이상)</span>
           </label>
           <input
             type="text"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             placeholder="문의 제목을 입력해주세요"
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-[15px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className={`w-full px-4 py-3 border rounded-xl text-[15px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+              subject.length > 0 && subject.length < 2 ? 'border-orange-300' : 'border-gray-200'
+            }`}
             maxLength={100}
           />
-          <p className="mt-1 text-[13px] text-gray-400 text-right">
-            {subject.length}/100
-          </p>
+          <div className="mt-1 flex justify-between">
+            <p className={`text-[13px] ${subject.length > 0 && subject.length < 2 ? 'text-orange-500' : 'text-transparent'}`}>
+              2자 이상 입력해주세요
+            </p>
+            <p className="text-[13px] text-gray-400">
+              {subject.length}/100
+            </p>
+          </div>
         </div>
 
         {/* 내용 */}
         <div>
           <label className="block text-[15px] font-semibold text-gray-900 mb-2">
-            문의 내용
+            문의 내용 <span className="text-[13px] font-normal text-gray-400">(10자 이상)</span>
           </label>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="문의하실 내용을 자세히 작성해주세요.&#10;&#10;• 오류가 발생한 경우, 어떤 상황에서 발생했는지 알려주세요.&#10;• 결제 관련 문의는 결제일시와 금액을 포함해주세요."
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-[15px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            className={`w-full px-4 py-3 border rounded-xl text-[15px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
+              content.length > 0 && content.length < 10 ? 'border-orange-300' : 'border-gray-200'
+            }`}
             rows={8}
             maxLength={2000}
           />
-          <p className="mt-1 text-[13px] text-gray-400 text-right">
-            {content.length}/2000
-          </p>
+          <div className="mt-1 flex justify-between">
+            <p className={`text-[13px] ${content.length > 0 && content.length < 10 ? 'text-orange-500' : 'text-transparent'}`}>
+              10자 이상 입력해주세요 ({content.length}/10)
+            </p>
+            <p className="text-[13px] text-gray-400">
+              {content.length}/2000
+            </p>
+          </div>
         </div>
 
         {/* 안내 문구 */}
