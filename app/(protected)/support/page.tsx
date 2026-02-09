@@ -1,7 +1,21 @@
+'use client';
+
 import Link from 'next/link';
+import { useState } from 'react';
 import { SUPPORT_ROUTES } from '@/lib/constants/routes';
+import { useGuestStore } from '@/stores/guestStore';
 
 export default function SupportPage() {
+  const { isGuest } = useGuestStore();
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  const handleInquiryClick = (e: React.MouseEvent) => {
+    if (isGuest) {
+      e.preventDefault();
+      setShowLoginModal(true);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* 헤더 */}
@@ -13,7 +27,7 @@ export default function SupportPage() {
       {/* 메뉴 카드들 */}
       <div className="px-5 py-6 space-y-4">
         {/* 1:1 문의하기 */}
-        <Link href="/support/inquiry/new">
+        <Link href="/support/inquiry/new" onClick={handleInquiryClick}>
           <div className="bg-white rounded-2xl p-5 shadow-sm active:bg-gray-50 transition-colors">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center">
@@ -23,17 +37,23 @@ export default function SupportPage() {
               </div>
               <div className="flex-1">
                 <h2 className="text-[17px] font-bold text-gray-900">1:1 문의하기</h2>
-                <p className="text-[14px] text-gray-500 mt-0.5">궁금한 점을 직접 물어보세요</p>
+                <p className="text-[14px] text-gray-500 mt-0.5">
+                  {isGuest ? '로그인 후 이용 가능해요' : '궁금한 점을 직접 물어보세요'}
+                </p>
               </div>
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              {isGuest ? (
+                <span className="text-[12px] text-orange-500 font-medium">로그인 필요</span>
+              ) : (
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              )}
             </div>
           </div>
         </Link>
 
         {/* 내 문의 내역 */}
-        <Link href="/support/inquiry">
+        <Link href="/support/inquiry" onClick={handleInquiryClick}>
           <div className="bg-white rounded-2xl p-5 shadow-sm active:bg-gray-50 transition-colors">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center">
@@ -43,11 +63,17 @@ export default function SupportPage() {
               </div>
               <div className="flex-1">
                 <h2 className="text-[17px] font-bold text-gray-900">내 문의 내역</h2>
-                <p className="text-[14px] text-gray-500 mt-0.5">문의 현황과 답변을 확인하세요</p>
+                <p className="text-[14px] text-gray-500 mt-0.5">
+                  {isGuest ? '로그인 후 이용 가능해요' : '문의 현황과 답변을 확인하세요'}
+                </p>
               </div>
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              {isGuest ? (
+                <span className="text-[12px] text-orange-500 font-medium">로그인 필요</span>
+              ) : (
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              )}
             </div>
           </div>
         </Link>
@@ -102,6 +128,40 @@ export default function SupportPage() {
           운영시간: 평일 10:00 - 18:00
         </p>
       </div>
+
+      {/* 로그인 필요 모달 */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-5">
+          <div className="bg-white rounded-2xl w-full max-w-sm p-6">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <h3 className="text-[18px] font-bold text-gray-900 mb-2">로그인이 필요해요</h3>
+              <p className="text-[14px] text-gray-500">
+                1:1 문의를 작성하려면 로그인해주세요.<br />
+                답변도 로그인 후 확인할 수 있어요.
+              </p>
+            </div>
+            <div className="space-y-3">
+              <Link
+                href="/login"
+                className="block w-full py-3 bg-blue-500 text-white text-center text-[15px] font-semibold rounded-xl"
+              >
+                로그인하기
+              </Link>
+              <button
+                onClick={() => setShowLoginModal(false)}
+                className="w-full py-3 bg-gray-100 text-gray-700 text-[15px] font-medium rounded-xl"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

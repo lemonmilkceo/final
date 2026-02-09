@@ -36,6 +36,8 @@ const GUEST_ALLOWED_ROUTES = [
   '/worker',
   '/worker/career',
   '/worker/contract',
+  '/support',        // 고객센터 메인
+  '/support/faq',    // FAQ (게스트도 접근 가능)
 ];
 
 // 역할 전환 기능 도입으로 역할별 경로 제한 제거
