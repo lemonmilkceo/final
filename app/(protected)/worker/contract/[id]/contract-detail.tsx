@@ -262,6 +262,9 @@ export default function WorkerContractDetail({
     { label: '휴게시간', value: `${contract.break_minutes}분` },
     { label: '근무장소', value: contract.work_location },
     { label: '업무내용', value: contract.job_description || '-' },
+    ...(contract.special_terms
+      ? [{ label: '특약사항', value: contract.special_terms }]
+      : []),
     { label: '급여일', value: formatPayDay() },
     // 5인 이상 사업장만 표시
     ...(contract.business_size === 'over_5' ? [

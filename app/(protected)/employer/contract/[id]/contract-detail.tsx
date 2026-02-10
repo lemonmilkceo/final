@@ -553,6 +553,9 @@ export default function ContractDetail({
     { label: '휴게시간', value: `${contract.breakMinutes}분` },
     { label: '근무장소', value: contract.workLocation },
     { label: '업무내용', value: contract.jobDescription || '-' },
+    ...(contract.specialTerms
+      ? [{ label: '특약사항', value: contract.specialTerms }]
+      : []),
     { label: '급여일', value: formatPayDay() },
     // 5인 이상 사업장만 표시
     ...(contract.businessSize === 'over_5'
