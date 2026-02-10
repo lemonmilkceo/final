@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createInquiry } from '@/app/actions/inquiry';
 
@@ -9,12 +9,22 @@ const categories = [
   { value: 'contract', label: '계약서 관련', icon: '📄' },
   { value: 'payment', label: '결제/환불', icon: '💳' },
   { value: 'account', label: '계정/로그인', icon: '👤' },
+  { value: 'enterprise', label: '기업/구독 문의', icon: '💼' },
   { value: 'etc', label: '기타 문의', icon: '💬' },
 ];
 
 export default function NewInquiryPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [category, setCategory] = useState('');
+  
+  // URL 파라미터로 카테고리 프리필
+  useEffect(() => {
+    const urlCategory = searchParams.get('category');
+    if (urlCategory && categories.some(c => c.value === urlCategory)) {
+      setCategory(urlCategory);
+    }
+  }, [searchParams]);
   const [subject, setSubject] = useState('');
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);

@@ -117,6 +117,7 @@ interface ContractPDFProps {
     breakMinutes: number;
     workLocation: string;
     jobDescription: string;
+    specialTerms?: string; // 특약사항
     payDay: number;
     paymentTiming?: string;
     isLastDayPayment?: boolean;
@@ -296,6 +297,16 @@ export function ContractPDFDocument({
             <Text style={styles.value}>{employer.phone || '-'}</Text>
           </View>
         </View>
+
+        {/* 특약사항 */}
+        {contract.specialTerms && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>5. 특약사항</Text>
+            <View style={{ padding: 10, backgroundColor: '#fafafa', borderRadius: 4 }}>
+              <Text style={{ fontSize: 9, lineHeight: 1.8 }}>{contract.specialTerms}</Text>
+            </View>
+          </View>
+        )}
 
         {/* 서명 영역 */}
         <View style={styles.signatureSection}>

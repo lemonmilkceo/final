@@ -191,5 +191,5 @@ export default async function ContractDetailPage({
     contract_type: contract.contract_type as 'regular' | 'contract' | undefined,
   };
 
-  return <WorkerContractDetail contract={typedContract} isGuestMode={false} />;
+  return <WorkerContractDetail contract={typedContract} isGuestMode={false} userId={user.id} />;
 }

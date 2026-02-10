@@ -88,6 +88,7 @@ export const contractFormSchema = z.object({
   // Step 9: 업무 + 급여일
   businessType: businessTypeSchema,
   jobDescription: z.string(),
+  specialTerms: z.string().optional(), // 특약사항
   payDay: z.number().min(0).max(31, '1~31일 사이로 입력해주세요'),
   paymentTiming: paymentTimingSchema,
   isLastDayPayment: z.boolean(),
@@ -128,6 +129,7 @@ export const createContractSchema = z.object({
   break_minutes: z.number().min(0),
   work_location: z.string().min(1),
   job_description: z.string(),
+  special_terms: z.string().nullable(), // 특약사항
   pay_day: z.number().min(0).max(31),
   payment_timing: paymentTimingSchema,
   is_last_day_payment: z.boolean(),
@@ -158,6 +160,7 @@ export function transformFormToDbSchema(formData: ContractFormInput): CreateCont
     break_minutes: formData.breakMinutes,
     work_location: formData.workLocation,
     job_description: formData.jobDescription || '',
+    special_terms: formData.specialTerms || null,
     pay_day: formData.isLastDayPayment ? 31 : formData.payDay,
     payment_timing: formData.paymentTiming,
     is_last_day_payment: formData.isLastDayPayment,

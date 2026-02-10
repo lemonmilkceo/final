@@ -185,7 +185,7 @@ export default function RefundRequestSheet({
               </p>
               <ul className="text-[12px] text-amber-600 space-y-1 list-disc pl-4">
                 <li>결제 후 <strong>7일 이내</strong> + <strong>크레딧 미사용</strong> 시: <strong>수수료 0%</strong></li>
-                <li>그 외의 경우: <strong>환불 금액의 10%</strong> 수수료 적용</li>
+                <li>그 외의 경우: <strong>환불 금액의 15%</strong> 수수료 적용</li>
                 <li>최소 환불 금액: 1,000원</li>
               </ul>
             </div>

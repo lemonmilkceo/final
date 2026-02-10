@@ -11,6 +11,7 @@ import Toast from '@/components/ui/Toast';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ContractPDF from '@/components/contract/ContractPDF';
 import GuestBanner from '@/components/shared/GuestBanner';
+import ChatButton from '@/components/chat/ChatButton';
 import { formatCurrency, formatDate, formatDday } from '@/lib/utils/format';
 import { generatePDF, getContractPDFFilename } from '@/lib/utils/pdf';
 import { deleteContract, resendAlimtalk, getAlimtalkStatus } from './actions';
@@ -42,6 +43,7 @@ interface ContractData {
   breakMinutes: number;
   workLocation: string;
   jobDescription: string;
+  specialTerms?: string | null;
   payDay: number;
   paymentTiming: 'current_month' | 'next_month';
   isLastDayPayment: boolean;
@@ -68,6 +70,7 @@ interface ContractDetailProps {
   aiReview: AIReviewData | null;
   employerName: string;
   isGuestMode?: boolean;
+  userId?: string;
 }
 
 // 수정 가능 여부 계산
@@ -116,6 +119,7 @@ export default function ContractDetail({
   aiReview,
   isGuestMode = false,
   employerName,
+  userId,
 }: ContractDetailProps) {
   const router = useRouter();
   const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
@@ -829,6 +833,18 @@ export default function ContractDetail({
               </span>
             </button>
           )}
+          {/* 채팅 버튼 - 서명 완료된 계약서에서만 표시 */}
+          {contract.status === 'completed' && userId && !isGuestMode && (
+            <div className="flex flex-col items-center gap-1">
+              <ChatButton
+                contractId={contract.id}
+                currentUserId={userId}
+                partnerName={contract.workerName}
+                variant="icon"
+              />
+              <span className="text-[11px] text-gray-500">채팅</span>
+            </div>
+          )}
           <button
             onClick={() => setIsDeleteSheetOpen(true)}
             disabled={contract.status === 'deleted'}
@@ -1081,6 +1097,7 @@ export default function ContractDetail({
                   breakMinutes: contract.breakMinutes,
                   workLocation: contract.workLocation,
                   jobDescription: contract.jobDescription || undefined,
+                  specialTerms: contract.specialTerms || undefined,
                   businessSize: contract.businessSize as 'under_5' | 'over_5',
                   employerSignature: contract.signatures?.find(
                     (s) => s.signer_role === 'employer'

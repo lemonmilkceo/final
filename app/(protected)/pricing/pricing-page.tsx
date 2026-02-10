@@ -23,34 +23,46 @@ interface PricingPageProps {
 // 단건 충전 한도 (토스페이먼츠 심사 요건)
 const MAX_SINGLE_CHARGE = 100000;
 
-// 상품 정의
+// 단건 기준 가격 (할인율 계산 기준)
+const SINGLE_PRICE = 1500;
+
+// 상품 정의 - originalPrice는 단건 기준으로 계산
 const PRODUCTS = [
+  {
+    id: 'credit_1',
+    name: '계약서 1건',
+    credits: 1,
+    price: 1500,
+    originalPrice: null, // 기준가격이므로 할인 없음
+    popular: false,
+    description: '급하게 1건만 필요할 때',
+  },
   {
     id: 'credit_5',
     name: '계약서 5건',
     credits: 5,
     price: 4900,
-    originalPrice: null,
+    originalPrice: SINGLE_PRICE * 5, // 7,500원
     popular: false,
-    description: '소규모 사업장 추천 · 결제 즉시 지급',
+    description: '소규모 사업장 추천 · 35% 할인',
   },
   {
     id: 'credit_15',
     name: '계약서 15건',
     credits: 15,
     price: 12900,
-    originalPrice: 14700,
+    originalPrice: SINGLE_PRICE * 15, // 22,500원
     popular: true,
-    description: '가장 많이 선택해요 · 12% 할인 적용',
+    description: '가장 많이 선택해요 · 43% 할인',
   },
   {
     id: 'credit_50',
     name: '계약서 50건',
     credits: 50,
     price: 39000,
-    originalPrice: 49000,
+    originalPrice: SINGLE_PRICE * 50, // 75,000원
     popular: false,
-    description: '대형 사업장 추천 · 20% 할인 적용',
+    description: '대형 사업장 추천 · 48% 할인',
   },
 ];
 
@@ -61,7 +73,7 @@ export default function PricingPage({
 }: PricingPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [selectedProduct, setSelectedProduct] = useState(PRODUCTS[1]); // 기본 인기상품
+  const [selectedProduct, setSelectedProduct] = useState(PRODUCTS[2]); // 기본 인기상품 (15건)
   const [showPayment, setShowPayment] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -153,10 +165,10 @@ export default function PricingPage({
               <span className="text-2xl">🎁</span>
               <div>
                 <p className="text-[16px] font-bold text-gray-900 mb-1">
-                  가입하면 무료 5건!
+                  가입하면 무료 3건!
                 </p>
                 <p className="text-[13px] text-gray-600">
-                  지금 가입하면 계약서 5건을 무료로 드려요
+                  지금 가입하면 계약서 3건을 무료로 드려요
                 </p>
               </div>
             </div>
@@ -275,6 +287,30 @@ export default function PricingPage({
           })}
         </div>
 
+        {/* 기업/구독 문의 안내 */}
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 mb-4">
+          <div className="flex items-start gap-3">
+            <span className="text-xl">💼</span>
+            <div className="flex-1">
+              <p className="text-[14px] font-semibold text-gray-900 mb-1">
+                대량 구매 / 정기 구독이 필요하신가요?
+              </p>
+              <p className="text-[12px] text-gray-600 mb-3">
+                50건 이상 대량 구매, 월/연 정기 구독, 기업 전용 요금제가 필요하시면 별도 문의해주세요.
+              </p>
+              <button
+                onClick={() => router.push('/support?category=enterprise')}
+                className="text-[13px] font-medium text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+              >
+                기업/구독 문의하기
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* 크레딧 사용처 안내 */}
         <div className="bg-white rounded-xl p-4 mb-4 space-y-3">
           <p className="text-[14px] font-semibold text-gray-900">크레딧 사용 안내</p>
@@ -312,7 +348,7 @@ export default function PricingPage({
       <div className="bg-white border-t border-gray-100 px-5 pt-3 pb-4 safe-bottom">
         <Button onClick={handlePaymentClick}>
           {isGuestMode ? (
-            '가입하고 무료 5건 받기 🎁'
+            '가입하고 무료 3건 받기 🎁'
           ) : (
             `${formatCurrency(selectedProduct.price)} 결제하기`
           )}

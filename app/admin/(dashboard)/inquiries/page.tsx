@@ -109,6 +109,9 @@ function CategoryBadge({ category }: { category: string }) {
     payment: 'bg-blue-100 text-blue-800',
     refund: 'bg-purple-100 text-purple-800',
     technical: 'bg-orange-100 text-orange-800',
+    contract: 'bg-green-100 text-green-800',
+    account: 'bg-cyan-100 text-cyan-800',
+    enterprise: 'bg-indigo-100 text-indigo-800',
     other: 'bg-gray-100 text-gray-600',
   };
 
@@ -117,6 +120,9 @@ function CategoryBadge({ category }: { category: string }) {
     payment: '결제',
     refund: '환불',
     technical: '기술',
+    contract: '계약서',
+    account: '계정',
+    enterprise: '기업/구독',
     other: '기타',
   };
 

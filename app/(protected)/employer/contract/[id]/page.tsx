@@ -149,6 +149,7 @@ export default async function ContractDetailPage({ params }: PageProps) {
         breakMinutes: contract.break_minutes,
         workLocation: contract.work_location,
         jobDescription: contract.job_description,
+        specialTerms: contract.special_terms,
         payDay: contract.pay_day,
         paymentTiming: (contract.payment_timing as 'current_month' | 'next_month') || 'current_month',
         isLastDayPayment: contract.is_last_day_payment,
@@ -173,6 +174,7 @@ export default async function ContractDetailPage({ params }: PageProps) {
           : null
       }
       employerName={profile?.name || ''}
+      userId={user.id}
     />
   );
 }

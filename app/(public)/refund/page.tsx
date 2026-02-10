@@ -42,7 +42,7 @@ export default function RefundPage() {
         <ul className="text-[15px] text-gray-700 leading-relaxed list-disc pl-5 space-y-2">
           <li>크레딧을 일부 사용한 경우, <strong>미사용 크레딧에 해당하는 금액</strong>을 환불받을 수 있습니다.</li>
           <li>환불 기본 금액 = (미사용 크레딧 수 ÷ 총 구매 크레딧 수) × 결제 금액</li>
-          <li><strong>환불 수수료 10%</strong>가 적용됩니다. (최종 환불 금액 = 환불 기본 금액 - 수수료)</li>
+          <li><strong>환불 수수료 15%</strong>가 적용됩니다. (최종 환불 금액 = 환불 기본 금액 - 수수료)</li>
           <li>단, 할인 적용된 상품의 경우 정가 기준이 아닌 <strong>실제 결제 금액 기준</strong>으로 계산됩니다.</li>
         </ul>
 

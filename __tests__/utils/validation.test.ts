@@ -14,9 +14,16 @@ describe('MINIMUM_WAGE_2026', () => {
 
 describe('contractFormSchema', () => {
   const validFormData: ContractFormInput = {
+    workplaceId: null,
+    workplaceName: '테스트 사업장',
+    workLocation: '서울시 강남구',
+    contractType: 'contract',
     businessSize: 'under_5',
     workerName: '홍길동',
+    workerPhone: '010-1234-5678',
+    wageType: 'hourly',
     hourlyWage: 10360,
+    monthlyWage: null,
     includesWeeklyAllowance: true,
     startDate: '2026-01-01',
     endDate: '2026-12-31',
@@ -27,9 +34,12 @@ describe('contractFormSchema', () => {
     workStartTime: '09:00',
     workEndTime: '18:00',
     breakMinutes: 60,
-    workLocation: '서울시 강남구',
+    businessType: null,
     jobDescription: '서빙',
+    specialTerms: '',
     payDay: 10,
+    paymentTiming: 'current_month',
+    isLastDayPayment: false,
   };
 
   it('유효한 데이터는 통과해야 한다', () => {
@@ -126,9 +136,16 @@ describe('contractFormSchema', () => {
 
 describe('transformFormToDbSchema', () => {
   const formData: ContractFormInput = {
+    workplaceId: null,
+    workplaceName: '테스트 사업장',
+    workLocation: '서울시 강남구',
+    contractType: 'contract',
     businessSize: 'over_5',
     workerName: '홍길동',
+    workerPhone: '010-1234-5678',
+    wageType: 'hourly',
     hourlyWage: 12000,
+    monthlyWage: null,
     includesWeeklyAllowance: true,
     startDate: '2026-01-01',
     endDate: '2026-12-31',
@@ -139,9 +156,12 @@ describe('transformFormToDbSchema', () => {
     workStartTime: '09:00',
     workEndTime: '18:00',
     breakMinutes: 60,
-    workLocation: '서울시 강남구',
+    businessType: null,
     jobDescription: '서빙',
+    specialTerms: '',
     payDay: 25,
+    paymentTiming: 'current_month',
+    isLastDayPayment: false,
   };
 
   it('폼 데이터를 DB 스키마로 변환해야 한다', () => {

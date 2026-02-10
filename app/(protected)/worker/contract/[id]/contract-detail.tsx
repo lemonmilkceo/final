@@ -11,6 +11,7 @@ import Badge from '@/components/ui/Badge';
 import ContractPDF from '@/components/contract/ContractPDF';
 import GuestBanner from '@/components/shared/GuestBanner';
 import SignupPromptSheet from '@/components/shared/SignupPromptSheet';
+import ChatButton from '@/components/chat/ChatButton';
 import { signContractAsWorker } from './actions';
 import { setResignationDate, clearResignationDate } from '@/app/actions/resignation';
 import { formatCurrency, formatDate, formatDday } from '@/lib/utils/format';
@@ -37,6 +38,7 @@ interface ContractDetailData {
   break_minutes: number;
   work_location: string;
   job_description: string;
+  special_terms?: string | null;
   pay_day: number;
   payment_timing?: string;
   is_last_day_payment?: boolean;
@@ -61,11 +63,13 @@ interface ContractDetailData {
 interface WorkerContractDetailProps {
   contract: ContractDetailData;
   isGuestMode?: boolean;
+  userId?: string;
 }
 
 export default function WorkerContractDetail({
   contract,
   isGuestMode = false,
+  userId,
 }: WorkerContractDetailProps) {
   const router = useRouter();
   const [isSignatureSheetOpen, setIsSignatureSheetOpen] = useState(false);
@@ -489,6 +493,20 @@ export default function WorkerContractDetail({
               <span className="text-[12px] text-gray-500">PDF 다운로드</span>
             </button>
             
+            {/* 채팅 버튼 - 게스트 모드가 아닐 때만 */}
+            {!isGuestMode && userId && (
+              <div className="flex flex-col items-center gap-1">
+                <ChatButton
+                  contractId={contract.id}
+                  currentUserId={userId}
+                  partnerName={contract.employer?.name || '사업자'}
+                  variant="icon"
+                  className="w-12 h-12"
+                />
+                <span className="text-[12px] text-gray-500">채팅</span>
+              </div>
+            )}
+            
             {/* 퇴사 처리 버튼 - 게스트 모드가 아닐 때만 */}
             {!isGuestMode && (
               <button
@@ -583,6 +601,7 @@ export default function WorkerContractDetail({
                   breakMinutes: contract.break_minutes,
                   workLocation: contract.work_location,
                   jobDescription: contract.job_description || undefined,
+                  specialTerms: contract.special_terms || undefined,
                   businessSize: (contract.business_size || 'under_5') as 'under_5' | 'over_5',
                   employerSignature: contract.signatures?.find(s => s.signer_role === 'employer')
                     ? {

@@ -2,8 +2,8 @@
 
 ## 싸인해주세요 (SignPlease)
 
-> **버전**: 2.2  
-> **최종 수정일**: 2026년 2월 9일  
+> **버전**: 2.6  
+> **최종 수정일**: 2026년 2월 3일  
 > **작성자**: Technical PO
 
 ---
@@ -206,6 +206,7 @@
 | `break_minutes` | `integer` | NO | - | 휴게시간 (분) |
 | `work_location` | `text` | NO | - | 근무 장소 |
 | `job_description` | `text` | NO | - | 업무 내용 |
+| `special_terms` | `text` | YES | NULL | 특약사항 (선택) |
 | `pay_day` | `integer` | NO | - | 급여 지급일 (1-31) |
 | `expires_at` | `timestamptz` | YES | NULL | 서명 만료 일시 |
 | `completed_at` | `timestamptz` | YES | NULL | 서명 완료 일시 |
@@ -355,7 +356,7 @@ AI 노무사 검토 결과를 저장합니다.
 | `toss_cancel_key` | `text` | YES | NULL | 토스 취소 키 |
 | `toss_cancel_reason` | `text` | YES | NULL | 토스 취소 사유 |
 | `base_refund_amount` | `integer` | YES | NULL | 수수료 차감 전 환불 금액 |
-| `fee_rate` | `numeric(5,4)` | NO | `0.10` | 적용된 수수료율 (0.10 = 10%) |
+| `fee_rate` | `numeric(5,4)` | NO | `0.15` | 적용된 수수료율 (0.15 = 15%) |
 | `fee_amount` | `integer` | NO | `0` | 수수료 금액 |
 | `created_at` | `timestamptz` | NO | `now()` | 생성일시 |
 | `updated_at` | `timestamptz` | NO | `now()` | 수정일시 |
@@ -372,8 +373,8 @@ AI 노무사 검토 결과를 저장합니다.
 - 자신의 환불 요청만 INSERT (pending 상태)
 - 자신의 환불 요청만 UPDATE (cancelled로 변경만 허용)
 
-**환불 수수료 정책 (2026-02-09 적용):**
-- 기본 수수료: 10%
+**환불 수수료 정책 (2026-02-10 수정):**
+- 기본 수수료: **15%** (단건 결제 악용 방지)
 - 수수료 면제 조건: 결제 후 7일 이내 + 크레딧 미사용
 - 최소 환불 금액: 1,000원 (수수료 차감 후)
 
@@ -500,7 +501,7 @@ AI 노무사 검토 결과를 저장합니다.
 ## 5. Database Functions
 
 ### 5.1 handle_new_user()
-신규 가입 시 profiles 테이블에 자동으로 레코드 생성 + 무료 크레딧 5개 지급
+신규 가입 시 profiles 테이블에 자동으로 레코드 생성 + 무료 크레딧 지급 (계약서 3건, AI 검토 5건)
 
 ### 5.2 use_credit()
 크레딧 사용 함수 (원자적 처리)
@@ -890,7 +891,7 @@ $$;
 ```sql
 -- refund_requests 테이블에 수수료 관련 컬럼 추가
 ALTER TABLE refund_requests ADD COLUMN IF NOT EXISTS base_refund_amount integer;
-ALTER TABLE refund_requests ADD COLUMN IF NOT EXISTS fee_rate numeric(5,4) DEFAULT 0.10;
+ALTER TABLE refund_requests ADD COLUMN IF NOT EXISTS fee_rate numeric(5,4) DEFAULT 0.15;
 ALTER TABLE refund_requests ADD COLUMN IF NOT EXISTS fee_amount integer DEFAULT 0;
 
 -- 기존 데이터 마이그레이션 (기존 refund_amount를 base_refund_amount로)
@@ -902,7 +903,7 @@ WHERE base_refund_amount IS NULL;
 
 -- 코멘트 추가
 COMMENT ON COLUMN refund_requests.base_refund_amount IS '수수료 차감 전 환불 금액';
-COMMENT ON COLUMN refund_requests.fee_rate IS '적용된 수수료율 (0.10 = 10%)';
+COMMENT ON COLUMN refund_requests.fee_rate IS '적용된 수수료율 (0.15 = 15%)';
 COMMENT ON COLUMN refund_requests.fee_amount IS '수수료 금액';
 ```
 
@@ -918,6 +919,228 @@ COMMENT ON COLUMN refund_requests.fee_amount IS '수수료 금액';
 **키 생성 방법:**
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
+---
+
+## 9. 추가 테이블 (2026-02-09 이후)
+
+### 9.1 inquiries (문의)
+
+고객 문의를 저장합니다.
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
+| `user_id` | `uuid` | NO | - | FK → auth.users.id |
+| `title` | `text` | NO | - | 문의 제목 |
+| `content` | `text` | NO | - | 문의 내용 |
+| `category` | `text` | NO | - | 문의 카테고리 |
+| `status` | `text` | NO | `'pending'` | 처리 상태 |
+| `admin_reply` | `text` | YES | NULL | 관리자 답변 |
+| `replied_at` | `timestamptz` | YES | NULL | 답변 시간 |
+| `created_at` | `timestamptz` | NO | `now()` | 생성일시 |
+| `updated_at` | `timestamptz` | NO | `now()` | 수정일시 |
+
+**Constraints:**
+- `CHECK(status IN ('pending', 'replied', 'closed'))`
+- `CHECK(category IN ('payment', 'contract', 'technical', 'account', 'other'))`
+
+**RLS Policies:**
+- 자신의 문의만 SELECT
+- 자신의 문의만 INSERT
+
+### 9.2 promo_codes (프로모션 코드)
+
+프로모션 코드를 저장합니다.
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
+| `code` | `text` | NO | - | 프로모션 코드 (UNIQUE) |
+| `credit_amount` | `integer` | NO | - | 지급 크레딧 수 |
+| `max_uses` | `integer` | NO | - | 최대 사용 횟수 (필수) |
+| `current_uses` | `integer` | NO | `0` | 현재 사용 횟수 |
+| `expires_at` | `timestamptz` | YES | NULL | 만료일시 |
+| `description` | `text` | YES | NULL | 설명 |
+| `is_active` | `boolean` | NO | `true` | 활성화 여부 |
+| `created_at` | `timestamptz` | NO | `now()` | 생성일시 |
+| `updated_at` | `timestamptz` | NO | `now()` | 수정일시 |
+
+**Constraints:**
+- `UNIQUE(code)`
+- `CHECK(max_uses >= 1)` - 최소 1회 이상 사용 가능
+
+### 9.3 promo_code_uses (프로모션 코드 사용 기록)
+
+프로모션 코드 사용 기록을 저장합니다.
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
+| `promo_code_id` | `uuid` | NO | - | FK → promo_codes.id |
+| `user_id` | `uuid` | NO | - | FK → auth.users.id |
+| `created_at` | `timestamptz` | NO | `now()` | 사용 시각 |
+
+**Constraints:**
+- `UNIQUE(promo_code_id, user_id)` - 사용자당 1회 사용
+
+---
+
+### 7.10 크레딧 및 환불 정책 변경 마이그레이션 (2026-02-10)
+
+```sql
+-- 기본 지급 크레딧 5건 → 3건으로 변경
+-- 환불 수수료 10% → 15%로 변경 (단건 결제 악용 방지)
+
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO ''
+AS $function$
+BEGIN
+  INSERT INTO public.profiles (id, name, avatar_url)
+  VALUES (
+    NEW.id,
+    NEW.raw_user_meta_data->>'name',
+    NEW.raw_user_meta_data->>'avatar_url'
+  );
+  
+  -- 무료 크레딧 지급 (계약서 3건, AI노무사 5건)
+  INSERT INTO public.credits (user_id, credit_type, amount)
+  VALUES 
+    (NEW.id, 'contract', 3),
+    (NEW.id, 'ai_review', 5);
+  
+  RETURN NEW;
+END;
+$function$;
+
+-- refund_requests 테이블 기본 수수료율 변경 (10% → 15%)
+ALTER TABLE public.refund_requests ALTER COLUMN fee_rate SET DEFAULT 0.15;
+
+COMMENT ON FUNCTION public.handle_new_user() IS '신규 가입 시 프로필 생성 + 무료 크레딧 지급 (계약서 3건, AI 5건)';
+```
+
+---
+
+## 10. 채팅 시스템 (2026-02-10)
+
+### 10.1 chat_rooms (채팅방)
+
+계약서별 1:1 채팅방입니다.
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
+| `contract_id` | `uuid` | NO | - | FK → contracts.id (UNIQUE) |
+| `employer_id` | `uuid` | NO | - | FK → auth.users.id |
+| `worker_id` | `uuid` | NO | - | FK → auth.users.id |
+| `last_message_at` | `timestamptz` | NO | `now()` | 최신 메시지 시간 |
+| `employer_unread_count` | `integer` | NO | `0` | 사업자 읽지 않은 메시지 수 |
+| `worker_unread_count` | `integer` | NO | `0` | 근로자 읽지 않은 메시지 수 |
+| `created_at` | `timestamptz` | NO | `now()` | 생성일시 |
+
+**Constraints:**
+- `UNIQUE(contract_id)` - 계약서당 1개 채팅방
+
+**RLS Policies:**
+- SELECT: 사업자 또는 근로자만 조회
+- INSERT: 사업자 또는 근로자만 생성
+- UPDATE: 사업자 또는 근로자만 수정
+
+### 10.2 chat_messages (채팅 메시지)
+
+채팅 메시지를 저장합니다.
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
+| `room_id` | `uuid` | YES | - | FK → chat_rooms.id |
+| `contract_id` | `uuid` | NO | - | FK → contracts.id |
+| `sender_id` | `uuid` | NO | - | FK → auth.users.id |
+| `content` | `text` | YES | - | 텍스트 메시지 |
+| `file_url` | `text` | YES | - | 파일 URL (Storage) |
+| `file_name` | `text` | YES | - | 파일명 |
+| `file_type` | `text` | YES | - | 파일 타입 (image, pdf, document) |
+| `file_size` | `integer` | YES | - | 파일 크기 (bytes) |
+| `is_read` | `boolean` | NO | `false` | 읽음 여부 |
+| `created_at` | `timestamptz` | NO | `now()` | 생성일시 |
+
+**RLS Policies:**
+- SELECT/INSERT/UPDATE: 계약서 당사자만 접근
+
+**Realtime:**
+- `supabase_realtime` publication에 추가됨
+
+### 10.3 채팅 시스템 마이그레이션 (2026-02-10)
+
+```sql
+-- 1. cs_inquiries 카테고리에 enterprise 추가
+ALTER TABLE cs_inquiries DROP CONSTRAINT IF EXISTS cs_inquiries_category_check;
+ALTER TABLE cs_inquiries ADD CONSTRAINT cs_inquiries_category_check 
+  CHECK (category IN ('general', 'payment', 'refund', 'technical', 'contract', 'account', 'enterprise', 'other'));
+
+-- 2. chat_rooms 테이블 생성
+CREATE TABLE IF NOT EXISTS chat_rooms (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  contract_id UUID NOT NULL REFERENCES contracts(id) ON DELETE CASCADE UNIQUE,
+  employer_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  worker_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  last_message_at TIMESTAMPTZ DEFAULT now(),
+  employer_unread_count INTEGER DEFAULT 0,
+  worker_unread_count INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 3. chat_messages 테이블 개선
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS file_name TEXT;
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS file_size INTEGER;
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS room_id UUID REFERENCES chat_rooms(id) ON DELETE CASCADE;
+
+-- 4. 인덱스
+CREATE INDEX IF NOT EXISTS idx_chat_rooms_employer ON chat_rooms(employer_id);
+CREATE INDEX IF NOT EXISTS idx_chat_rooms_worker ON chat_rooms(worker_id);
+CREATE INDEX IF NOT EXISTS idx_chat_rooms_last_message ON chat_rooms(last_message_at DESC);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_room ON chat_messages(room_id, created_at DESC);
+
+-- 5. RLS 정책
+ALTER TABLE chat_rooms ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "chat_rooms_select" ON chat_rooms
+  FOR SELECT USING (auth.uid() = employer_id OR auth.uid() = worker_id);
+
+CREATE POLICY "chat_messages_select_policy" ON chat_messages
+  FOR SELECT USING (
+    EXISTS (SELECT 1 FROM contracts WHERE contracts.id = chat_messages.contract_id 
+    AND (contracts.employer_id = auth.uid() OR contracts.worker_id = auth.uid()))
+  );
+
+-- 6. Realtime 활성화
+ALTER PUBLICATION supabase_realtime ADD TABLE chat_messages;
+
+-- 7. 메시지 생성 시 채팅방 업데이트 트리거
+CREATE OR REPLACE FUNCTION update_chat_room_on_message()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_room chat_rooms%ROWTYPE;
+BEGIN
+  IF NEW.room_id IS NOT NULL THEN
+    SELECT * INTO v_room FROM chat_rooms WHERE id = NEW.room_id;
+    UPDATE chat_rooms SET 
+      last_message_at = NEW.created_at,
+      employer_unread_count = CASE WHEN NEW.sender_id != v_room.employer_id THEN employer_unread_count + 1 ELSE employer_unread_count END,
+      worker_unread_count = CASE WHEN NEW.sender_id != v_room.worker_id THEN worker_unread_count + 1 ELSE worker_unread_count END
+    WHERE id = NEW.room_id;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER trigger_update_chat_room_on_message
+  AFTER INSERT ON chat_messages
+  FOR EACH ROW EXECUTE FUNCTION update_chat_room_on_message();
 ```
 
 ---

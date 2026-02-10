@@ -2,11 +2,14 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { SUPPORT_ROUTES } from '@/lib/constants/routes';
 import { useGuestStore } from '@/stores/guestStore';
 import { createClient } from '@/lib/supabase/client';
 
 export default function SupportPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { isGuest: isGuestFromStore } = useGuestStore();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -17,9 +20,15 @@ export default function SupportPage() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       setIsAuthenticated(!!user);
+      
+      // 로그인된 사용자이고 category 파라미터가 있으면 바로 문의 작성 페이지로 이동
+      const category = searchParams.get('category');
+      if (user && category) {
+        router.replace(`/support/inquiry/new?category=${category}`);
+      }
     };
     checkAuth();
-  }, []);
+  }, [searchParams, router]);
 
   // 실제 로그인 상태와 게스트 스토어 모두 확인
   // 인증된 사용자면 게스트가 아님

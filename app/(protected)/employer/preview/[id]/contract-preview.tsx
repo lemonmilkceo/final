@@ -52,6 +52,7 @@ interface PreviewContract {
   break_minutes: number;
   work_location: string;
   job_description: string;
+  special_terms?: string | null;
   pay_day: number;
   payment_timing?: string;
   is_last_day_payment?: boolean;
@@ -166,6 +167,7 @@ export default function ContractPreview({
         breakMinutes: sourceData.breakMinutes,
         workLocation: sourceData.workLocation,
         jobDescription: sourceData.jobDescription,
+        specialTerms: sourceData.specialTerms,
         payDay: sourceData.payDay,
         contractType: sourceData.contractType || 'contract',
         businessSize: sourceData.businessSize,
@@ -188,6 +190,7 @@ export default function ContractPreview({
         breakMinutes: contract?.break_minutes || 0,
         workLocation: contract?.work_location || '',
         jobDescription: contract?.job_description || '',
+        specialTerms: contract?.special_terms,
         payDay: contract?.pay_day || 10,
         contractType: contract?.contract_type || 'contract',
         businessSize: contract?.business_size || 'under_5',
@@ -1054,6 +1057,7 @@ export default function ContractPreview({
                   breakMinutes: displayData.breakMinutes,
                   workLocation: displayData.workLocation,
                   jobDescription: displayData.jobDescription,
+                  specialTerms: displayData.specialTerms || undefined,
                   businessSize: displayData.businessSize as
                     | 'under_5'
                     | 'over_5',

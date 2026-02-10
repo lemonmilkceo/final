@@ -50,6 +50,7 @@ export interface ContractFormData {
   // Step 10: 업무 내용 + 급여일
   businessType: BusinessType;
   jobDescription: string;
+  specialTerms: string; // 특약사항
   payDay: number;
   paymentTiming: PaymentTiming;
   isLastDayPayment: boolean;
@@ -106,6 +107,7 @@ const initialData: ContractFormData = {
   // Step 10: 업무 내용 + 급여일
   businessType: null,
   jobDescription: '',
+  specialTerms: '', // 특약사항
   payDay: 10,
   paymentTiming: 'current_month',
   isLastDayPayment: false,

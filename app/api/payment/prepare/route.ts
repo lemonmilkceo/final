@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
 
     // 상품 정보 검증
     const VALID_PRODUCTS: Record<string, { price: number; credits: number }> = {
+      credit_1: { price: 1500, credits: 1 },
       credit_5: { price: 4900, credits: 5 },
       credit_15: { price: 12900, credits: 15 },
       credit_50: { price: 39000, credits: 50 },

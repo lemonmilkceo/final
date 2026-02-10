@@ -31,6 +31,7 @@ interface ContractPDFProps {
     breakMinutes: number;
     workLocation: string;
     jobDescription?: string;
+    specialTerms?: string; // 특약사항
 
     // 사업장 정보
     businessSize: 'under_5' | 'over_5';
@@ -260,10 +261,33 @@ function ContractPDF({ data, ref }: ContractPDFProps) {
         </section>
       )}
 
+      {/* 특약사항 */}
+      {data.specialTerms && (
+        <section style={{ marginBottom: '24px' }}>
+          <h2 style={sectionTitleStyle}>
+            {data.businessSize === 'over_5' ? '5' : '4'}. 특약사항
+          </h2>
+          <div
+            style={{
+              padding: '16px',
+              border: '1px solid #E5E7EB',
+              borderRadius: '4px',
+              backgroundColor: '#FAFAFA',
+              whiteSpace: 'pre-wrap',
+              lineHeight: '1.8',
+            }}
+          >
+            {data.specialTerms}
+          </div>
+        </section>
+      )}
+
       {/* 서명 영역 */}
       <section style={{ marginTop: '40px' }}>
         <h2 style={sectionTitleStyle}>
-          {data.businessSize === 'over_5' ? '5' : '4'}. 서명
+          {data.specialTerms
+            ? data.businessSize === 'over_5' ? '6' : '5'
+            : data.businessSize === 'over_5' ? '5' : '4'}. 서명
         </h2>
         <div
           style={{

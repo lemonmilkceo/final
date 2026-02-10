@@ -511,6 +511,7 @@ export async function getContractForEdit(contractId: string): Promise<
     breakMinutes: number;
     businessType: string | null;
     jobDescription: string | null;
+    specialTerms: string | null;
     payDay: number;
     paymentTiming: 'current_month' | 'next_month';
     isLastDayPayment: boolean;
@@ -576,6 +577,7 @@ export async function getContractForEdit(contractId: string): Promise<
       breakMinutes: contract.break_minutes,
       businessType: null, // business_type은 DB에 저장되지 않음
       jobDescription: contract.job_description,
+      specialTerms: contract.special_terms,
       payDay: contract.pay_day,
       paymentTiming: contract.payment_timing as 'current_month' | 'next_month',
       isLastDayPayment: contract.is_last_day_payment,

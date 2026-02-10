@@ -145,30 +145,39 @@ export type Database = {
           content: string
           contract_id: string
           created_at: string
+          file_name: string | null
+          file_size: number | null
           file_type: string | null
           file_url: string | null
           id: string
           is_read: boolean
+          room_id: string | null
           sender_id: string
         }
         Insert: {
           content: string
           contract_id: string
           created_at?: string
+          file_name?: string | null
+          file_size?: number | null
           file_type?: string | null
           file_url?: string | null
           id?: string
           is_read?: boolean
+          room_id?: string | null
           sender_id: string
         }
         Update: {
           content?: string
           contract_id?: string
           created_at?: string
+          file_name?: string | null
+          file_size?: number | null
           file_type?: string | null
           file_url?: string | null
           id?: string
           is_read?: boolean
+          room_id?: string | null
           sender_id?: string
         }
         Relationships: [
@@ -180,10 +189,58 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "chat_messages_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "chat_messages_sender_id_fkey"
             columns: ["sender_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_rooms: {
+        Row: {
+          contract_id: string
+          created_at: string | null
+          employer_id: string
+          employer_unread_count: number | null
+          id: string
+          last_message_at: string | null
+          worker_id: string
+          worker_unread_count: number | null
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string | null
+          employer_id: string
+          employer_unread_count?: number | null
+          id?: string
+          last_message_at?: string | null
+          worker_id: string
+          worker_unread_count?: number | null
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string | null
+          employer_id?: string
+          employer_unread_count?: number | null
+          id?: string
+          last_message_at?: string | null
+          worker_id?: string
+          worker_unread_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_rooms_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: true
+            referencedRelation: "contracts"
             referencedColumns: ["id"]
           },
         ]
@@ -211,6 +268,7 @@ export type Database = {
           pdf_url: string | null
           resignation_date: string | null
           share_token: string
+          special_terms: string | null
           start_date: string
           status: Database["public"]["Enums"]["contract_status"]
           updated_at: string
@@ -251,6 +309,7 @@ export type Database = {
           pdf_url?: string | null
           resignation_date?: string | null
           share_token?: string
+          special_terms?: string | null
           start_date: string
           status?: Database["public"]["Enums"]["contract_status"]
           updated_at?: string
@@ -291,6 +350,7 @@ export type Database = {
           pdf_url?: string | null
           resignation_date?: string | null
           share_token?: string
+          special_terms?: string | null
           start_date?: string
           status?: Database["public"]["Enums"]["contract_status"]
           updated_at?: string

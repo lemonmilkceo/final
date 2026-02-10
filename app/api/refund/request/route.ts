@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimit, getRateLimitKey } from '@/lib/utils/rate-limiter';
 
 // 환불 수수료 설정
-const FEE_RATE = 0.10; // 10% 수수료
+const FEE_RATE = 0.15; // 15% 수수료 (단건 결제 악용 방지)
 const NO_FEE_DAYS = 7; // 7일 이내 미사용 시 수수료 면제
 const MINIMUM_REFUND_AMOUNT = 1000; // 최소 환불 금액 1,000원
 
@@ -12,7 +12,7 @@ const MINIMUM_REFUND_AMOUNT = 1000; // 최소 환불 금액 1,000원
  * POST /api/refund/request
  * 
  * 수수료 정책:
- * - 기본: 10% 수수료 적용
+ * - 기본: 15% 수수료 적용
  * - 예외: 결제 후 7일 이내 + 크레딧 미사용 시 수수료 면제
  * - 최소 환불 금액: 1,000원
  */

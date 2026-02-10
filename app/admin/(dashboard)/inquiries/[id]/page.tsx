@@ -87,6 +87,9 @@ function CategoryBadge({ category }: { category: string }) {
     payment: '결제',
     refund: '환불',
     technical: '기술',
+    contract: '계약서',
+    account: '계정',
+    enterprise: '기업/구독',
     other: '기타',
   };
   return labels[category] || category;

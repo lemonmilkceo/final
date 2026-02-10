@@ -156,12 +156,25 @@ function calculateExtraPayments(hourlyWage: number | null, monthlyWage: number |
   };
 }
 
+// 특약 예시
+const SPECIAL_TERMS_EXAMPLES = [
+  '수습 기간 3개월 적용',
+  '비밀유지 의무 동의',
+  '경쟁업체 취업 제한 (퇴직 후 1년)',
+  '근무복 대여 및 반납 조건',
+  '교육 수료 후 일정 기간 근무 의무',
+  '차량 사용 시 유류비 지원',
+  '식대 별도 지급',
+];
+
 export default function Step9JobDescription() {
   const router = useRouter();
   const { data, updateData } = useContractFormStore();
   const [isBusinessTypeSheetOpen, setIsBusinessTypeSheetOpen] = useState(false);
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
   const [additionalDescription, setAdditionalDescription] = useState('');
+  const [selectedSpecialTerms, setSelectedSpecialTerms] = useState<string[]>([]);
+  const [customSpecialTerms, setCustomSpecialTerms] = useState('');
   
   // 5인 이상 사업장일 때만 추가수당 계산
   const extraPayments = useMemo(() => {
@@ -210,6 +223,53 @@ export default function Step9JobDescription() {
       : selectedKeywords.join(', ');
     updateData({ jobDescription: combined });
   };
+
+  // 특약 예시 토글
+  const handleSpecialTermToggle = (term: string) => {
+    const newTerms = selectedSpecialTerms.includes(term)
+      ? selectedSpecialTerms.filter((t) => t !== term)
+      : [...selectedSpecialTerms, term];
+    
+    setSelectedSpecialTerms(newTerms);
+    
+    // 특약 업데이트
+    const combined = customSpecialTerms
+      ? [...newTerms, customSpecialTerms].filter(Boolean).join('\n')
+      : newTerms.join('\n');
+    updateData({ specialTerms: combined });
+  };
+
+  // 특약 직접 작성
+  const handleCustomSpecialTermsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setCustomSpecialTerms(value);
+    
+    // 특약 업데이트
+    const combined = value
+      ? [...selectedSpecialTerms, value].filter(Boolean).join('\n')
+      : selectedSpecialTerms.join('\n');
+    updateData({ specialTerms: combined });
+  };
+
+  // 기존 특약 데이터 초기화 (수정 모드)
+  useEffect(() => {
+    if (data.specialTerms) {
+      const lines = data.specialTerms.split('\n');
+      const matched: string[] = [];
+      const custom: string[] = [];
+      
+      lines.forEach(line => {
+        if (SPECIAL_TERMS_EXAMPLES.includes(line.trim())) {
+          matched.push(line.trim());
+        } else if (line.trim()) {
+          custom.push(line.trim());
+        }
+      });
+      
+      setSelectedSpecialTerms(matched);
+      setCustomSpecialTerms(custom.join('\n'));
+    }
+  }, []); // 컴포넌트 마운트 시 1회만 실행
 
   const handlePreview = () => {
     router.push('/employer/preview/new');
@@ -278,8 +338,43 @@ export default function Step9JobDescription() {
               onChange={handleAdditionalChange}
               placeholder="추가로 입력하고 싶은 업무 내용을 적어주세요"
               rows={3}
-              className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-[15px] text-gray-900 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 mb-6"
+              className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-[15px] text-gray-900 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 mb-8"
             />
+
+            {/* 특약사항 섹션 */}
+            <div className="mb-8">
+              <h2 className="text-[20px] font-bold text-gray-900 mb-2">
+                추가하고 싶은 특약이 있나요?
+              </h2>
+              <p className="text-[14px] text-gray-500 mb-4">선택사항이에요. 예시를 선택하거나 직접 작성할 수 있어요.</p>
+
+              {/* 특약 예시 태그 */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {SPECIAL_TERMS_EXAMPLES.map((term) => (
+                  <button
+                    key={term}
+                    onClick={() => handleSpecialTermToggle(term)}
+                    className={clsx(
+                      'px-4 py-2.5 rounded-full text-[14px] transition-colors border',
+                      selectedSpecialTerms.includes(term)
+                        ? 'bg-purple-500 text-white border-purple-500'
+                        : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300'
+                    )}
+                  >
+                    {term}
+                  </button>
+                ))}
+              </div>
+
+              {/* 특약 직접 작성 */}
+              <textarea
+                value={customSpecialTerms}
+                onChange={handleCustomSpecialTermsChange}
+                placeholder="직접 작성하고 싶은 특약 내용을 입력해주세요&#10;예) 주 1회 정기 미팅 참석 의무"
+                rows={4}
+                className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-[15px] text-gray-900 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
 
             {/* 5인 이상 사업장: 추가수당 안내 */}
             {extraPayments && (
