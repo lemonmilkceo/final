@@ -68,6 +68,7 @@ export default async function ContractDetailPage({ params }: PageProps) {
           breakMinutes: sampleContract.break_minutes,
           workLocation: sampleContract.work_location,
           jobDescription: sampleContract.job_description,
+          specialTerms: sampleContract.special_terms,
           payDay: sampleContract.pay_day,
           paymentTiming: 'current_month',
           isLastDayPayment: false,

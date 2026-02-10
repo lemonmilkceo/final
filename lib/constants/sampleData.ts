@@ -80,6 +80,7 @@ export const SAMPLE_CONTRACT_DETAILS: Record<string, {
   break_minutes: number;
   work_location: string;
   job_description: string;
+  special_terms: string | null;
   pay_day: number;
   created_at: string;
   expires_at: string | null;
@@ -112,6 +113,7 @@ export const SAMPLE_CONTRACT_DETAILS: Record<string, {
     break_minutes: 60,
     work_location: '서울 강남구 테헤란로 123, 싸인빌딩 5층',
     job_description: '카페 바리스타 (음료 제조, 매장 청소, 재고 관리)',
+    special_terms: '수습 기간 3개월 적용\n비밀유지 의무 동의\n식대 별도 지급',
     pay_day: 10,
     created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
     expires_at: null,
@@ -142,6 +144,7 @@ export const SAMPLE_CONTRACT_DETAILS: Record<string, {
     break_minutes: 30,
     work_location: '서울 마포구 합정동 456, 카페모카',
     job_description: '주말 홀서빙 (주문 접수, 음식 서빙, 테이블 정리)',
+    special_terms: '근무복 대여 및 반납 조건',
     pay_day: 25,
     created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     expires_at: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
@@ -172,6 +175,7 @@ export const SAMPLE_CONTRACT_DETAILS: Record<string, {
     break_minutes: 60,
     work_location: '서울 송파구 잠실동 789, 롯데마트',
     job_description: '마트 계산원 (상품 계산, 고객 응대, 매장 정리)',
+    special_terms: null,
     pay_day: 15,
     created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
     expires_at: null,
@@ -199,6 +203,7 @@ export const SAMPLE_CONTRACT_DETAILS: Record<string, {
     break_minutes: 60,
     work_location: '서울 서초구 반포동 321, 이마트',
     job_description: '식품 코너 판매 (상품 진열, 재고 관리, 고객 응대)',
+    special_terms: '교육 수료 후 일정 기간 근무 의무\n차량 사용 시 유류비 지원',
     pay_day: 5,
     created_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
     expires_at: null,
@@ -229,6 +234,7 @@ export const SAMPLE_CONTRACT_DETAILS: Record<string, {
     break_minutes: 45,
     work_location: '서울 용산구 이태원동 55, 브런치카페',
     job_description: '카페 서빙 및 주방 보조 (음료 제조, 서빙, 설거지)',
+    special_terms: '수습 기간 3개월 적용\n식대 별도 지급',
     pay_day: 20,
     created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
     expires_at: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
