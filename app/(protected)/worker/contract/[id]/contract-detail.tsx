@@ -498,16 +498,12 @@ export default function WorkerContractDetail({
             
             {/* 채팅 버튼 - 게스트 모드가 아닐 때만 */}
             {!isGuestMode && userId && (
-              <div className="flex flex-col items-center gap-1">
-                <ChatButton
-                  contractId={contract.id}
-                  currentUserId={userId}
-                  partnerName={contract.employer?.name || '사업자'}
-                  variant="icon"
-                  className="w-12 h-12"
-                />
-                <span className="text-[12px] text-gray-500">채팅</span>
-              </div>
+              <ChatButton
+                contractId={contract.id}
+                currentUserId={userId}
+                partnerName={contract.employer?.name || '사업자'}
+                variant="icon"
+              />
             )}
             
             {/* 퇴사 처리 버튼 - 게스트 모드가 아닐 때만 */}

@@ -61,21 +61,17 @@ export default function ChatButton({
         <button
           onClick={openChat}
           disabled={isCreating}
-          className={`p-2 rounded-full bg-blue-50 text-blue-500 hover:bg-blue-100 transition-colors ${className}`}
+          className={`flex flex-col items-center gap-1 ${className}`}
           aria-label="채팅하기"
         >
-          {isCreating ? (
-            <div className="w-5 h-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
-          ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-              />
-            </svg>
-          )}
+          <span className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl">
+            {isCreating ? (
+              <div className="w-5 h-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+            ) : (
+              '💬'
+            )}
+          </span>
+          <span className="text-[12px] text-gray-500">채팅</span>
         </button>
 
         {isOpen && roomId && (

@@ -838,15 +838,12 @@ export default function ContractDetail({
           )}
           {/* 채팅 버튼 - 서명 완료된 계약서에서만 표시 */}
           {contract.status === 'completed' && userId && !isGuestMode && (
-            <div className="flex flex-col items-center gap-1">
-              <ChatButton
-                contractId={contract.id}
-                currentUserId={userId}
-                partnerName={contract.workerName}
-                variant="icon"
-              />
-              <span className="text-[11px] text-gray-500">채팅</span>
-            </div>
+            <ChatButton
+              contractId={contract.id}
+              currentUserId={userId}
+              partnerName={contract.workerName}
+              variant="icon"
+            />
           )}
           <button
             onClick={() => setIsDeleteSheetOpen(true)}
