@@ -129,7 +129,17 @@ export default function ChatRoom({
         body: JSON.stringify({ content: messageContent }),
       });
 
-      if (!response.ok) {
+      if (response.ok) {
+        const data = await response.json();
+        // API 응답에서 받은 메시지를 직접 추가 (Realtime 백업)
+        if (data.message) {
+          setMessages((prev) => {
+            // 중복 방지
+            if (prev.some((m) => m.id === data.message.id)) return prev;
+            return [...prev, data.message];
+          });
+        }
+      } else {
         setNewMessage(messageContent);
       }
     } catch (error) {
@@ -170,7 +180,7 @@ export default function ChatRoom({
         .getPublicUrl(uploadData.path);
 
       // 메시지로 파일 전송
-      await fetch(`/api/chat/rooms/${roomId}/messages`, {
+      const response = await fetch(`/api/chat/rooms/${roomId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -180,6 +190,17 @@ export default function ChatRoom({
           fileSize: file.size,
         }),
       });
+
+      if (response.ok) {
+        const data = await response.json();
+        // API 응답에서 받은 메시지를 직접 추가
+        if (data.message) {
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === data.message.id)) return prev;
+            return [...prev, data.message];
+          });
+        }
+      }
     } catch (error) {
       console.error('Failed to upload file:', error);
       alert('파일 업로드에 실패했어요');
