@@ -31,6 +31,12 @@ interface ChatRoomProps {
   onClose: () => void;
 }
 
+interface PendingFile {
+  file: File;
+  previewUrl: string;
+  type: 'image' | 'document';
+}
+
 export default function ChatRoom({
   roomId,
   contractId,
@@ -45,6 +51,7 @@ export default function ChatRoom({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string>('');
   const [hasMore, setHasMore] = useState(false);
+  const [pendingFile, setPendingFile] = useState<PendingFile | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -117,120 +124,129 @@ export default function ChatRoom({
     }
   }, [messages]);
 
-  // 메시지 전송
-  const sendMessage = async () => {
-    if (!newMessage.trim() || isSending) return;
-
-    setIsSending(true);
-    const messageContent = newMessage.trim();
-    setNewMessage('');
-
-    try {
-      const response = await fetch(`/api/chat/rooms/${roomId}/messages`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: messageContent }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        // API 응답에서 받은 메시지를 직접 추가 (Realtime 백업)
-        if (data.message) {
-          setMessages((prev) => {
-            // 중복 방지
-            if (prev.some((m) => m.id === data.message.id)) return prev;
-            return [...prev, data.message];
-          });
-        }
-      } else {
-        setNewMessage(messageContent);
-      }
-    } catch (error) {
-      console.error('Failed to send message:', error);
-      setNewMessage(messageContent);
-    } finally {
-      setIsSending(false);
-      inputRef.current?.focus();
-    }
+  // 메시지 전송 (통합 - 텍스트/파일 함께 전송)
+  const sendMessage = () => {
+    sendMessageWithFile();
   };
 
-  // 파일 업로드
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 파일 선택 시 미리보기로 표시 (바로 전송하지 않음)
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     // 파일 크기 제한 (20MB)
     if (file.size > 20 * 1024 * 1024) {
       alert('파일 크기는 20MB 이하만 가능해요');
-      // input 초기화
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
       return;
     }
 
-    setIsUploading(true);
-    setUploadProgress(`${file.name} 업로드 중...`);
+    const type = file.type.startsWith('image/') ? 'image' : 'document';
+    const previewUrl = type === 'image' ? URL.createObjectURL(file) : '';
+
+    setPendingFile({ file, previewUrl, type });
+
+    // input 초기화
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // 첨부파일 취소
+  const cancelPendingFile = () => {
+    if (pendingFile?.previewUrl) {
+      URL.revokeObjectURL(pendingFile.previewUrl);
+    }
+    setPendingFile(null);
+  };
+
+  // 메시지 전송 (텍스트 + 파일 함께)
+  const sendMessageWithFile = async () => {
+    if ((!newMessage.trim() && !pendingFile) || isSending) return;
+
+    setIsSending(true);
+    const messageContent = newMessage.trim();
+    setNewMessage('');
 
     try {
-      const supabase = createClient();
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${roomId}/${Date.now()}.${fileExt}`;
+      let fileUrl: string | undefined;
+      let fileName: string | undefined;
+      let fileType: 'image' | 'document' | undefined;
+      let fileSize: number | undefined;
 
-      setUploadProgress(`${file.name} 업로드 중... (저장소에 업로드)`);
+      // 첨부파일이 있으면 먼저 업로드
+      if (pendingFile) {
+        setIsUploading(true);
+        setUploadProgress(`${pendingFile.file.name} 업로드 중...`);
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('chat-files')
-        .upload(fileName, file);
+        const supabase = createClient();
+        const fileExt = pendingFile.file.name.split('.').pop();
+        const storagePath = `${roomId}/${Date.now()}.${fileExt}`;
 
-      if (uploadError) {
-        console.error('Storage upload error:', uploadError);
-        throw uploadError;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('chat-files')
+          .upload(storagePath, pendingFile.file);
+
+        if (uploadError) {
+          console.error('Storage upload error:', uploadError);
+          throw uploadError;
+        }
+
+        const { data: urlData } = supabase.storage
+          .from('chat-files')
+          .getPublicUrl(uploadData.path);
+
+        fileUrl = urlData.publicUrl;
+        fileName = pendingFile.file.name;
+        fileType = pendingFile.type;
+        fileSize = pendingFile.file.size;
+
+        // 미리보기 URL 정리
+        if (pendingFile.previewUrl) {
+          URL.revokeObjectURL(pendingFile.previewUrl);
+        }
+        setPendingFile(null);
+        setUploadProgress('');
+        setIsUploading(false);
       }
 
-      setUploadProgress(`${file.name} 전송 중...`);
-
-      const { data: urlData } = supabase.storage
-        .from('chat-files')
-        .getPublicUrl(uploadData.path);
-
-      // 메시지로 파일 전송
+      // 메시지 전송 (텍스트만, 파일만, 또는 둘 다)
       const response = await fetch(`/api/chat/rooms/${roomId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          fileUrl: urlData.publicUrl,
-          fileName: file.name,
-          fileType: file.type.startsWith('image/') ? 'image' : 'document',
-          fileSize: file.size,
+          content: messageContent || undefined,
+          fileUrl,
+          fileName,
+          fileType,
+          fileSize,
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        // API 응답에서 받은 메시지를 직접 추가
         if (data.message) {
           setMessages((prev) => {
             if (prev.some((m) => m.id === data.message.id)) return prev;
             return [...prev, data.message];
           });
         }
-        setUploadProgress('');
       } else {
         const errorData = await response.json();
         console.error('Message API error:', errorData);
+        setNewMessage(messageContent);
         throw new Error(errorData.error || '메시지 전송 실패');
       }
     } catch (error) {
-      console.error('Failed to upload file:', error);
-      alert('파일 업로드에 실패했어요');
-      setUploadProgress('');
+      console.error('Failed to send message:', error);
+      alert('메시지 전송에 실패했어요');
     } finally {
+      setIsSending(false);
       setIsUploading(false);
-      // input 초기화
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      setUploadProgress('');
+      inputRef.current?.focus();
     }
   };
 
@@ -399,12 +415,46 @@ export default function ChatRoom({
             <span className="text-[13px] text-blue-600 truncate flex-1">{uploadProgress}</span>
           </div>
         )}
+
+        {/* 첨부파일 미리보기 */}
+        {pendingFile && (
+          <div className="flex items-center gap-3 mb-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
+            {pendingFile.type === 'image' && pendingFile.previewUrl ? (
+              <img
+                src={pendingFile.previewUrl}
+                alt="미리보기"
+                className="w-14 h-14 object-cover rounded-lg"
+              />
+            ) : (
+              <div className="w-14 h-14 bg-gray-200 rounded-lg flex items-center justify-center text-2xl">
+                📎
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-medium text-gray-900 truncate">
+                {pendingFile.file.name}
+              </p>
+              <p className="text-[12px] text-gray-500">
+                {formatFileSize(pendingFile.file.size)}
+              </p>
+            </div>
+            <button
+              onClick={cancelPendingFile}
+              className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+              disabled={isSending}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
         
         <div className="flex items-end gap-2">
           {/* 파일 첨부 버튼 */}
           <label className={clsx(
             "p-2 cursor-pointer transition-colors",
-            isUploading ? "text-gray-300 cursor-not-allowed" : "text-gray-500 hover:text-gray-700"
+            (isUploading || pendingFile) ? "text-gray-300 cursor-not-allowed" : "text-gray-500 hover:text-gray-700"
           )}>
             {isUploading ? (
               <div className="w-6 h-6 animate-spin rounded-full border-2 border-gray-400 border-t-transparent" />
@@ -423,8 +473,8 @@ export default function ChatRoom({
               type="file"
               className="hidden"
               accept="image/*,.pdf,.doc,.docx,.xlsx"
-              onChange={handleFileUpload}
-              disabled={isSending || isUploading}
+              onChange={handleFileSelect}
+              disabled={isSending || isUploading || !!pendingFile}
             />
           </label>
 
@@ -435,7 +485,7 @@ export default function ChatRoom({
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="메시지를 입력하세요"
+              placeholder={pendingFile ? "메시지와 함께 전송 (선택)" : "메시지를 입력하세요"}
               className="w-full bg-transparent text-[15px] resize-none focus:outline-none max-h-24"
               rows={1}
               disabled={isSending}
@@ -445,10 +495,10 @@ export default function ChatRoom({
           {/* 전송 버튼 */}
           <button
             onClick={sendMessage}
-            disabled={!newMessage.trim() || isSending}
+            disabled={(!newMessage.trim() && !pendingFile) || isSending}
             className={clsx(
               'p-2 rounded-full transition-colors',
-              newMessage.trim() && !isSending
+              (newMessage.trim() || pendingFile) && !isSending
                 ? 'bg-blue-500 text-white'
                 : 'bg-gray-200 text-gray-400'
             )}
