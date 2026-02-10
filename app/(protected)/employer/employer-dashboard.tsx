@@ -133,6 +133,9 @@ export default function EmployerDashboard({
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  // 채팅 unread count (계약서 ID별)
+  const [chatUnreadCounts, setChatUnreadCounts] = useState<Record<string, number>>({});
+
   // Toast
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -305,6 +308,25 @@ export default function EmployerDashboard({
     const count = await getUnreadNotificationCount();
     setUnreadCount(count);
   };
+
+  // 채팅 unread count 조회
+  useEffect(() => {
+    if (isGuestMode) return;
+
+    const fetchChatUnreadCounts = async () => {
+      try {
+        const response = await fetch('/api/chat/unread-counts');
+        if (response.ok) {
+          const data = await response.json();
+          setChatUnreadCounts(data.unreadCounts || {});
+        }
+      } catch (error) {
+        console.error('Failed to fetch chat unread counts:', error);
+      }
+    };
+
+    fetchChatUnreadCounts();
+  }, [isGuestMode]);
 
   // 계약서 작성
   const handleCreateContract = () => {
@@ -959,6 +981,7 @@ export default function EmployerDashboard({
                       isSelected={selectedIds.has(contract.id)}
                       onSelect={toggleSelect}
                       onEdit={handleEditContract}
+                      unreadCount={chatUnreadCounts[contract.id] || 0}
                     />
                   ))}
                 </div>

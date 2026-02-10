@@ -94,12 +94,12 @@ const BottomNav: React.FC<BottomNavProps> = ({ userRole }) => {
               pathname === item.href ||
               (item.href !== '/worker' && pathname.startsWith(item.href));
 
-            // 채팅은 토스트로 "준비 중" 안내
+            // 준비 중 기능은 토스트로 안내
             if (item.comingSoon) {
               return (
                 <button
                   key={item.href}
-                  onClick={() => handleComingSoon(item.comingSoonLabel || item.label)}
+                  onClick={() => handleComingSoon(item.label)}
                   className="flex flex-col items-center justify-center flex-1 py-2"
                 >
                   {item.icon(false)}

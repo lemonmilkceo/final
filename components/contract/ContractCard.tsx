@@ -31,6 +31,7 @@ interface ContractCardProps {
   onSelect?: (id: string) => void;
   onEdit?: (id: string) => void;
   isDeleted?: boolean;
+  unreadCount?: number;
 }
 
 // 상태별 아이콘 색상
@@ -145,6 +146,7 @@ const ContractCard: React.FC<ContractCardProps> = ({
   onSelect,
   onEdit,
   isDeleted = false,
+  unreadCount = 0,
 }) => {
   const router = useRouter();
   const statusIcon = isDeleted
@@ -223,25 +225,33 @@ const ContractCard: React.FC<ContractCardProps> = ({
         )}
 
         {/* 아이콘 */}
-        <div
-          className={clsx(
-            'w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0',
-            statusIcon.bgColor
-          )}
-        >
-          <svg
-            className={clsx('w-6 h-6', statusIcon.iconColor)}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        <div className="relative flex-shrink-0">
+          <div
+            className={clsx(
+              'w-12 h-12 rounded-full flex items-center justify-center',
+              statusIcon.bgColor
+            )}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
+            <svg
+              className={clsx('w-6 h-6', statusIcon.iconColor)}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+          </div>
+          {/* 읽지 않은 메시지 배지 */}
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
         </div>
 
         {/* 정보 */}

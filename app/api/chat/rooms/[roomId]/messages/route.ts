@@ -208,6 +208,41 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    // 상대방에게 알림 생성 (비동기 - 실패해도 메시지 전송은 성공)
+    const recipientId = room.employer_id === user.id ? room.worker_id : room.employer_id;
+    
+    if (recipientId) {
+      try {
+        // 보낸 사람 이름 조회
+        const { data: senderProfile } = await supabase
+          .from('profiles')
+          .select('name')
+          .eq('id', user.id)
+          .single();
+
+        const senderName = senderProfile?.name || '상대방';
+        const messagePreview = content 
+          ? (content.length > 30 ? content.substring(0, 30) + '...' : content)
+          : '파일을 보냈어요';
+
+        // 알림 생성
+        await supabase.from('notifications').insert({
+          user_id: recipientId,
+          type: 'chat_message',
+          title: `${senderName}님의 메시지`,
+          body: messagePreview,
+          data: {
+            roomId: roomId,
+            contractId: room.contract_id,
+            senderId: user.id,
+          },
+          is_read: false,
+        });
+      } catch (notificationError) {
+        console.error('Notification create error:', notificationError);
+      }
+    }
+
     return NextResponse.json({ message }, { status: 201 });
   } catch (error) {
     console.error('Message create error:', error);

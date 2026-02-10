@@ -112,6 +112,9 @@ export default function WorkerDashboard({
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  // 채팅 unread count (계약서 ID별)
+  const [chatUnreadCounts, setChatUnreadCounts] = useState<Record<string, number>>({});
+
   // Toast
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -254,6 +257,25 @@ export default function WorkerDashboard({
     const count = await getUnreadNotificationCount();
     setUnreadCount(count);
   };
+
+  // 채팅 unread count 조회
+  useEffect(() => {
+    if (isGuestMode) return;
+
+    const fetchChatUnreadCounts = async () => {
+      try {
+        const response = await fetch('/api/chat/unread-counts');
+        if (response.ok) {
+          const data = await response.json();
+          setChatUnreadCounts(data.unreadCounts || {});
+        }
+      } catch (error) {
+        console.error('Failed to fetch chat unread counts:', error);
+      }
+    };
+
+    fetchChatUnreadCounts();
+  }, [isGuestMode]);
 
   // 편집 모드 토글
   const toggleEditMode = () => {
@@ -859,18 +881,43 @@ export default function WorkerDashboard({
                       className="border border-gray-100"
                     >
                       <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-[15px] font-medium text-gray-900">
-                            {contract.employer?.name || '사장님'}
-                          </p>
-                          <p className="text-[13px] text-gray-500">
-                            {contract.wage_type === 'monthly' &&
-                            contract.monthly_wage
-                              ? `월 ${formatCurrency(contract.monthly_wage)}`
-                              : contract.hourly_wage
-                                ? formatCurrency(contract.hourly_wage)
-                                : '-'}
-                          </p>
+                        <div className="flex items-center gap-3">
+                          {/* 채팅 unread 배지 */}
+                          {chatUnreadCounts[contract.id] > 0 && (
+                            <div className="relative">
+                              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <svg
+                                  className="w-5 h-5 text-blue-500"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                                  />
+                                </svg>
+                              </div>
+                              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                                {chatUnreadCounts[contract.id] > 99 ? '99+' : chatUnreadCounts[contract.id]}
+                              </span>
+                            </div>
+                          )}
+                          <div>
+                            <p className="text-[15px] font-medium text-gray-900">
+                              {contract.employer?.name || '사장님'}
+                            </p>
+                            <p className="text-[13px] text-gray-500">
+                              {contract.wage_type === 'monthly' &&
+                              contract.monthly_wage
+                                ? `월 ${formatCurrency(contract.monthly_wage)}`
+                                : contract.hourly_wage
+                                  ? formatCurrency(contract.hourly_wage)
+                                  : '-'}
+                            </p>
+                          </div>
                         </div>
                         <Badge variant="completed">완료</Badge>
                       </div>

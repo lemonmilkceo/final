@@ -1208,6 +1208,7 @@ export type Database = {
         | "system"
         | "credit_low"
         | "inquiry_response"
+        | "chat_message"
       signer_role: "employer" | "worker"
       user_role: "employer" | "worker"
     }
@@ -1349,9 +1350,11 @@ export const Constants = {
         "system",
         "credit_low",
         "inquiry_response",
+        "chat_message",
       ],
       signer_role: ["employer", "worker"],
       user_role: ["employer", "worker"],
     },
   },
 } as const
+
