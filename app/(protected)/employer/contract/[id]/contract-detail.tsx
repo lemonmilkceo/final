@@ -843,6 +843,7 @@ export default function ContractDetail({
               currentUserId={userId}
               partnerName={contract.workerName}
               variant="icon"
+              size="sm"
             />
           )}
           <button

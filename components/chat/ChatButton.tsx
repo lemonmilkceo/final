@@ -10,6 +10,7 @@ interface ChatButtonProps {
   partnerName: string;
   className?: string;
   variant?: 'primary' | 'secondary' | 'icon';
+  size?: 'sm' | 'md'; // sm: w-10 h-10 (employer), md: w-12 h-12 (worker)
 }
 
 export default function ChatButton({
@@ -19,6 +20,7 @@ export default function ChatButton({
   partnerName,
   className = '',
   variant = 'primary',
+  size = 'md',
 }: ChatButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [roomId, setRoomId] = useState(initialRoomId);
@@ -56,6 +58,11 @@ export default function ChatButton({
   };
 
   if (variant === 'icon') {
+    const iconSize = size === 'sm' ? 'w-10 h-10' : 'w-12 h-12';
+    const textSize = size === 'sm' ? 'text-lg' : 'text-xl';
+    const labelSize = size === 'sm' ? 'text-[11px]' : 'text-[12px]';
+    const spinnerSize = size === 'sm' ? 'w-4 h-4' : 'w-5 h-5';
+
     return (
       <>
         <button
@@ -64,14 +71,14 @@ export default function ChatButton({
           className={`flex flex-col items-center gap-1 ${className}`}
           aria-label="채팅하기"
         >
-          <span className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-lg">
+          <span className={`${iconSize} bg-blue-100 rounded-full flex items-center justify-center ${textSize}`}>
             {isCreating ? (
-              <div className="w-4 h-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+              <div className={`${spinnerSize} animate-spin rounded-full border-2 border-blue-500 border-t-transparent`} />
             ) : (
               '💬'
             )}
           </span>
-          <span className="text-[11px] text-gray-500">채팅</span>
+          <span className={`${labelSize} text-gray-500`}>채팅</span>
         </button>
 
         {isOpen && roomId && (
