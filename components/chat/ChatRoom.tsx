@@ -42,10 +42,13 @@ export default function ChatRoom({
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string>('');
   const [hasMore, setHasMore] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 메시지 목록 조회
   const fetchMessages = useCallback(async (before?: string) => {
@@ -159,21 +162,33 @@ export default function ChatRoom({
     // 파일 크기 제한 (20MB)
     if (file.size > 20 * 1024 * 1024) {
       alert('파일 크기는 20MB 이하만 가능해요');
+      // input 초기화
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
       return;
     }
 
-    setIsSending(true);
+    setIsUploading(true);
+    setUploadProgress(`${file.name} 업로드 중...`);
 
     try {
       const supabase = createClient();
       const fileExt = file.name.split('.').pop();
       const fileName = `${roomId}/${Date.now()}.${fileExt}`;
 
+      setUploadProgress(`${file.name} 업로드 중... (저장소에 업로드)`);
+
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('chat-files')
         .upload(fileName, file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        throw uploadError;
+      }
+
+      setUploadProgress(`${file.name} 전송 중...`);
 
       const { data: urlData } = supabase.storage
         .from('chat-files')
@@ -200,12 +215,22 @@ export default function ChatRoom({
             return [...prev, data.message];
           });
         }
+        setUploadProgress('');
+      } else {
+        const errorData = await response.json();
+        console.error('Message API error:', errorData);
+        throw new Error(errorData.error || '메시지 전송 실패');
       }
     } catch (error) {
       console.error('Failed to upload file:', error);
       alert('파일 업로드에 실패했어요');
+      setUploadProgress('');
     } finally {
-      setIsSending(false);
+      setIsUploading(false);
+      // input 초기화
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -367,23 +392,39 @@ export default function ChatRoom({
 
       {/* 입력창 */}
       <div className="bg-white border-t border-gray-100 px-4 py-3 safe-bottom">
+        {/* 업로드 상태 표시 */}
+        {isUploading && uploadProgress && (
+          <div className="flex items-center gap-2 mb-2 px-2 py-2 bg-blue-50 rounded-xl">
+            <div className="w-4 h-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+            <span className="text-[13px] text-blue-600 truncate flex-1">{uploadProgress}</span>
+          </div>
+        )}
+        
         <div className="flex items-end gap-2">
           {/* 파일 첨부 버튼 */}
-          <label className="p-2 text-gray-500 hover:text-gray-700 cursor-pointer">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-              />
-            </svg>
+          <label className={clsx(
+            "p-2 cursor-pointer transition-colors",
+            isUploading ? "text-gray-300 cursor-not-allowed" : "text-gray-500 hover:text-gray-700"
+          )}>
+            {isUploading ? (
+              <div className="w-6 h-6 animate-spin rounded-full border-2 border-gray-400 border-t-transparent" />
+            ) : (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                />
+              </svg>
+            )}
             <input
+              ref={fileInputRef}
               type="file"
               className="hidden"
               accept="image/*,.pdf,.doc,.docx,.xlsx"
               onChange={handleFileUpload}
-              disabled={isSending}
+              disabled={isSending || isUploading}
             />
           </label>
 
