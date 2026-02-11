@@ -196,6 +196,16 @@ export default function OnboardingPage() {
           </Link>
           에 동의하는 것으로 봐요
         </p>
+
+        {/* 사업자 정보 */}
+        <div className="mt-6 pt-4 border-t border-gray-100">
+          <div className="text-[11px] text-gray-400 text-center space-y-0.5">
+            <p className="font-medium text-gray-500">레몬밀크AI</p>
+            <p>대표: 이현승 | 사업자등록번호: 499-24-02238</p>
+            <p>서울특별시 강남구 역삼로 512, 5층-772</p>
+            <p>전화: 010-5375-0414</p>
+          </div>
+        </div>
       </div>
     </div>
   );
