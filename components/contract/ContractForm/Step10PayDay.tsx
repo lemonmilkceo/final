@@ -219,29 +219,53 @@ export default function Step10PayDay() {
         </h1>
 
         {/* 당월/익월 지급 토글 */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="grid grid-cols-2 gap-3 mb-3">
           <button
             onClick={() => handleTimingChange('current_month')}
             className={clsx(
-              'py-3 rounded-2xl font-semibold text-[15px] transition-colors',
+              'py-3 px-2 rounded-2xl transition-colors flex flex-col items-center gap-0.5',
               data.paymentTiming === 'current_month'
                 ? 'bg-blue-500 text-white'
                 : 'bg-gray-100 text-gray-700'
             )}
           >
-            당월 지급
+            <span className="font-semibold text-[15px]">당월 지급</span>
+            <span className={clsx(
+              'text-[12px]',
+              data.paymentTiming === 'current_month' ? 'text-blue-100' : 'text-gray-400'
+            )}>
+              일한 달에 받기
+            </span>
           </button>
           <button
             onClick={() => handleTimingChange('next_month')}
             className={clsx(
-              'py-3 rounded-2xl font-semibold text-[15px] transition-colors',
+              'py-3 px-2 rounded-2xl transition-colors flex flex-col items-center gap-0.5',
               data.paymentTiming === 'next_month'
                 ? 'bg-blue-500 text-white'
                 : 'bg-gray-100 text-gray-700'
             )}
           >
-            익월 지급
+            <span className="font-semibold text-[15px]">익월 지급</span>
+            <span className={clsx(
+              'text-[12px]',
+              data.paymentTiming === 'next_month' ? 'text-blue-100' : 'text-gray-400'
+            )}>
+              다음 달에 받기
+            </span>
           </button>
+        </div>
+        
+        {/* 동적 예시 안내 */}
+        <div className="bg-blue-50 rounded-xl px-4 py-2.5 mb-4">
+          <p className="text-[13px] text-blue-600">
+            💡 예: 1월에 일하면 →{' '}
+            <span className="font-semibold">
+              {data.paymentTiming === 'next_month' ? '2월' : '1월'}{' '}
+              {data.isLastDayPayment ? '말일' : `${data.payDay || 10}일`}
+            </span>{' '}
+            지급
+          </p>
         </div>
 
         {/* 말일 지급 체크박스 */}
