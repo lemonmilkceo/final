@@ -38,17 +38,17 @@ const Header: React.FC<HeaderProps> = ({
         {/* 좌측: 빈 공간 (균형을 위해) */}
         <div className="w-10" />
 
-        {/* 중앙: 닉네임 인사말 또는 텍스트 로고 */}
+        {/* 중앙: 닉네임 인사말 또는 심볼 로고 */}
         {userName ? (
           <span className="text-[17px] font-bold text-gray-900">
             {userName}님 👋
           </span>
         ) : (
           <Image
-            src="/images/logo-text.png"
+            src="/images/logo-symbol.png"
             alt="싸인해주세요"
-            width={120}
-            height={24}
+            width={36}
+            height={36}
             priority
           />
         )}
