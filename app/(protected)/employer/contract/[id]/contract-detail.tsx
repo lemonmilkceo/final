@@ -150,6 +150,23 @@ export default function ContractDetail({
   const [isPDFGenerating, setIsPDFGenerating] = useState(false);
   const [showPDFSheet, setShowPDFSheet] = useState(false);
 
+  // 채팅 안내 배너 상태
+  const [isChatBannerVisible, setIsChatBannerVisible] = useState(false);
+  
+  // 채팅 배너 localStorage 확인 (클라이언트에서만)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && contract.status === 'completed' && !isGuestMode) {
+      const dismissed = localStorage.getItem('employer-chat-banner-dismissed');
+      setIsChatBannerVisible(!dismissed);
+    }
+  }, [contract.status, isGuestMode]);
+  
+  // 채팅 배너 닫기
+  const handleDismissChatBanner = () => {
+    localStorage.setItem('employer-chat-banner-dismissed', 'true');
+    setIsChatBannerVisible(false);
+  };
+
   // 알림톡 관련 상태
   const [alimtalkResendCount, setAlimtalkResendCount] = useState(0);
   const [alimtalkMaxResendCount, setAlimtalkMaxResendCount] = useState(3);
@@ -636,6 +653,40 @@ export default function ContractDetail({
             </div>
           </div>
         </div>
+
+        {/* 채팅 안내 배너 - 완료된 계약서, 비게스트, 미닫힘 상태일 때만 표시 */}
+        {contract.status === 'completed' && !isGuestMode && isChatBannerVisible && userId && (
+          <div className="bg-blue-50 rounded-2xl p-4 mb-4 relative">
+            {/* 닫기 버튼 */}
+            <button
+              onClick={handleDismissChatBanner}
+              className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600"
+              aria-label="닫기"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            {/* 안내 내용 */}
+            <div className="flex items-start gap-3 pr-6">
+              <span className="text-2xl">💬</span>
+              <div className="flex-1">
+                <p className="font-semibold text-gray-900 mb-1">채팅으로 소통하세요</p>
+                <p className="text-[13px] text-gray-600 mb-3 leading-relaxed">
+                  임금명세서, 근무 일정 변경 등<br/>
+                  필요한 내용을 전달할 수 있어요
+                </p>
+                <ChatButton
+                  contractId={contract.id}
+                  currentUserId={userId}
+                  partnerName={contract.workerName}
+                  variant="text"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* AI 검토 결과 요약 */}
         {aiReview && (

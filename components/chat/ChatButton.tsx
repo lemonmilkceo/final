@@ -9,7 +9,7 @@ interface ChatButtonProps {
   currentUserId: string;
   partnerName: string;
   className?: string;
-  variant?: 'primary' | 'secondary' | 'icon';
+  variant?: 'primary' | 'secondary' | 'icon' | 'text';
   size?: 'sm' | 'md'; // sm: w-10 h-10 (employer), md: w-12 h-12 (worker)
 }
 
@@ -115,6 +115,40 @@ export default function ChatButton({
                 />
               </svg>
               채팅하기
+            </>
+          )}
+        </button>
+
+        {isOpen && roomId && (
+          <ChatRoom
+            roomId={roomId}
+            contractId={contractId}
+            currentUserId={currentUserId}
+            partnerName={partnerName}
+            onClose={() => setIsOpen(false)}
+          />
+        )}
+      </>
+    );
+  }
+
+  // 텍스트 링크 스타일 (배너 내 CTA용)
+  if (variant === 'text') {
+    return (
+      <>
+        <button
+          onClick={openChat}
+          disabled={isCreating}
+          className={`inline-flex items-center gap-1.5 text-blue-600 font-semibold text-[14px] hover:text-blue-700 transition-colors disabled:opacity-50 ${className}`}
+        >
+          {isCreating ? (
+            <div className="w-4 h-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+          ) : (
+            <>
+              채팅 시작하기
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </>
           )}
         </button>
