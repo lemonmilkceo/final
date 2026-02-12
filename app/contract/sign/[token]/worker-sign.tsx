@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import SignatureCanvas from '@/components/contract/SignatureCanvas';
 import BottomSheet from '@/components/ui/BottomSheet';
@@ -112,6 +112,19 @@ export default function WorkerSignPage({
   };
   
   const [currentStep, setCurrentStep] = useState<SignStep>(getInitialStep());
+  
+  // OAuth 콜백 후 로그인 상태 변경 시 단계 재계산
+  useEffect(() => {
+    if (isLoggedIn) {
+      // 로그인 완료 → 적절한 단계로 이동
+      if (hasExistingDetails) {
+        setCurrentStep('sign');
+      } else if (currentStep === 'view_contract' || currentStep === 'verify_phone') {
+        // 계약서 보기/번호 확인 단계였다면 정보 입력으로
+        setCurrentStep('input_details');
+      }
+    }
+  }, [isLoggedIn, hasExistingDetails, currentStep]);
   
   // 휴대폰 인증 상태
   const [inputPhone, setInputPhone] = useState('');
@@ -351,55 +364,44 @@ export default function WorkerSignPage({
       <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center">
         <span className="text-6xl mb-4 animate-bounce">🎉</span>
         <h1 className="text-[22px] font-bold text-gray-900 mb-2">
-          계약이 완료됐어요!
+          계약 완료!
         </h1>
-        <p className="text-[15px] text-gray-500 mb-4">
-          이 계약서가 내 경력에 자동 저장됐어요
+        <p className="text-[15px] text-gray-500 mb-6">
+          {contract.employer?.name || '사장님'}과의 계약이 체결됐어요
         </p>
         
         {/* 완료 안내 */}
         <div className="bg-green-50 rounded-2xl p-4 mb-8 w-full max-w-xs text-left">
           <p className="text-[14px] text-green-700 font-medium mb-2">
-            ✅ 저장된 정보
+            ✅ 자동으로 저장된 정보
           </p>
           <ul className="text-[13px] text-green-600 space-y-1">
-            <li>• 계약서 원본 보관</li>
-            <li>• 경력 자동 등록</li>
-            <li>• PDF 다운로드 가능</li>
+            <li>• 계약서 원본 안전 보관</li>
+            <li>• 내 경력에 자동 등록</li>
+            <li>• 언제든 PDF 다운로드 가능</li>
           </ul>
         </div>
 
-        {isLoggedIn ? (
-          <>
-            <button
-              onClick={() => router.push(completedContractId ? `/worker/contract/${completedContractId}` : '/worker')}
-              className="w-full max-w-xs py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg text-center mb-3"
-            >
-              내 계약서 확인하기 📄
-            </button>
-            <button
-              onClick={() => router.push('/worker')}
-              className="text-[14px] text-gray-400"
-            >
-              목록으로 가기
-            </button>
-          </>
-        ) : (
-          <>
-            <a
-              href="/login"
-              className="w-full max-w-xs py-4 rounded-2xl bg-[#FEE500] text-[#3C1E1E] font-semibold text-lg text-center block mb-3"
-            >
-              카카오로 로그인하기
-            </a>
-            <button
-              onClick={() => router.push('/')}
-              className="text-[14px] text-gray-400"
-            >
-              홈으로 가기
-            </button>
-          </>
-        )}
+        {/* CTA 버튼 */}
+        <div className="w-full max-w-xs space-y-3">
+          <button
+            onClick={() => router.push(completedContractId ? `/worker/contract/${completedContractId}` : '/worker')}
+            className="w-full py-4 rounded-2xl bg-blue-500 text-white font-semibold text-lg text-center"
+          >
+            계약서 확인하기 📄
+          </button>
+          <button
+            onClick={() => router.push('/worker')}
+            className="w-full py-3 rounded-2xl bg-gray-100 text-gray-600 font-medium text-[15px]"
+          >
+            내 계약서 보관함으로
+          </button>
+        </div>
+        
+        {/* 안내 문구 */}
+        <p className="text-[12px] text-gray-400 mt-6">
+          다음 알바도 싸인플리즈로 간편하게 계약하세요
+        </p>
       </div>
     );
   }
@@ -705,7 +707,7 @@ export default function WorkerSignPage({
               {isLoggingIn ? (
                 <>
                   <LoadingSpinner variant="button" />
-                  로그인 중...
+                  잠시만요...
                 </>
               ) : (
                 <>
@@ -717,12 +719,12 @@ export default function WorkerSignPage({
                       fill="currentColor"
                     />
                   </svg>
-                  카카오로 3초 만에 로그인하고 서명하기
+                  카카오로 시작하고 서명하기
                 </>
               )}
             </button>
             <p className="text-[12px] text-gray-400 text-center">
-              계약서 저장을 위해 로그인이 필요해요
+              3초면 회원가입 완료! 계약서가 안전하게 보관돼요
             </p>
           </div>
         )}

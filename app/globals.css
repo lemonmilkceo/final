@@ -103,6 +103,15 @@
   }
 }
 
+@keyframes slide-down {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
 @keyframes slide-in-right {
   0% {
     transform: translateX(100%);
@@ -480,6 +489,10 @@ body {
 
 .animate-slide-up {
   animation: slide-up 0.3s ease-out;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.25s ease-in forwards;
 }
 
 .animate-slide-in-right {

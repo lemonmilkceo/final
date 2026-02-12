@@ -11,7 +11,7 @@ const Badge: React.FC<BadgeProps> = ({ variant, children, className }) => {
   return (
     <span
       className={clsx(
-        'px-2.5 py-1 rounded-full text-[12px] font-medium inline-flex items-center',
+        'px-2.5 py-1 rounded-full text-[12px] font-medium inline-flex items-center whitespace-nowrap shrink-0',
         {
           'bg-amber-100 text-amber-600': variant === 'waiting' || variant === 'pending',
           'bg-green-100 text-green-600': variant === 'complete' || variant === 'completed',

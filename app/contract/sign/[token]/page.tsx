@@ -3,6 +3,10 @@ import { createClient } from '@/lib/supabase/server';
 import WorkerSignPage from './worker-sign';
 import Link from 'next/link';
 
+// OAuth 콜백 후 캐시 문제 방지 - 항상 최신 데이터 fetch
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface SignPageProps {
   params: Promise<{ token: string }>;
 }

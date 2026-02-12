@@ -232,10 +232,13 @@ export default function WorkerContractDetail({
   };
 
   // 계약 상세 항목 (사업자 페이지와 동일)
+  // 사업자 이름: employer.name이 없으면 workplace_name 또는 '사업자' 표시
+  const employerDisplayName = contract.employer?.name || contract.workplace_name || '사업자';
+  
   const contractItems = [
     { label: '사업장', value: contract.workplace_name || '-' },
     { label: '계약형태', value: formatContractType() },
-    { label: '사업자', value: contract.employer?.name || '-' },
+    { label: '사업자', value: employerDisplayName },
     { label: '근로자', value: contract.worker_name },
     { label: '급여', value: formatWage() },
     {
