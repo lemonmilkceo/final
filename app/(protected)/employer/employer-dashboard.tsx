@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import clsx from 'clsx';
 import MenuSheet from '@/components/layout/MenuSheet';
 import ContractCard from '@/components/contract/ContractCard';
@@ -719,10 +720,19 @@ export default function EmployerDashboard({
         /* 기본 헤더 */
         <header className="bg-white px-5 sticky top-0 z-40 safe-top">
           <div className="h-14 flex items-center justify-between">
-            <div className="w-10" />
-            <span className="text-[17px] font-bold text-gray-900">
-              싸인해주세요
-            </span>
+            {/* 좌측: 심볼 로고 */}
+            <div className="w-10 h-10 flex items-center justify-center">
+              <Image
+                src="/images/logo-symbol.png"
+                alt="싸인해주세요"
+                width={32}
+                height={32}
+                priority
+              />
+            </div>
+            {/* 중앙: 빈 공간 */}
+            <div className="flex-1" />
+            {/* 우측: 알림 + 메뉴 */}
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsNotificationSheetOpen(true)}
