@@ -54,20 +54,25 @@ export function LoginForm() {
 
       {/* Content */}
       <div className="flex-1 flex flex-col items-center justify-center">
-        {/* Logo */}
+        {/* Symbol Logo */}
         <div className="w-20 h-20 mb-4 flex items-center justify-center">
           <Image
-            src="/images/logo.png"
-            alt="싸인해주세요 로고"
+            src="/images/logo-symbol.png"
+            alt="싸인해주세요 심볼"
             width={80}
             height={80}
           />
         </div>
 
-        {/* Title */}
-        <h1 className="text-[22px] font-bold text-gray-900 mb-2">
-          싸인해주세요
-        </h1>
+        {/* Text Logo */}
+        <div className="mb-2">
+          <Image
+            src="/images/logo-text.png"
+            alt="싸인해주세요"
+            width={160}
+            height={32}
+          />
+        </div>
 
         {/* Subtitle */}
         <p className="text-[15px] text-gray-500 text-center">
