@@ -42,21 +42,27 @@ export default function SplashPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white">
-      {/* Logo */}
-      <div className="w-24 h-24 mb-4 animate-bounce-slow">
+      {/* Symbol Logo */}
+      <div className="w-20 h-20 mb-5 animate-bounce-slow">
         <Image
-          src="/images/logo.png"
-          alt="싸인해주세요 로고"
-          width={96}
-          height={96}
+          src="/images/logo-symbol.png"
+          alt="싸인해주세요 심볼"
+          width={80}
+          height={80}
           priority
         />
       </div>
 
-      {/* Service Name */}
-      <h1 className="text-[22px] font-bold text-gray-900 tracking-tight animate-fade-in">
-        싸인해주세요
-      </h1>
+      {/* Text Logo */}
+      <div className="animate-fade-in">
+        <Image
+          src="/images/logo-text.png"
+          alt="싸인해주세요"
+          width={180}
+          height={36}
+          priority
+        />
+      </div>
 
       {/* Loading Dots */}
       <div className="flex gap-1.5 mt-8">
