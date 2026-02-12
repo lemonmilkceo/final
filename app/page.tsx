@@ -42,8 +42,8 @@ export default function SplashPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white">
-      {/* Symbol Logo */}
-      <div className="w-20 h-20 mb-5 animate-bounce-slow">
+      {/* Symbol Logo - 펄스 글로우 애니메이션 */}
+      <div className="w-20 h-20 mb-5 animate-pulse-glow">
         <Image
           src="/images/logo-symbol.png"
           alt="싸인해주세요 심볼"
@@ -53,7 +53,7 @@ export default function SplashPage() {
         />
       </div>
 
-      {/* Text Logo */}
+      {/* Text Logo - 페이드인 */}
       <div className="animate-fade-in">
         <Image
           src="/images/logo-text.png"
@@ -64,19 +64,19 @@ export default function SplashPage() {
         />
       </div>
 
-      {/* Loading Dots */}
-      <div className="flex gap-1.5 mt-8">
+      {/* Loading Dots - 순차 펄스 */}
+      <div className="flex gap-2 mt-8">
         <span
           className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"
           style={{ animationDelay: '0ms' }}
         />
         <span
           className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"
-          style={{ animationDelay: '150ms' }}
+          style={{ animationDelay: '200ms' }}
         />
         <span
           className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"
-          style={{ animationDelay: '300ms' }}
+          style={{ animationDelay: '400ms' }}
         />
       </div>
     </div>
