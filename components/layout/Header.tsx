@@ -35,23 +35,19 @@ const Header: React.FC<HeaderProps> = ({
       )}
     >
       <div className="h-14 flex items-center justify-between">
-        {/* 좌측: 빈 공간 (균형을 위해) */}
-        <div className="w-10" />
-
-        {/* 중앙: 닉네임 인사말 또는 가로형 로고 */}
-        {userName ? (
-          <span className="text-[17px] font-bold text-gray-900">
-            {userName}님 👋
-          </span>
-        ) : (
+        {/* 좌측: 심볼 로고 */}
+        <div className="w-10 h-10 flex items-center justify-center">
           <Image
-            src="/images/logo-horizontal.png"
+            src="/images/logo-symbol.png"
             alt="싸인해주세요"
-            width={120}
-            height={28}
+            width={32}
+            height={32}
             priority
           />
-        )}
+        </div>
+
+        {/* 중앙: 빈 공간 (flex 균형) */}
+        <div className="flex-1" />
 
         {/* 우측: 크레딧 + 알림 + 메뉴 */}
         <div className="flex items-center gap-2 min-w-[40px] justify-end">
