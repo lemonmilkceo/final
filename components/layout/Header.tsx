@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import clsx from 'clsx';
 import { ROUTES } from '@/lib/constants/routes';
 
@@ -37,13 +38,19 @@ const Header: React.FC<HeaderProps> = ({
         {/* 좌측: 빈 공간 (균형을 위해) */}
         <div className="w-10" />
 
-        {/* 중앙: 닉네임 인사말 또는 서비스명 */}
+        {/* 중앙: 닉네임 인사말 또는 텍스트 로고 */}
         {userName ? (
           <span className="text-[17px] font-bold text-gray-900">
             {userName}님 👋
           </span>
         ) : (
-          <span className="text-[17px] font-bold text-gray-900">싸인해주세요</span>
+          <Image
+            src="/images/logo-text.png"
+            alt="싸인해주세요"
+            width={120}
+            height={24}
+            priority
+          />
         )}
 
         {/* 우측: 크레딧 + 알림 + 메뉴 */}
